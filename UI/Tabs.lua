@@ -111,7 +111,7 @@ end
 SelectTab(InfoTab, InfoPage)
 
 -- ==================================================
--- REFRESH BUTTONS
+-- REFRESH BUTTONS (សម្រាប់ Tabs ដែលមាន Button)
 -- ==================================================
 CreateRefreshButton(NearMoonPage, 1)
 CreateRefreshButton(FullMoonPage, 1)
@@ -165,212 +165,84 @@ clickAttackCheckbox.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================
--- NEAR MOON TAB
+-- NEAR MOON TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(NearMoonPage, "Near Moon", 2)
-
-local nearMoonFrame, nearMoonCheckbox, getNearMoonState = CreateCheckbox(NearMoonPage, "Auto Near Moon", 3)
-
-nearMoonCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoNearMoon then
-        _G.YOKUDO_ToggleAutoNearMoon()
-    end
-end)
+AddFeaturesSoon(NearMoonPage)
 
 -- ==================================================
--- FULL MOON TAB
+-- FULL MOON TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(FullMoonPage, "Full Moon", 2)
-
-local fullMoonFrame, fullMoonCheckbox, getFullMoonState = CreateCheckbox(FullMoonPage, "Auto Full Moon", 3)
-
-fullMoonCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoFullMoon then
-        _G.YOKUDO_ToggleAutoFullMoon()
-    end
-end)
+AddFeaturesSoon(FullMoonPage)
 
 -- ==================================================
--- DOUGH KING TAB
+-- DOUGH KING TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(DoughKingPage, "Dough King", 2)
-
-local doughKingFrame, doughKingCheckbox, getDoughKingState = CreateCheckbox(DoughKingPage, "Auto Dough King", 3)
-
-doughKingCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoDoughKing then
-        _G.YOKUDO_ToggleAutoDoughKing()
-    end
-end)
+AddFeaturesSoon(DoughKingPage)
 
 -- ==================================================
--- RIP INDRA TAB
+-- RIP INDRA TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(RipIndraPage, "Rip indra", 2)
-
-local ripIndraFrame, ripIndraCheckbox, getRipIndraState = CreateCheckbox(RipIndraPage, "Auto Rip indra", 3)
-
-ripIndraCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoRipIndra then
-        _G.YOKUDO_ToggleAutoRipIndra()
-    end
-end)
+AddFeaturesSoon(RipIndraPage)
 
 -- ==================================================
--- CAKE PRINCE TAB
+-- CAKE PRINCE TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(CakePrincePage, "Cake Prince", 2)
-
-local cakePrinceFrame, cakePrinceCheckbox, getCakePrinceState = CreateCheckbox(CakePrincePage, "Auto Cake Prince", 3)
-
-cakePrinceCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoCakePrince then
-        _G.YOKUDO_ToggleAutoCakePrince()
-    end
-end)
+AddFeaturesSoon(CakePrincePage)
 
 -- ==================================================
--- CAKE QUEEN TAB
+-- CAKE QUEEN TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(CakeQueenPage, "Cake Queen", 2)
-
-local cakeQueenFrame, cakeQueenCheckbox, getCakeQueenState = CreateCheckbox(CakeQueenPage, "Auto Cake Queen", 3)
-
-cakeQueenCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoCakeQueen then
-        _G.YOKUDO_ToggleAutoCakeQueen()
-    end
-end)
+AddFeaturesSoon(CakeQueenPage)
 
 -- ==================================================
--- ELITE HUNTER TAB
+-- ELITE HUNTER TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(EliteHunterPage, "Elite Hunter", 2)
-
-local eliteHunterFrame, eliteHunterCheckbox, getEliteHunterState = CreateCheckbox(EliteHunterPage, "Auto Elite Hunter", 3)
-
-eliteHunterCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoEliteHunter then
-        _G.YOKUDO_ToggleAutoEliteHunter()
-    end
-end)
+AddFeaturesSoon(EliteHunterPage)
 
 -- ==================================================
--- SOUL REAPER TAB
+-- SOUL REAPER TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(SoulReaperPage, "Soul Reaper", 2)
-
-local soulReaperFrame, soulReaperCheckbox, getSoulReaperState = CreateCheckbox(SoulReaperPage, "Auto Soul Reaper", 3)
-
-soulReaperCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoSoulReaper then
-        _G.YOKUDO_ToggleAutoSoulReaper()
-    end
-end)
+AddFeaturesSoon(SoulReaperPage)
 
 -- ==================================================
--- PIRATE RAID TAB
+-- PIRATE RAID TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(PirateRaidPage, "Pirate Raid", 2)
-
-local pirateRaidFrame, pirateRaidCheckbox, getPirateRaidState = CreateCheckbox(PirateRaidPage, "Auto Pirate Raid", 3)
-
-pirateRaidCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoPirateRaid then
-        _G.YOKUDO_ToggleAutoPirateRaid()
-    end
-end)
+AddFeaturesSoon(PirateRaidPage)
 
 -- ==================================================
--- TYRANT OF THE SKIES TAB
+-- TYRANT OF THE SKIES TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(TyrantSkiesPage, "tyrant of the skies", 2)
-
-local tyrantSkiesFrame, tyrantSkiesCheckbox, getTyrantSkiesState = CreateCheckbox(TyrantSkiesPage, "Auto tyrant of the skies", 3)
-
-tyrantSkiesCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoTyrantSkies then
-        _G.YOKUDO_ToggleAutoTyrantSkies()
-    end
-end)
+AddFeaturesSoon(TyrantSkiesPage)
 
 -- ==================================================
--- MIRAGE ISLAND TAB
+-- MIRAGE ISLAND TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(MirageIslandPage, "Mirage Island", 2)
-
-local mirageIslandFrame, mirageIslandCheckbox, getMirageIslandState = CreateCheckbox(MirageIslandPage, "Auto Mirage Island", 3)
-
-mirageIslandCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoMirageIsland then
-        _G.YOKUDO_ToggleAutoMirageIsland()
-    end
-end)
+AddFeaturesSoon(MirageIslandPage)
 
 -- ==================================================
--- PREHISTORIC ISLAND TAB
+-- PREHISTORIC ISLAND TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(PrehistoricIslandPage, "Prehistoric Island", 2)
-
-local prehistoricIslandFrame, prehistoricIslandCheckbox, getPrehistoricIslandState = CreateCheckbox(PrehistoricIslandPage, "Auto Prehistoric Island", 3)
-
-prehistoricIslandCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoPrehistoricIsland then
-        _G.YOKUDO_ToggleAutoPrehistoricIsland()
-    end
-end)
+AddFeaturesSoon(PrehistoricIslandPage)
 
 -- ==================================================
--- KITSUNE ISLAND TAB
+-- KITSUNE ISLAND TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(KitsuneIslandPage, "Kitsune Island", 2)
-
-local kitsuneIslandFrame, kitsuneIslandCheckbox, getKitsuneIslandState = CreateCheckbox(KitsuneIslandPage, "Auto Kitsune Island", 3)
-
-kitsuneIslandCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoKitsuneIsland then
-        _G.YOKUDO_ToggleAutoKitsuneIsland()
-    end
-end)
+AddFeaturesSoon(KitsuneIslandPage)
 
 -- ==================================================
--- HAKI LEGENDARY TAB
+-- HAKI LEGENDARY TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(HakiLegendaryPage, "Haki Legendary", 2)
-
-local unlockHakiFrame, unlockHakiCheckbox, getUnlockHakiState = CreateCheckbox(HakiLegendaryPage, "Auto Unlock Haki", 3)
-
-unlockHakiCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoUnlockHaki then
-        _G.YOKUDO_ToggleAutoUnlockHaki()
-    end
-end)
+AddFeaturesSoon(HakiLegendaryPage)
 
 -- ==================================================
--- FRUIT TAB
+-- FRUIT TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(FruitPage, "Fruit", 2)
-
-local fruitFrame, fruitCheckbox, getFruitState = CreateCheckbox(FruitPage, "Auto Fruit", 3)
-
-fruitCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoFruit then
-        _G.YOKUDO_ToggleAutoFruit()
-    end
-end)
+AddFeaturesSoon(FruitPage)
 
 -- ==================================================
--- BERRY TAB
+-- BERRY TAB (មាន Refresh Button)
 -- ==================================================
-CreateSectionTitle(BerryPage, "Berry", 2)
-
-local berryFrame, berryCheckbox, getBerryState = CreateCheckbox(BerryPage, "Auto Berry", 3)
-
-berryCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoBerry then
-        _G.YOKUDO_ToggleAutoBerry()
-    end
-end)
+AddFeaturesSoon(BerryPage)
 
 -- ==================================================
 -- SETTING TAB (គ្មាន Refresh Button)
