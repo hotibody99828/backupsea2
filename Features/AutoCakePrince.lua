@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (FIXED 100%)
+-- AUTO CAKE PRINCE (FIXED - No Clip 100%)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -31,6 +31,7 @@ local isToggling = false
 local toggleLock = false
 local respawnDone = false
 local isBossDead = false
+local isTweening = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -38,47 +39,28 @@ local isBossDead = false
 local currentTween = nil
 local bodyVelocity = nil
 local bodyGyro = nil
-local isTweening = false
 local lockConnection = nil
 local isLocked = false
 local currentBossPos = nil
 local followConnection = nil
 local bossTarget = nil
+local isTweeningToPosition = false
 
 -- ==================================================
--- NO CLIP STATE
--- ==================================================
-local noClipEnabled = false
-local noClipLoop = nil
-
--- ==================================================
--- NO CLIP FUNCTIONS (FIXED)
+-- NO CLIP FUNCTIONS (100%)
 -- ==================================================
 local function enableNoClip()
-    if noClipLoop then
-        noClipLoop:Disconnect()
-        noClipLoop = nil
-    end
-    noClipEnabled = true
-    noClipLoop = RunService.RenderStepped:Connect(function()
-        if not noClipEnabled then return end
-        local char = Player.Character
-        if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
+    local char = Player.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
             end
         end
-    end)
+    end
 end
 
 local function disableNoClip()
-    noClipEnabled = false
-    if noClipLoop then
-        noClipLoop:Disconnect()
-        noClipLoop = nil
-    end
     local char = Player.Character
     if char then
         for _, part in ipairs(char:GetDescendants()) do
@@ -127,23 +109,7 @@ local function stopTweenTeleport()
     disableNoClip()
 end
 
-local function stopTweenToPosition()
-    if currentTween then
-        currentTween:Cancel()
-        currentTween = nil
-    end
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-    isTweening = false
-    if bodyVelocity then
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    end
-    disableNoClip()
-end
-
-local function tweenToPosition(targetPos, speed)
+local function tweenToPosition(targetPos, speed, yOffset)
     local character = Player.Character
     if not character then return false end
     
@@ -169,10 +135,13 @@ local function tweenToPosition(targetPos, speed)
     end
     isLocked = false
     
+    -- Set Y offset (320)
+    local finalPos = Vector3.new(targetPos.X, targetPos.Y + (yOffset or 0), targetPos.Z)
+    
     -- Enable No Clip
     enableNoClip()
     
-    local distance = (targetPos - root.Position).Magnitude
+    local distance = (finalPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
@@ -183,7 +152,7 @@ local function tweenToPosition(targetPos, speed)
     
     local duration = math.max(0.10, distance / speed)
     
-    local direction = (targetPos - root.Position).Unit
+    local direction = (finalPos - root.Position).Unit
     if not bodyVelocity then
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
@@ -196,7 +165,7 @@ local function tweenToPosition(targetPos, speed)
         bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 10000
         bodyGyro.Parent = root
     end
-    bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
+    bodyGyro.CFrame = CFrame.lookAt(root.Position, finalPos)
     
     local tweenInfo = TweenInfo.new(
         duration,
@@ -205,7 +174,7 @@ local function tweenToPosition(targetPos, speed)
     )
     
     currentTween = TweenService:Create(root, tweenInfo, {
-        CFrame = CFrame.new(targetPos)
+        CFrame = CFrame.new(finalPos)
     })
     
     isTweening = true
@@ -217,6 +186,7 @@ local function tweenToPosition(targetPos, speed)
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     end
     
+    -- Disable No Clip
     disableNoClip()
     
     if not isTweening then
@@ -252,10 +222,11 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
+    local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
+    
     -- Enable No Clip
     enableNoClip()
     
-    local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
@@ -301,12 +272,31 @@ local function tweenToBoss(bossPos, speed)
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     end
     
+    -- Disable No Clip
     disableNoClip()
     
     if not isTweening then
         return false
     end
     
+    return true
+end
+
+-- ==================================================
+-- BYPASS TELEPORT
+-- ==================================================
+local function bypassTeleport(targetPos)
+    local character = Player.Character
+    if not character then return false end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid and humanoid.Health <= 0 then return false end
+    
+    root.CFrame = CFrame.new(targetPos)
+    hasBypassTeleported = true
     return true
 end
 
@@ -326,7 +316,7 @@ local function setSpawnPoint(location)
 end
 
 -- ==================================================
--- INVOKE LOOP
+-- INVOKE LOOP (SetLastSpawnPoint "Loaf")
 -- ==================================================
 local function invokeSpawnPointLoop()
     while _G.YOKUDO_AutoCakePrinceEnabled do
@@ -348,7 +338,7 @@ local function invokeSpawnPointLoop()
 end
 
 -- ==================================================
--- CHECK LAST SPAWN POINT (FIXED)
+-- CHECK LAST SPAWN POINT
 -- ==================================================
 local function checkLastSpawnPoint()
     local Data = Player:FindFirstChild("Data")
@@ -427,18 +417,17 @@ local function cakePrinceLoop()
         
         local boss, location = findCakePrince()
         
+        -- CASE 1: Boss នៅឆ្ងាយ (ReplicatedStorage)
         if location == "replicatedstorage" then
             local distance = (POSITION_2 - root.Position).Magnitude
             
             if distance > 3000 and not hasBypassTeleported then
                 -- Bypass Teleport ទៅ Position 1
                 bypassTeleport(POSITION_1)
-                
-                -- wait 2s
                 task.wait(2)
                 
-                -- Tween Teleport ទៅ Position 2
-                tweenToPosition(POSITION_2, TWEEN_SPEED)
+                -- Tween Teleport ទៅ Position 2 (Y Offset 320)
+                tweenToPosition(POSITION_2, TWEEN_SPEED, 320)
                 
                 -- Start Invoke Loop
                 task.spawn(invokeSpawnPointLoop)
@@ -447,7 +436,6 @@ local function cakePrinceLoop()
                 task.spawn(function()
                     while _G.YOKUDO_AutoCakePrinceEnabled do
                         if checkLastSpawnPoint() and not respawnDone then
-                            -- Respawn
                             respawnPlayer()
                             respawnDone = true
                             hasBypassTeleported = false
@@ -462,6 +450,7 @@ local function cakePrinceLoop()
             continue
         end
         
+        -- CASE 2: Boss នៅជិត (workspace)
         if location == "workspace" then
             -- Auto Equip
             if _G.YOKUDO_EquipWeaponFromBackpack then
@@ -473,7 +462,7 @@ local function cakePrinceLoop()
             end
             
             if isTweening then
-                stopTweenToPosition()
+                stopTweenTeleport()
             end
             
             local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
@@ -545,6 +534,7 @@ local function cakePrinceLoop()
             continue
         end
         
+        -- CASE 3: Boss Dead
         if location == "dead" then
             if not isBossDead then
                 isBossDead = true
@@ -575,13 +565,7 @@ Player.CharacterAdded:Connect(function()
     
     if _G.YOKUDO_AutoCakePrinceEnabled then
         -- Bypass Teleport ទៅ Position 2
-        local character = Player.Character
-        if character then
-            local root = character:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = CFrame.new(POSITION_2)
-            end
-        end
+        bypassTeleport(POSITION_2)
         stopTweenTeleport()
         disableNoClip()
     end
@@ -594,7 +578,7 @@ _G.YOKUDO_AutoCakePrinceEnabled = false
 _G.YOKUDO_AutoCakePrinceLoop = nil
 
 -- ==================================================
--- TOGGLE AUTO CAKE PRINCE (FIXED)
+-- TOGGLE AUTO CAKE PRINCE
 -- ==================================================
 function _G.YOKUDO_ToggleAutoCakePrince()
     if toggleLock then
@@ -617,15 +601,10 @@ function _G.YOKUDO_ToggleAutoCakePrince()
             return
         end
         
-        -- Reset ALL state
         hasRespawned = false
         hasBypassTeleported = false
         isBossDead = false
         respawnDone = false
-        isTweening = false
-        isLocked = false
-        bossTarget = nil
-        currentBossPos = nil
         
         if followConnection then
             followConnection:Disconnect()
@@ -638,7 +617,6 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         end
         
         _G.YOKUDO_AutoCakePrinceLoop = task.spawn(cakePrinceLoop)
-        print("🎂 Auto Cake Prince Started")
     else
         if _G.YOKUDO_AutoCakePrinceLoop then
             task.cancel(_G.YOKUDO_AutoCakePrinceLoop)
@@ -653,17 +631,10 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         stopTweenTeleport()
         disableNoClip()
         
-        -- Reset ALL state
         isBossDead = false
         isFeatureRunning = false
         respawnDone = false
         hasBypassTeleported = false
-        isTweening = false
-        isLocked = false
-        bossTarget = nil
-        currentBossPos = nil
-        
-        print("🎂 Auto Cake Prince Stopped")
     end
     
     task.wait(0.3)
@@ -671,4 +642,4 @@ function _G.YOKUDO_ToggleAutoCakePrince()
     toggleLock = false
 end
 
-print("✅ AutoCakePrince Loaded (FIXED 100%)")
+print("✅ AutoCakePrince Loaded (No Clip 100%)")
