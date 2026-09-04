@@ -376,6 +376,9 @@ function CreateTextBoxWithCheckbox(Parent, TextValue, Order)
     return Holder, CheckButton, function() return Enabled end, TextBox, function() return CurrentValue end
 end
 
+-- ==================================================
+-- REFRESH BUTTON (ដូច SEA2)
+-- ==================================================
 function CreateRefreshButton(Parent, Order)
     local Y = _G.Y
     local Holder = Instance.new("Frame")
