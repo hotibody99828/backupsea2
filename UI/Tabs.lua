@@ -134,15 +134,14 @@ CreateRefreshButton(FruitPage, 1)
 CreateRefreshButton(BerryPage, 1)
 
 -- ==================================================
--- INFO TAB (គ្មាន Refresh Button)
+-- INFO TAB
 -- ==================================================
 
 -- ==================================================
--- SHOP TAB (មាន Auto Unlock Haki + Join Server)
+-- SHOP TAB
 -- ==================================================
 CreateSectionTitle(ShopPage, "Shop", 1)
 
--- Auto Unlock Haki Legendary
 local unlockHakiFrame, unlockHakiCheckbox, getUnlockHakiState = CreateCheckbox(ShopPage, "Auto Unlock Haki Legendary", 2)
 
 unlockHakiCheckbox.MouseButton1Click:Connect(function()
@@ -151,12 +150,8 @@ unlockHakiCheckbox.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================================================
--- TITLE: Join Server With Jobid
--- ==================================================
 CreateSectionTitle(ShopPage, "Join Server With Jobid", 3)
 
--- JobId TextBox + Button
 local jobIdHolder = Instance.new("Frame")
 jobIdHolder.Name = "JobIdHolder"
 jobIdHolder.Size = UDim2.new(1, 0, 0, 32)
@@ -240,9 +235,6 @@ joinButton.MouseLeave:Connect(function()
     joinButton.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
 end)
 
--- ==================================================
--- JOIN BUTTON EVENT
--- ==================================================
 joinButton.MouseButton1Click:Connect(function()
     local jobId = jobIdTextBox.Text
     if jobId and jobId ~= "" then
@@ -257,7 +249,7 @@ joinButton.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================
--- AUTO HOP TAB (គ្មាន Refresh Button)
+-- AUTO HOP TAB
 -- ==================================================
 CreateSectionTitle(AutoHopPage, "Select Weapon for attack", 1)
 CreateWeaponDropdown(AutoHopPage, 2)
@@ -270,72 +262,112 @@ clickAttackCheckbox.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================================================
--- NEAR MOON TAB (មានតែ Refresh Button)
--- ==================================================
+-- Farm Boss: Dough King
+CreateSectionTitle(AutoHopPage, "Farm Boss", 4)
+
+local doughKingFrame, doughKingCheckbox, getDoughKingState = CreateCheckbox(AutoHopPage, "Auto Dough King", 5)
+
+local hopDoughKingFrame, hopDoughKingCheckbox, getHopDoughKingState = CreateCheckbox(AutoHopPage, "Auto Hop Dough King", 6)
+
+-- Farm Boss: Rip Indra
+CreateSectionTitle(AutoHopPage, "Farm Boss", 7)
+
+local ripIndraFrame, ripIndraCheckbox, getRipIndraState = CreateCheckbox(AutoHopPage, "Auto Rip indra", 8)
+
+local hopRipIndraFrame, hopRipIndraCheckbox, getHopRipIndraState = CreateCheckbox(AutoHopPage, "Auto Hop Rip indra", 9)
+
+-- Farm Boss: Cake Prince
+CreateSectionTitle(AutoHopPage, "Farm Boss", 10)
+
+local cakePrinceFrame, cakePrinceCheckbox, getCakePrinceState = CreateCheckbox(AutoHopPage, "Auto Cake Prince", 11)
+
+local hopCakePrinceFrame, hopCakePrinceCheckbox, getHopCakePrinceState = CreateCheckbox(AutoHopPage, "Auto Hop Cake Prince", 12)
+
+-- Farm Boss: Soul Reaper
+CreateSectionTitle(AutoHopPage, "Farm Boss", 13)
+
+local soulReaperFrame, soulReaperCheckbox, getSoulReaperState = CreateCheckbox(AutoHopPage, "Auto Soul Reaper", 14)
+
+local hopSoulReaperFrame, hopSoulReaperCheckbox, getHopSoulReaperState = CreateCheckbox(AutoHopPage, "Auto Hop Soul Reaper", 15)
+
+-- Farm Boss: Elite Hunter
+CreateSectionTitle(AutoHopPage, "Farm Boss", 16)
+
+local eliteHunterFrame, eliteHunterCheckbox, getEliteHunterState = CreateCheckbox(AutoHopPage, "Auto Elite Hunter", 17)
+
+local hopEliteHunterFrame, hopEliteHunterCheckbox, getHopEliteHunterState = CreateCheckbox(AutoHopPage, "Auto Hop Elite Hunter", 18)
 
 -- ==================================================
--- FULL MOON TAB (មានតែ Refresh Button)
+-- AUTO HOP CHECKBOX EVENTS
 -- ==================================================
+clickAttackCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoClickAttack then
+        _G.YOKUDO_ToggleAutoClickAttack()
+    end
+end)
+
+doughKingCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoDoughKing then
+        _G.YOKUDO_ToggleAutoDoughKing()
+    end
+end)
+
+hopDoughKingCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoHopDoughKing then
+        _G.YOKUDO_ToggleAutoHopDoughKing()
+    end
+end)
+
+ripIndraCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoRipIndra then
+        _G.YOKUDO_ToggleAutoRipIndra()
+    end
+end)
+
+hopRipIndraCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoHopRipIndra then
+        _G.YOKUDO_ToggleAutoHopRipIndra()
+    end
+end)
+
+cakePrinceCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoCakePrince then
+        _G.YOKUDO_ToggleAutoCakePrince()
+    end
+end)
+
+hopCakePrinceCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoHopCakePrince then
+        _G.YOKUDO_ToggleAutoHopCakePrince()
+    end
+end)
+
+soulReaperCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoSoulReaper then
+        _G.YOKUDO_ToggleAutoSoulReaper()
+    end
+end)
+
+hopSoulReaperCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoHopSoulReaper then
+        _G.YOKUDO_ToggleAutoHopSoulReaper()
+    end
+end)
+
+eliteHunterCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoEliteHunter then
+        _G.YOKUDO_ToggleAutoEliteHunter()
+    end
+end)
+
+hopEliteHunterCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoHopEliteHunter then
+        _G.YOKUDO_ToggleAutoHopEliteHunter()
+    end
+end)
 
 -- ==================================================
--- DOUGH KING TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- RIP INDRA TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- CAKE PRINCE TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- CAKE QUEEN TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- ELITE HUNTER TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- SOUL REAPER TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- PIRATE RAID TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- TYRANT OF THE SKIES TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- MIRAGE ISLAND TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- PREHISTORIC ISLAND TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- KITSUNE ISLAND TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- HAKI LEGENDARY TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- FRUIT TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- BERRY TAB (មានតែ Refresh Button)
--- ==================================================
-
--- ==================================================
--- SETTING TAB (គ្មាន Refresh Button)
+-- SETTING TAB
 -- ==================================================
 CreateSectionTitle(SettingPage, "Tween Settings", 1)
 CreateStopTweenButton(SettingPage, 2)
