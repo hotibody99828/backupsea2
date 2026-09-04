@@ -111,7 +111,7 @@ end
 SelectTab(InfoTab, InfoPage)
 
 -- ==================================================
--- REFRESH BUTTONS (សម្រាប់ Tabs ដែលមាន Button)
+-- REFRESH BUTTONS (មានតែ Refresh Button)
 -- ==================================================
 CreateRefreshButton(NearMoonPage, 1)
 CreateRefreshButton(FullMoonPage, 1)
@@ -131,24 +131,8 @@ CreateRefreshButton(FruitPage, 1)
 CreateRefreshButton(BerryPage, 1)
 
 -- ==================================================
--- INFO TAB (គ្មាន Refresh Button)
+-- INFO TAB (គ្មាន Refresh Button, គ្មាន Text)
 -- ==================================================
-CreateSectionTitle(InfoPage, "Info", 1)
-
-local infoText = Instance.new("TextLabel")
-infoText.Name = "InfoText"
-infoText.Size = UDim2.new(1, -10, 0, 60)
-infoText.Position = UDim2.new(0, 5, 0, 30)
-infoText.BackgroundTransparency = 1
-infoText.Text = "YOKUDO HUB | SEA3 | [Premium]\nVersion: 1.0\nAuthor: Yokudo"
-infoText.TextColor3 = Color3.fromRGB(200, 200, 220)
-infoText.TextSize = 14
-infoText.TextXAlignment = Enum.TextXAlignment.Left
-infoText.TextYAlignment = Enum.TextYAlignment.Top
-infoText.Font = Enum.Font.GothamMedium
-infoText.LineHeight = 1.5
-infoText.ZIndex = 8
-infoText.Parent = InfoPage
 
 -- ==================================================
 -- AUTO HOP TAB (គ្មាន Refresh Button)
@@ -165,84 +149,68 @@ clickAttackCheckbox.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================
--- NEAR MOON TAB (មាន Refresh Button)
+-- NEAR MOON TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(NearMoonPage)
 
 -- ==================================================
--- FULL MOON TAB (មាន Refresh Button)
+-- FULL MOON TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(FullMoonPage)
 
 -- ==================================================
--- DOUGH KING TAB (មាន Refresh Button)
+-- DOUGH KING TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(DoughKingPage)
 
 -- ==================================================
--- RIP INDRA TAB (មាន Refresh Button)
+-- RIP INDRA TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(RipIndraPage)
 
 -- ==================================================
--- CAKE PRINCE TAB (មាន Refresh Button)
+-- CAKE PRINCE TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(CakePrincePage)
 
 -- ==================================================
--- CAKE QUEEN TAB (មាន Refresh Button)
+-- CAKE QUEEN TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(CakeQueenPage)
 
 -- ==================================================
--- ELITE HUNTER TAB (មាន Refresh Button)
+-- ELITE HUNTER TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(EliteHunterPage)
 
 -- ==================================================
--- SOUL REAPER TAB (មាន Refresh Button)
+-- SOUL REAPER TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(SoulReaperPage)
 
 -- ==================================================
--- PIRATE RAID TAB (មាន Refresh Button)
+-- PIRATE RAID TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(PirateRaidPage)
 
 -- ==================================================
--- TYRANT OF THE SKIES TAB (មាន Refresh Button)
+-- TYRANT OF THE SKIES TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(TyrantSkiesPage)
 
 -- ==================================================
--- MIRAGE ISLAND TAB (មាន Refresh Button)
+-- MIRAGE ISLAND TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(MirageIslandPage)
 
 -- ==================================================
--- PREHISTORIC ISLAND TAB (មាន Refresh Button)
+-- PREHISTORIC ISLAND TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(PrehistoricIslandPage)
 
 -- ==================================================
--- KITSUNE ISLAND TAB (មាន Refresh Button)
+-- KITSUNE ISLAND TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(KitsuneIslandPage)
 
 -- ==================================================
--- HAKI LEGENDARY TAB (មាន Refresh Button)
+-- HAKI LEGENDARY TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(HakiLegendaryPage)
 
 -- ==================================================
--- FRUIT TAB (មាន Refresh Button)
+-- FRUIT TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(FruitPage)
 
 -- ==================================================
--- BERRY TAB (មាន Refresh Button)
+-- BERRY TAB (មានតែ Refresh Button)
 -- ==================================================
-AddFeaturesSoon(BerryPage)
 
 -- ==================================================
 -- SETTING TAB (គ្មាន Refresh Button)
