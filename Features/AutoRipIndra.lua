@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO RIP INDRA (ដូច Auto Dough King)
+-- AUTO RIP INDRA 
 -- ==================================================
 
 local Players = game:GetService("Players")
