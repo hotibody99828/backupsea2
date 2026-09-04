@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (គណនា Distance ពី Boss)
+-- AUTO CAKE PRINCE (FIXED - សាមញ្ញ)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -23,10 +23,12 @@ local POSITION_3 = Vector3.new(-2157, 160, -12400)
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- RESPAWN STATE
+-- STATE
 -- ==================================================
 local hasRespawned = false
 local characterAddedConnection = nil
+local hasBypassTeleported = false
+local hasBypassTeleported2 = false
 
 -- ==================================================
 -- TOGGLE DEBOUNCE
@@ -34,17 +36,6 @@ local characterAddedConnection = nil
 local isToggling = false
 local toggleLock = false
 local isFeatureRunning = false
-
--- ==================================================
--- BYPASS TELEPORT STATE
--- ==================================================
-local hasBypassTeleported = false
-local hasBypassTeleported2 = false
-
--- ==================================================
--- BOSS SPAWN STATE
--- ==================================================
-local bossHasSpawned = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -323,18 +314,10 @@ local function respawnPlayer()
 end
 
 -- ==================================================
--- RESET BYPASS STATE
--- ==================================================
-local function resetBypassState()
-    hasBypassTeleported = false
-    hasBypassTeleported2 = false
-end
-
--- ==================================================
 -- FIND CAKE PRINCE BOSS
 -- ==================================================
 local function findCakePrince()
-    -- ពិនិត្យ ReplicatedStorage មុន (Boss មិនទាន់ Spawn)
+    -- ពិនិត្យ ReplicatedStorage (Boss មិនទាន់ Spawn)
     local stored = ReplicatedStorage:FindFirstChild("Cake Prince")
     if stored then
         return stored, "replicatedstorage"
@@ -355,31 +338,6 @@ local function findCakePrince()
     end
     
     return nil, nil
-end
-
--- ==================================================
--- CHECK DISTANCE FROM BOSS
--- ==================================================
-local function checkDistanceFromBoss()
-    local bossInStorage = ReplicatedStorage:FindFirstChild("Cake Prince")
-    if not bossInStorage then
-        return false, 0
-    end
-    
-    local character = Player.Character
-    if not character then
-        return false, 0
-    end
-    
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then
-        return false, 0
-    end
-    
-    -- គណនាចម្ងាយពី Player ទៅ Boss (Position_2 ជាទីតាំង Boss)
-    local distance = (POSITION_2 - root.Position).Magnitude
-    
-    return true, distance
 end
 
 -- ==================================================
@@ -424,45 +382,30 @@ local function cakePrinceLoop()
         end
         
         -- ==================================================
-        -- ពិនិត្យ Boss Spawn
+        -- 1. FIND BOSS
+        -- ==================================================
+        local boss, location = findCakePrince()
+        
+        -- ==================================================
+        -- 2. CHECK BOSS SPAWN (ReplicatedStorage)
         -- ==================================================
         local bossInStorage = ReplicatedStorage:FindFirstChild("Cake Prince")
         
-        -- ប្រសិនបើ Boss មិនទាន់ Spawn → មិនធ្វើអ្វីទាំងអស់
+        -- ប្រសិនបើ Boss មិនទាន់ Spawn → មិនធ្វើអ្វី
         if not bossInStorage then
-            if bossHasSpawned then
-                bossHasSpawned = false
-                hasRespawned = false
-                hasBypassTeleported = false
-                hasBypassTeleported2 = false
-                cleanupBody()
-                if followConnection then
-                    followConnection:Disconnect()
-                    followConnection = nil
-                end
-                isFollowingBoss = false
-                isTweeningToPosition = false
-                if characterAddedConnection then
-                    characterAddedConnection:Disconnect()
-                    characterAddedConnection = nil
-                end
-            end
             task.wait(0.01)
             continue
         end
         
         -- ==================================================
-        -- Boss បាន Spawn → ដំណើរការ
+        -- 3. CALCULATE DISTANCE FROM BOSS
         -- ==================================================
-        bossHasSpawned = true
+        local distance = (POSITION_2 - root.Position).Magnitude
         
         -- ==================================================
-        -- គណនាចម្ងាយពី Boss
+        -- 4. BYPASS TO POSITION 1 IF DISTANCE > 2000m
         -- ==================================================
-        local hasBoss, distance = checkDistanceFromBoss()
-        
-        if hasBoss and distance > 2000 and not hasBypassTeleported then
-            -- Bypass ទៅ Position 1
+        if distance > 2000 and not hasBypassTeleported then
             bypassTeleport(POSITION_1)
             hasBypassTeleported = true
             task.wait(0.01)
@@ -470,7 +413,7 @@ local function cakePrinceLoop()
         end
         
         -- ==================================================
-        -- Tween ទៅ Position 2
+        -- 5. TWEEN TO POSITION 2
         -- ==================================================
         if hasBypassTeleported and not hasBypassTeleported2 then
             local distToPos1 = (POSITION_1 - root.Position).Magnitude
@@ -484,7 +427,7 @@ local function cakePrinceLoop()
         end
         
         -- ==================================================
-        -- Respawn at Position 2
+        -- 6. RESPAWN AT POSITION 2
         -- ==================================================
         if hasBypassTeleported2 and not hasRespawned then
             local distToPos2 = (POSITION_2 - root.Position).Magnitude
@@ -514,10 +457,8 @@ local function cakePrinceLoop()
         end
         
         -- ==================================================
-        -- FIND AND ATTACK BOSS
+        -- 7. ATTACK BOSS
         -- ==================================================
-        local boss, location = findCakePrince()
-        
         if not boss then
             if location == "dead" then
                 if not isBossDead then
@@ -547,9 +488,7 @@ local function cakePrinceLoop()
         -- Auto Equip
         autoEquipWeapon()
         
-        -- ==================================================
-        -- CASE: Boss in workspace (Near - Boss បាន Spawn)
-        -- ==================================================
+        -- CASE: Boss in workspace (Near)
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -622,6 +561,8 @@ local function cakePrinceLoop()
             task.wait(0.01)
             continue
         end
+        
+        task.wait(0.01)
     end
     
     isFeatureRunning = false
@@ -660,7 +601,6 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         hasRespawned = false
         hasBypassTeleported = false
         hasBypassTeleported2 = false
-        bossHasSpawned = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -710,7 +650,6 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
-        bossHasSpawned = false
     end
     
     task.wait(0.3)
@@ -723,7 +662,8 @@ end
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
-    resetBypassState()
+    hasBypassTeleported = false
+    hasBypassTeleported2 = false
     
     if _G.YOKUDO_AutoCakePrinceEnabled then
         stopTweenTeleport()
