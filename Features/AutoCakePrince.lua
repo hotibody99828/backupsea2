@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (FIXED)
+-- AUTO CAKE PRINCE (FIXED 100%)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -22,7 +22,7 @@ local POSITION_2 = Vector3.new(-2157, 160, -12400)
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- STATE (Reset ពេល Toggle)
+-- STATE
 -- ==================================================
 local hasRespawned = false
 local hasBypassTeleported = false
@@ -31,7 +31,6 @@ local isToggling = false
 local toggleLock = false
 local respawnDone = false
 local isBossDead = false
-local invokeLoopRunning = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -47,13 +46,13 @@ local followConnection = nil
 local bossTarget = nil
 
 -- ==================================================
--- NO CLIP
+-- NO CLIP STATE
 -- ==================================================
 local noClipEnabled = false
 local noClipLoop = nil
 
 -- ==================================================
--- NO CLIP FUNCTIONS (FIXED - បិទ CanCollide ទាំងអស់)
+-- NO CLIP FUNCTIONS (FIXED)
 -- ==================================================
 local function enableNoClip()
     if noClipLoop then
@@ -91,7 +90,7 @@ local function disableNoClip()
 end
 
 -- ==================================================
--- TWEEN TELEPORT FUNCTIONS (FIXED - No Clip 100%)
+-- TWEEN TELEPORT FUNCTIONS
 -- ==================================================
 
 local function cleanupBody()
@@ -327,44 +326,9 @@ local function setSpawnPoint(location)
 end
 
 -- ==================================================
--- CHECK LAST SPAWN POINT (FIXED - Path ត្រឹមត្រូវ)
--- ==================================================
-local function checkLastSpawnPoint()
-    local Data = Player:FindFirstChild("Data")
-    if Data then
-        local LastSpawnPoint = Data:FindFirstChild("LastSpawnPoint")
-        if LastSpawnPoint then
-            local value = LastSpawnPoint.Value
-            if value == "Loaf" then
-                return true
-            end
-        end
-    end
-    return false
-end
-
--- ==================================================
--- RESPAWN FUNCTION (FIXED - Respawn + Set Point)
--- ==================================================
-local function respawnPlayer()
-    local character = Player.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.Health = 0
-            task.wait(0.01)
-            setSpawnPoint("Loaf")
-            return true
-        end
-    end
-    return false
-end
-
--- ==================================================
 -- INVOKE LOOP
 -- ==================================================
 local function invokeSpawnPointLoop()
-    invokeLoopRunning = true
     while _G.YOKUDO_AutoCakePrinceEnabled do
         pcall(function()
             local args = {
@@ -381,22 +345,40 @@ local function invokeSpawnPointLoop()
         end)
         task.wait(0.05)
     end
-    invokeLoopRunning = false
 end
 
 -- ==================================================
--- RESPAWN CHECK LOOP (FIXED - Respawn ពេលឃើញ Loaf)
+-- CHECK LAST SPAWN POINT (FIXED)
 -- ==================================================
-local function respawnCheckLoop()
-    while _G.YOKUDO_AutoCakePrinceEnabled do
-        if checkLastSpawnPoint() and not respawnDone then
-            respawnPlayer()
-            respawnDone = true
-            hasBypassTeleported = false
-            break
+local function checkLastSpawnPoint()
+    local Data = Player:FindFirstChild("Data")
+    if Data then
+        local LastSpawnPoint = Data:FindFirstChild("LastSpawnPoint")
+        if LastSpawnPoint then
+            local value = LastSpawnPoint.Value
+            if value == "Loaf" then
+                return true
+            end
         end
-        task.wait(0.05)
     end
+    return false
+end
+
+-- ==================================================
+-- RESPAWN FUNCTION
+-- ==================================================
+local function respawnPlayer()
+    local character = Player.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Health = 0
+            task.wait(0.01)
+            setSpawnPoint("Loaf")
+            return true
+        end
+    end
+    return false
 end
 
 -- ==================================================
@@ -425,7 +407,7 @@ local function findCakePrince()
 end
 
 -- ==================================================
--- AUTO CAKE PRINCE LOOP (FIXED - Reset State ពេល Toggle)
+-- AUTO CAKE PRINCE LOOP
 -- ==================================================
 local function cakePrinceLoop()
     isFeatureRunning = true
@@ -451,6 +433,8 @@ local function cakePrinceLoop()
             if distance > 3000 and not hasBypassTeleported then
                 -- Bypass Teleport ទៅ Position 1
                 bypassTeleport(POSITION_1)
+                
+                -- wait 2s
                 task.wait(2)
                 
                 -- Tween Teleport ទៅ Position 2
@@ -459,10 +443,19 @@ local function cakePrinceLoop()
                 -- Start Invoke Loop
                 task.spawn(invokeSpawnPointLoop)
                 
-                -- Start Respawn Check Loop
-                task.spawn(respawnCheckLoop)
-                
-                hasBypassTeleported = true
+                -- Check LastSpawnPoint
+                task.spawn(function()
+                    while _G.YOKUDO_AutoCakePrinceEnabled do
+                        if checkLastSpawnPoint() and not respawnDone then
+                            -- Respawn
+                            respawnPlayer()
+                            respawnDone = true
+                            hasBypassTeleported = false
+                            break
+                        end
+                        task.wait(0.05)
+                    end
+                end)
             end
             
             task.wait(0.01)
@@ -601,7 +594,7 @@ _G.YOKUDO_AutoCakePrinceEnabled = false
 _G.YOKUDO_AutoCakePrinceLoop = nil
 
 -- ==================================================
--- TOGGLE AUTO CAKE PRINCE (FIXED - Reset State ទាំងអស់)
+-- TOGGLE AUTO CAKE PRINCE (FIXED)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoCakePrince()
     if toggleLock then
@@ -618,12 +611,21 @@ function _G.YOKUDO_ToggleAutoCakePrince()
     _G.YOKUDO_AutoCakePrinceEnabled = not _G.YOKUDO_AutoCakePrinceEnabled
     
     if _G.YOKUDO_AutoCakePrinceEnabled then
-        -- START - Reset State ទាំងអស់
+        if isFeatureRunning then
+            isToggling = false
+            toggleLock = false
+            return
+        end
+        
+        -- Reset ALL state
         hasRespawned = false
         hasBypassTeleported = false
         isBossDead = false
         respawnDone = false
-        invokeLoopRunning = false
+        isTweening = false
+        isLocked = false
+        bossTarget = nil
+        currentBossPos = nil
         
         if followConnection then
             followConnection:Disconnect()
@@ -638,7 +640,6 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         _G.YOKUDO_AutoCakePrinceLoop = task.spawn(cakePrinceLoop)
         print("🎂 Auto Cake Prince Started")
     else
-        -- STOP - Cleanup ទាំងអស់
         if _G.YOKUDO_AutoCakePrinceLoop then
             task.cancel(_G.YOKUDO_AutoCakePrinceLoop)
             _G.YOKUDO_AutoCakePrinceLoop = nil
@@ -652,12 +653,15 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         stopTweenTeleport()
         disableNoClip()
         
-        -- Reset State
+        -- Reset ALL state
         isBossDead = false
         isFeatureRunning = false
         respawnDone = false
         hasBypassTeleported = false
-        invokeLoopRunning = false
+        isTweening = false
+        isLocked = false
+        bossTarget = nil
+        currentBossPos = nil
         
         print("🎂 Auto Cake Prince Stopped")
     end
@@ -667,4 +671,4 @@ function _G.YOKUDO_ToggleAutoCakePrince()
     toggleLock = false
 end
 
-print("✅ AutoCakePrince Loaded (Fixed)")
+print("✅ AutoCakePrince Loaded (FIXED 100%)")
