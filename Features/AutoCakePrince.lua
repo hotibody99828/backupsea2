@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (FULL)
+-- AUTO CAKE PRINCE (ដំណើរការតែពេល Boss Spawn)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -40,6 +40,11 @@ local isFeatureRunning = false
 -- ==================================================
 local hasBypassTeleported = false
 local hasBypassTeleported2 = false
+
+-- ==================================================
+-- BOSS SPAWN STATE
+-- ==================================================
+local bossHasSpawned = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -329,6 +334,13 @@ end
 -- FIND CAKE PRINCE BOSS
 -- ==================================================
 local function findCakePrince()
+    -- ពិនិត្យ ReplicatedStorage មុន (Boss មិនទាន់ Spawn)
+    local stored = ReplicatedStorage:FindFirstChild("Cake Prince")
+    if stored then
+        return stored, "replicatedstorage"
+    end
+    
+    -- ពិនិត្យ workspace (Boss បាន Spawn)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("Cake Prince")
@@ -342,11 +354,6 @@ local function findCakePrince()
         end
     end
     
-    local stored = ReplicatedStorage:FindFirstChild("Cake Prince")
-    if stored then
-        return stored, "replicatedstorage"
-    end
-    
     return nil, nil
 end
 
@@ -358,10 +365,14 @@ local function checkAndRespawn()
         return false
     end
     
+    -- ពិនិត្យ Boss ក្នុង ReplicatedStorage (Boss Spawn)
     local bossInStorage = ReplicatedStorage:FindFirstChild("Cake Prince")
     if not bossInStorage then
         return false
     end
+    
+    -- សម្គាល់ថា Boss បាន Spawn
+    bossHasSpawned = true
     
     local character = Player.Character
     if not character then
@@ -382,11 +393,32 @@ local function checkAndRespawn()
     if not hasBypassTeleported then
         bypassTeleport(POSITION_1)
         hasBypassTeleported = true
-        print("⚡ Bypass Teleport to Position 1!")
         return true
     end
     
     return false
+end
+
+-- ==================================================
+-- AUTO EQUIP WRAPPER
+-- ==================================================
+local function autoEquipWeapon()
+    if _G.YOKUDO_EquipWeaponFromBackpack then
+        local weaponType = "Melee"
+        if _G.YOKUDO_AutoEquip then
+            weaponType = _G.YOKUDO_AutoEquip.SelectedType
+        end
+        _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
+    end
+end
+
+-- ==================================================
+-- AUTO ATTACK WRAPPER
+-- ==================================================
+local function attackTarget(target)
+    if _G.YOKUDO_AttackTarget then
+        _G.YOKUDO_AttackTarget(target)
+    end
 end
 
 -- ==================================================
@@ -407,6 +439,40 @@ local function cakePrinceLoop()
             task.wait(0.01)
             continue
         end
+        
+        -- ==================================================
+        -- ពិនិត្យ Boss Spawn
+        -- ==================================================
+        local bossInStorage = ReplicatedStorage:FindFirstChild("Cake Prince")
+        
+        -- ប្រសិនបើ Boss មិនទាន់ Spawn → មិនធ្វើអ្វីទាំងអស់
+        if not bossInStorage then
+            -- Reset state ពេល Boss បាត់
+            if bossHasSpawned then
+                bossHasSpawned = false
+                hasRespawned = false
+                hasBypassTeleported = false
+                hasBypassTeleported2 = false
+                cleanupBody()
+                if followConnection then
+                    followConnection:Disconnect()
+                    followConnection = nil
+                end
+                isFollowingBoss = false
+                isTweeningToPosition = false
+                if characterAddedConnection then
+                    characterAddedConnection:Disconnect()
+                    characterAddedConnection = nil
+                end
+            end
+            task.wait(0.01)
+            continue
+        end
+        
+        -- ==================================================
+        -- Boss បាន Spawn → ដំណើរការ
+        -- ==================================================
+        bossHasSpawned = true
         
         local boss, location = findCakePrince()
         
@@ -437,16 +503,10 @@ local function cakePrinceLoop()
         isBossDead = false
         
         -- Auto Equip
-        if _G.YOKUDO_EquipWeaponFromBackpack then
-            local weaponType = "Melee"
-            if _G.YOKUDO_AutoEquip then
-                weaponType = _G.YOKUDO_AutoEquip.SelectedType
-            end
-            _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
-        end
+        autoEquipWeapon()
         
         -- ==================================================
-        -- CASE 1: Boss in ReplicatedStorage (Far)
+        -- CASE 1: Boss in ReplicatedStorage (Far - មិនទាន់ Spawn ក្នុងហ្គេម)
         -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
@@ -465,7 +525,6 @@ local function cakePrinceLoop()
                 if not hasBypassTeleported then
                     bypassTeleport(POSITION_1)
                     hasBypassTeleported = true
-                    print("⚡ Bypass Teleport to Position 1!")
                     task.wait(0.01)
                     continue
                 end
@@ -477,7 +536,6 @@ local function cakePrinceLoop()
                         task.wait(1)
                         tweenToPosition(POSITION_2, TWEEN_SPEED)
                         hasBypassTeleported2 = true
-                        print("🚀 Tween to Position 2!")
                         task.wait(0.01)
                         continue
                     end
@@ -489,14 +547,11 @@ local function cakePrinceLoop()
                     if distToPos2 < 5 then
                         respawnPlayer()
                         hasRespawned = true
-                        print("💀 Respawn to Loaf!")
                         
                         -- Wait for character respawn
                         local function onCharacterAdded()
                             task.wait(0.5)
-                            -- Bypass to Position 3
                             bypassTeleport(POSITION_3)
-                            print("⚡ Bypass Teleport to Position 3!")
                             
                             if characterAddedConnection then
                                 characterAddedConnection:Disconnect()
@@ -521,7 +576,7 @@ local function cakePrinceLoop()
         end
         
         -- ==================================================
-        -- CASE 2: Boss in workspace (Near)
+        -- CASE 2: Boss in workspace (Near - Boss បាន Spawn)
         -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
@@ -583,17 +638,13 @@ local function cakePrinceLoop()
                     
                     local distToBoss = (currentBossPos - rootPart.Position).Magnitude
                     if distToBoss <= 60 then
-                        if _G.YOKUDO_AttackTarget then
-                            _G.YOKUDO_AttackTarget(bossTarget)
-                        end
+                        attackTarget(bossTarget)
                     end
                 end)
                 
                 isLocked = true
             else
-                if _G.YOKUDO_AttackTarget then
-                    _G.YOKUDO_AttackTarget(boss)
-                end
+                attackTarget(boss)
             end
             
             task.wait(0.01)
@@ -637,6 +688,7 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         hasRespawned = false
         hasBypassTeleported = false
         hasBypassTeleported2 = false
+        bossHasSpawned = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -659,7 +711,6 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         end
         
         _G.YOKUDO_AutoCakePrinceLoop = task.spawn(cakePrinceLoop)
-        print("🎂 Auto Cake Prince Started")
     else
         if _G.YOKUDO_AutoCakePrinceLoop then
             task.cancel(_G.YOKUDO_AutoCakePrinceLoop)
@@ -687,8 +738,7 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
-        
-        print("🎂 Auto Cake Prince Stopped")
+        bossHasSpawned = false
     end
     
     task.wait(0.3)
