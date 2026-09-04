@@ -111,6 +111,30 @@ end
 SelectTab(InfoTab, InfoPage)
 
 -- ==================================================
+-- REFRESH BUTTONS (ទុក Refresh Button)
+-- ==================================================
+CreateRefreshButton(NearMoonPage, 1)
+CreateRefreshButton(FullMoonPage, 1)
+CreateRefreshButton(DoughKingPage, 1)
+CreateRefreshButton(RipIndraPage, 1)
+CreateRefreshButton(CakePrincePage, 1)
+CreateRefreshButton(CakeQueenPage, 1)
+CreateRefreshButton(EliteHunterPage, 1)
+CreateRefreshButton(SoulReaperPage, 1)
+CreateRefreshButton(PirateRaidPage, 1)
+CreateRefreshButton(TyrantSkiesPage, 1)
+CreateRefreshButton(MirageIslandPage, 1)
+CreateRefreshButton(PrehistoricIslandPage, 1)
+CreateRefreshButton(KitsuneIslandPage, 1)
+CreateRefreshButton(HakiLegendaryPage, 1)
+CreateRefreshButton(FruitPage, 1)
+CreateRefreshButton(BerryPage, 1)
+
+-- ==================================================
+-- INFO TAB (គ្មាន Refresh Button)
+-- ==================================================
+
+-- ==================================================
 -- AUTO HOP TAB (គ្មាន Refresh Button)
 -- ==================================================
 CreateSectionTitle(AutoHopPage, "Select Weapon for attack", 1)
@@ -123,6 +147,70 @@ clickAttackCheckbox.MouseButton1Click:Connect(function()
         _G.YOKUDO_ToggleAutoClickAttack()
     end
 end)
+
+-- ==================================================
+-- NEAR MOON TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- FULL MOON TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- DOUGH KING TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- RIP INDRA TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- CAKE PRINCE TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- CAKE QUEEN TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- ELITE HUNTER TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- SOUL REAPER TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- PIRATE RAID TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- TYRANT OF THE SKIES TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- MIRAGE ISLAND TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- PREHISTORIC ISLAND TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- KITSUNE ISLAND TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- HAKI LEGENDARY TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- FRUIT TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
+
+-- ==================================================
+-- BERRY TAB (មានតែ Refresh Button - គ្មាន Features)
+-- ==================================================
 
 -- ==================================================
 -- SETTING TAB (គ្មាន Refresh Button)
