@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (FIXED)
+-- AUTO CAKE PRINCE (គ្មាន No Clip - Y ដើម)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -14,7 +14,7 @@ local Player = Players.LocalPlayer
 -- POSITIONS
 -- ==================================================
 local POSITION_1 = Vector3.new(-12464, 376, -7562)
-local POSITION_2 = Vector3.new(-2157, 320, -12400)  -- Y 320
+local POSITION_2 = Vector3.new(-2157, 160, -12400)  -- Y 160 ដើម
 
 -- ==================================================
 -- TWEEN SPEED
@@ -46,7 +46,7 @@ local lockConnection = nil
 local isLocked = false
 
 -- ==================================================
--- TWEEN TELEPORT FUNCTIONS
+-- TWEEN TELEPORT FUNCTIONS (គ្មាន No Clip)
 -- ==================================================
 
 local function cleanupBody()
@@ -252,6 +252,24 @@ local function tweenToBoss(bossPos, speed)
 end
 
 -- ==================================================
+-- BYPASS TELEPORT FUNCTION
+-- ==================================================
+local function bypassTeleport(targetPos)
+    local character = Player.Character
+    if not character then return false end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid and humanoid.Health <= 0 then return false end
+    
+    root.CFrame = CFrame.new(targetPos)
+    hasBypassTeleported = true
+    return true
+end
+
+-- ==================================================
 -- SET SPAWN POINT
 -- ==================================================
 local function setSpawnPoint(location)
@@ -359,7 +377,7 @@ local function cakePrinceLoop()
                 -- wait 2s
                 task.wait(2)
                 
-                -- Tween Teleport ទៅ Position 2 (Y 320)
+                -- Tween Teleport ទៅ Position 2 (Y 160 ដើម)
                 tweenToPosition(POSITION_2, TWEEN_SPEED)
                 
                 -- Start Invoke Loop (SetLastSpawnPoint "Loaf") រាល់ 0.05s
@@ -513,31 +531,13 @@ local function cakePrinceLoop()
 end
 
 -- ==================================================
--- BYPASS TELEPORT FUNCTION
--- ==================================================
-local function bypassTeleport(targetPos)
-    local character = Player.Character
-    if not character then return false end
-    
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return false end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid and humanoid.Health <= 0 then return false end
-    
-    root.CFrame = CFrame.new(targetPos)
-    hasBypassTeleported = true
-    return true
-end
-
--- ==================================================
 -- CHARACTER RESPAWN HANDLER
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     
     if _G.YOKUDO_AutoCakePrinceEnabled then
-        -- Bypass Teleport ទៅ Position 2
+        -- Bypass Teleport ទៅ Position 2 (Y 160 ដើម)
         bypassTeleport(POSITION_2)
         stopTweenTeleport()
     end
@@ -616,4 +616,4 @@ function _G.YOKUDO_ToggleAutoCakePrince()
     toggleLock = false
 end
 
-print("✅ AutoCakePrince Loaded")
+print("✅ AutoCakePrince Loaded (No NoClip - Y 160)")
