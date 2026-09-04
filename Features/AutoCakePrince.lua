@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE
+-- AUTO CAKE PRINCE (Check ReplicatedStorage មុន)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -170,7 +170,7 @@ local function tweenToBoss(bossPos, speed)
         return true 
     end
     
-    local duration = math.max(0.10, distance / speed)
+    local duration = math.max(0.5, distance / speed)
     
     local direction = (targetPos - root.Position).Unit
     if not bodyVelocity then
@@ -214,9 +214,16 @@ local function tweenToBoss(bossPos, speed)
 end
 
 -- ==================================================
--- FIND CAKE PRINCE BOSS
+-- FIND CAKE PRINCE BOSS (Check ReplicatedStorage មុន)
 -- ==================================================
 local function findCakePrince()
+    -- 1. ពិនិត្យ ReplicatedStorage មុន (Boss នៅឆ្ងាយ)
+    local stored = ReplicatedStorage:FindFirstChild("Cake Prince")
+    if stored then
+        return stored, "replicatedstorage"
+    end
+    
+    -- 2. ពិនិត្យ workspace (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("Cake Prince")
@@ -228,11 +235,6 @@ local function findCakePrince()
                 return nil, "dead"
             end
         end
-    end
-    
-    local stored = ReplicatedStorage:FindFirstChild("Cake Prince")
-    if stored then
-        return stored, "replicatedstorage"
     end
     
     return nil, nil
@@ -293,6 +295,25 @@ local function cakePrinceLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
+        -- ==================================================
+        -- CASE 1: Boss នៅឆ្ងាយ (ReplicatedStorage) → Bypass Teleport
+        -- ==================================================
+        if location == "replicatedstorage" then
+            bossFound = false
+            isAtPosition = false
+            isFollowingBoss = false
+            
+            if not hasBypassTeleported then
+                bypassTeleport(CAKE_PRINCE_POSITION)
+            end
+            
+            task.wait(0.01)
+            continue
+        end
+        
+        -- ==================================================
+        -- CASE 2: Boss នៅជិត (workspace) → Tween ទៅ Boss
+        -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -364,19 +385,6 @@ local function cakePrinceLoop()
                 if _G.YOKUDO_AttackTarget then
                     _G.YOKUDO_AttackTarget(boss)
                 end
-            end
-            
-            task.wait(0.01)
-            continue
-        end
-        
-        if location == "replicatedstorage" then
-            bossFound = false
-            isAtPosition = false
-            isFollowingBoss = false
-            
-            if not hasBypassTeleported then
-                bypassTeleport(CAKE_PRINCE_POSITION)
             end
             
             task.wait(0.01)
@@ -476,4 +484,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoCakePrince Loaded")
+print("✅ AutoCakePrince Loaded (Check ReplicatedStorage First)")
