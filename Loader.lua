@@ -104,6 +104,7 @@ task.spawn(function()
         "AutoBuso",
         "AutoKen",
         "AutoUnlockHaki",
+        "JoinServer",
         "CharacterHandler",
         "WeaponWatcher"
     }
