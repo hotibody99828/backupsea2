@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (SEA3)
+-- AUTO CAKE PRINCE (FULL)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -39,6 +39,7 @@ local isFeatureRunning = false
 -- BYPASS TELEPORT STATE
 -- ==================================================
 local hasBypassTeleported = false
+local hasBypassTeleported2 = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -57,30 +58,6 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
-
--- ==================================================
--- BYPASS TELEPORT FUNCTION
--- ==================================================
-local function bypassTeleport(targetPos)
-    local character = Player.Character
-    if not character then return false end
-    
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return false end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid and humanoid.Health <= 0 then return false end
-    
-    root.CFrame = CFrame.new(targetPos)
-    return true
-end
-
--- ==================================================
--- RESET BYPASS STATE
--- ==================================================
-local function resetBypassState()
-    hasBypassTeleported = false
-end
 
 -- ==================================================
 -- TWEEN TELEPORT FUNCTIONS
@@ -134,6 +111,20 @@ local function stopTweenToPosition()
     if bodyVelocity then
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     end
+end
+
+local function bypassTeleport(targetPos)
+    local character = Player.Character
+    if not character then return false end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid and humanoid.Health <= 0 then return false end
+    
+    root.CFrame = CFrame.new(targetPos)
+    return true
 end
 
 local function tweenToPosition(targetPos, speed)
@@ -209,9 +200,11 @@ local function tweenToPosition(targetPos, speed)
     end
     
     if not isTweening then
+        isTweeningToPosition = false
         return false
     end
     
+    isTweeningToPosition = false
     return true
 end
 
@@ -310,18 +303,26 @@ local function setSpawnPoint(location)
     end
 end
 
-local function respawnPlayer(location)
+local function respawnPlayer()
     local character = Player.Character
     if character then
         local humanoid = character:FindFirstChild("Humanoid")
         if humanoid then
             humanoid.Health = 0
             task.wait(0.01)
-            setSpawnPoint(location)
+            setSpawnPoint("Loaf")
             return true
         end
     end
     return false
+end
+
+-- ==================================================
+-- RESET BYPASS STATE
+-- ==================================================
+local function resetBypassState()
+    hasBypassTeleported = false
+    hasBypassTeleported2 = false
 end
 
 -- ==================================================
@@ -347,6 +348,45 @@ local function findCakePrince()
     end
     
     return nil, nil
+end
+
+-- ==================================================
+-- CHECK DISTANCE AND RESPAWN
+-- ==================================================
+local function checkAndRespawn()
+    if hasRespawned then
+        return false
+    end
+    
+    local bossInStorage = ReplicatedStorage:FindFirstChild("Cake Prince")
+    if not bossInStorage then
+        return false
+    end
+    
+    local character = Player.Character
+    if not character then
+        return false
+    end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then
+        return false
+    end
+    
+    local distance = (POSITION_2 - root.Position).Magnitude
+    
+    if distance > 2000 then
+        return false
+    end
+    
+    if not hasBypassTeleported then
+        bypassTeleport(POSITION_1)
+        hasBypassTeleported = true
+        print("⚡ Bypass Teleport to Position 1!")
+        return true
+    end
+    
+    return false
 end
 
 -- ==================================================
@@ -381,8 +421,6 @@ local function cakePrinceLoop()
                     end
                     isFollowingBoss = false
                     isTweeningToPosition = false
-                    hasRespawned = false
-                    hasBypassTeleported = false
                 end
                 task.wait(5)
                 isBossDead = false
@@ -398,6 +436,7 @@ local function cakePrinceLoop()
         
         isBossDead = false
         
+        -- Auto Equip
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -407,7 +446,82 @@ local function cakePrinceLoop()
         end
         
         -- ==================================================
-        -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
+        -- CASE 1: Boss in ReplicatedStorage (Far)
+        -- ==================================================
+        if location == "replicatedstorage" then
+            bossFound = false
+            isAtPosition = false
+            isFollowingBoss = false
+            
+            -- Check distance and respawn
+            if not hasRespawned then
+                local distToPos2 = (POSITION_2 - root.Position).Magnitude
+                if distToPos2 > 2000 then
+                    task.wait(0.01)
+                    continue
+                end
+                
+                -- Bypass to Position 1
+                if not hasBypassTeleported then
+                    bypassTeleport(POSITION_1)
+                    hasBypassTeleported = true
+                    print("⚡ Bypass Teleport to Position 1!")
+                    task.wait(0.01)
+                    continue
+                end
+                
+                -- Tween to Position 2
+                if hasBypassTeleported and not hasBypassTeleported2 then
+                    local distToPos1 = (POSITION_1 - root.Position).Magnitude
+                    if distToPos1 < 5 then
+                        task.wait(1)
+                        tweenToPosition(POSITION_2, TWEEN_SPEED)
+                        hasBypassTeleported2 = true
+                        print("🚀 Tween to Position 2!")
+                        task.wait(0.01)
+                        continue
+                    end
+                end
+                
+                -- Respawn at Position 2
+                if hasBypassTeleported2 and not hasRespawned then
+                    local distToPos2 = (POSITION_2 - root.Position).Magnitude
+                    if distToPos2 < 5 then
+                        respawnPlayer()
+                        hasRespawned = true
+                        print("💀 Respawn to Loaf!")
+                        
+                        -- Wait for character respawn
+                        local function onCharacterAdded()
+                            task.wait(0.5)
+                            -- Bypass to Position 3
+                            bypassTeleport(POSITION_3)
+                            print("⚡ Bypass Teleport to Position 3!")
+                            
+                            if characterAddedConnection then
+                                characterAddedConnection:Disconnect()
+                                characterAddedConnection = nil
+                            end
+                        end
+                        
+                        if characterAddedConnection then
+                            characterAddedConnection:Disconnect()
+                            characterAddedConnection = nil
+                        end
+                        characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
+                        
+                        task.wait(0.01)
+                        continue
+                    end
+                end
+            end
+            
+            task.wait(0.01)
+            continue
+        end
+        
+        -- ==================================================
+        -- CASE 2: Boss in workspace (Near)
         -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
@@ -485,57 +599,6 @@ local function cakePrinceLoop()
             task.wait(0.01)
             continue
         end
-        
-        -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage)
-        -- ==================================================
-        if location == "replicatedstorage" then
-            bossFound = false
-            isAtPosition = false
-            isFollowingBoss = false
-            
-            local distToPos = (POSITION_1 - root.Position).Magnitude
-            
-            -- ប្រសិនបើចម្ងាយ > 2000m → Bypass Teleport ទៅ Position 1
-            if distToPos > 2000 and not hasBypassTeleported then
-                bypassTeleport(POSITION_1)
-                hasBypassTeleported = true
-                task.wait(1)
-                
-                -- Tween ទៅ Position 2
-                tweenToPosition(POSITION_2, TWEEN_SPEED)
-                
-                -- Respawn + Set Spawn Point "Loaf"
-                respawnPlayer("Loaf")
-                
-                -- រង់ចាំ Character Respawn
-                local function onCharacterAdded()
-                    if hasRespawned then
-                        return
-                    end
-                    
-                    task.wait(0.5)
-                    hasRespawned = true
-                    
-                    -- Bypass Teleport ទៅ Position 3
-                    bypassTeleport(POSITION_3)
-                    
-                    if characterAddedConnection then
-                        characterAddedConnection:Disconnect()
-                        characterAddedConnection = nil
-                    end
-                end
-                
-                if characterAddedConnection then
-                    characterAddedConnection:Disconnect()
-                    characterAddedConnection = nil
-                end
-                characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
-            end
-            
-            task.wait(0.01)
-            continue
-        end
     end
     
     isFeatureRunning = false
@@ -573,20 +636,21 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         
         hasRespawned = false
         hasBypassTeleported = false
+        hasBypassTeleported2 = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
         
-        if followConnection then
-            followConnection:Disconnect()
-            followConnection = nil
-        end
-        
         if characterAddedConnection then
             characterAddedConnection:Disconnect()
             characterAddedConnection = nil
+        end
+        
+        if followConnection then
+            followConnection:Disconnect()
+            followConnection = nil
         end
         
         if _G.YOKUDO_AutoCakePrinceLoop then
@@ -595,20 +659,21 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         end
         
         _G.YOKUDO_AutoCakePrinceLoop = task.spawn(cakePrinceLoop)
+        print("🎂 Auto Cake Prince Started")
     else
         if _G.YOKUDO_AutoCakePrinceLoop then
             task.cancel(_G.YOKUDO_AutoCakePrinceLoop)
             _G.YOKUDO_AutoCakePrinceLoop = nil
         end
         
-        if followConnection then
-            followConnection:Disconnect()
-            followConnection = nil
-        end
-        
         if characterAddedConnection then
             characterAddedConnection:Disconnect()
             characterAddedConnection = nil
+        end
+        
+        if followConnection then
+            followConnection:Disconnect()
+            followConnection = nil
         end
         
         stopTweenTeleport()
@@ -622,6 +687,8 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
+        
+        print("🎂 Auto Cake Prince Stopped")
     end
     
     task.wait(0.3)
@@ -634,6 +701,8 @@ end
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
+    resetBypassState()
+    
     if _G.YOKUDO_AutoCakePrinceEnabled then
         stopTweenTeleport()
     end
