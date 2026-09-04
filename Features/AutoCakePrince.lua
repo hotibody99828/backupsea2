@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (ដំណើរការតែពេល Boss Spawn)
+-- AUTO CAKE PRINCE (គណនា Distance ពី Boss)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -358,45 +358,28 @@ local function findCakePrince()
 end
 
 -- ==================================================
--- CHECK DISTANCE AND RESPAWN
+-- CHECK DISTANCE FROM BOSS
 -- ==================================================
-local function checkAndRespawn()
-    if hasRespawned then
-        return false
-    end
-    
-    -- ពិនិត្យ Boss ក្នុង ReplicatedStorage (Boss Spawn)
+local function checkDistanceFromBoss()
     local bossInStorage = ReplicatedStorage:FindFirstChild("Cake Prince")
     if not bossInStorage then
-        return false
+        return false, 0
     end
-    
-    -- សម្គាល់ថា Boss បាន Spawn
-    bossHasSpawned = true
     
     local character = Player.Character
     if not character then
-        return false
+        return false, 0
     end
     
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then
-        return false
+        return false, 0
     end
     
+    -- គណនាចម្ងាយពី Player ទៅ Boss (Position_2 ជាទីតាំង Boss)
     local distance = (POSITION_2 - root.Position).Magnitude
     
-    if distance > 2000 then
-        return false
-    end
-    
-    if not hasBypassTeleported then
-        bypassTeleport(POSITION_1)
-        hasBypassTeleported = true
-        return true
-    end
-    
-    return false
+    return true, distance
 end
 
 -- ==================================================
@@ -447,7 +430,6 @@ local function cakePrinceLoop()
         
         -- ប្រសិនបើ Boss មិនទាន់ Spawn → មិនធ្វើអ្វីទាំងអស់
         if not bossInStorage then
-            -- Reset state ពេល Boss បាត់
             if bossHasSpawned then
                 bossHasSpawned = false
                 hasRespawned = false
@@ -474,6 +456,66 @@ local function cakePrinceLoop()
         -- ==================================================
         bossHasSpawned = true
         
+        -- ==================================================
+        -- គណនាចម្ងាយពី Boss
+        -- ==================================================
+        local hasBoss, distance = checkDistanceFromBoss()
+        
+        if hasBoss and distance > 2000 and not hasBypassTeleported then
+            -- Bypass ទៅ Position 1
+            bypassTeleport(POSITION_1)
+            hasBypassTeleported = true
+            task.wait(0.01)
+            continue
+        end
+        
+        -- ==================================================
+        -- Tween ទៅ Position 2
+        -- ==================================================
+        if hasBypassTeleported and not hasBypassTeleported2 then
+            local distToPos1 = (POSITION_1 - root.Position).Magnitude
+            if distToPos1 < 5 then
+                task.wait(1)
+                tweenToPosition(POSITION_2, TWEEN_SPEED)
+                hasBypassTeleported2 = true
+                task.wait(0.01)
+                continue
+            end
+        end
+        
+        -- ==================================================
+        -- Respawn at Position 2
+        -- ==================================================
+        if hasBypassTeleported2 and not hasRespawned then
+            local distToPos2 = (POSITION_2 - root.Position).Magnitude
+            if distToPos2 < 5 then
+                respawnPlayer()
+                hasRespawned = true
+                
+                local function onCharacterAdded()
+                    task.wait(0.5)
+                    bypassTeleport(POSITION_3)
+                    
+                    if characterAddedConnection then
+                        characterAddedConnection:Disconnect()
+                        characterAddedConnection = nil
+                    end
+                end
+                
+                if characterAddedConnection then
+                    characterAddedConnection:Disconnect()
+                    characterAddedConnection = nil
+                end
+                characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
+                
+                task.wait(0.01)
+                continue
+            end
+        end
+        
+        -- ==================================================
+        -- FIND AND ATTACK BOSS
+        -- ==================================================
         local boss, location = findCakePrince()
         
         if not boss then
@@ -506,77 +548,7 @@ local function cakePrinceLoop()
         autoEquipWeapon()
         
         -- ==================================================
-        -- CASE 1: Boss in ReplicatedStorage (Far - មិនទាន់ Spawn ក្នុងហ្គេម)
-        -- ==================================================
-        if location == "replicatedstorage" then
-            bossFound = false
-            isAtPosition = false
-            isFollowingBoss = false
-            
-            -- Check distance and respawn
-            if not hasRespawned then
-                local distToPos2 = (POSITION_2 - root.Position).Magnitude
-                if distToPos2 > 2000 then
-                    task.wait(0.01)
-                    continue
-                end
-                
-                -- Bypass to Position 1
-                if not hasBypassTeleported then
-                    bypassTeleport(POSITION_1)
-                    hasBypassTeleported = true
-                    task.wait(0.01)
-                    continue
-                end
-                
-                -- Tween to Position 2
-                if hasBypassTeleported and not hasBypassTeleported2 then
-                    local distToPos1 = (POSITION_1 - root.Position).Magnitude
-                    if distToPos1 < 5 then
-                        task.wait(1)
-                        tweenToPosition(POSITION_2, TWEEN_SPEED)
-                        hasBypassTeleported2 = true
-                        task.wait(0.01)
-                        continue
-                    end
-                end
-                
-                -- Respawn at Position 2
-                if hasBypassTeleported2 and not hasRespawned then
-                    local distToPos2 = (POSITION_2 - root.Position).Magnitude
-                    if distToPos2 < 5 then
-                        respawnPlayer()
-                        hasRespawned = true
-                        
-                        -- Wait for character respawn
-                        local function onCharacterAdded()
-                            task.wait(0.5)
-                            bypassTeleport(POSITION_3)
-                            
-                            if characterAddedConnection then
-                                characterAddedConnection:Disconnect()
-                                characterAddedConnection = nil
-                            end
-                        end
-                        
-                        if characterAddedConnection then
-                            characterAddedConnection:Disconnect()
-                            characterAddedConnection = nil
-                        end
-                        characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
-                        
-                        task.wait(0.01)
-                        continue
-                    end
-                end
-            end
-            
-            task.wait(0.01)
-            continue
-        end
-        
-        -- ==================================================
-        -- CASE 2: Boss in workspace (Near - Boss បាន Spawn)
+        -- CASE: Boss in workspace (Near - Boss បាន Spawn)
         -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
