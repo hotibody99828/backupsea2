@@ -8,6 +8,7 @@ local Settings = _G.YOKUDO
 
 -- Create Pages
 local InfoPage = CreatePage("INFO")
+local ShopPage = CreatePage("SHOP")
 local AutoHopPage = CreatePage("AUTO_HOP")
 local NearMoonPage = CreatePage("NEAR_MOON")
 local FullMoonPage = CreatePage("FULL_MOON")
@@ -29,28 +30,30 @@ local SettingPage = CreatePage("SETTING")
 
 -- Create Tabs
 local InfoTab = CreateTab("Info", 1)
-local AutoHopTab = CreateTab("Auto Hop", 2)
-local NearMoonTab = CreateTab("Near Moon", 3)
-local FullMoonTab = CreateTab("Full Moon", 4)
-local DoughKingTab = CreateTab("Dough King", 5)
-local RipIndraTab = CreateTab("Rip indra", 6)
-local CakePrinceTab = CreateTab("Cake Prince", 7)
-local CakeQueenTab = CreateTab("Cake Queen", 8)
-local EliteHunterTab = CreateTab("Elite Hunter", 9)
-local SoulReaperTab = CreateTab("Soul Reaper", 10)
-local PirateRaidTab = CreateTab("Pirate Raid", 11)
-local TyrantSkiesTab = CreateTab("tyrant of the skies", 12)
-local MirageIslandTab = CreateTab("Mirage Island", 13)
-local PrehistoricIslandTab = CreateTab("Prehistoric Island", 14)
-local KitsuneIslandTab = CreateTab("Kitsune Island", 15)
-local HakiLegendaryTab = CreateTab("Haki Legendary", 16)
-local FruitTab = CreateTab("Fruit", 17)
-local BerryTab = CreateTab("Berry", 18)
-local SettingTab = CreateTab("Setting", 19)
+local ShopTab = CreateTab("Shop", 2)
+local AutoHopTab = CreateTab("Auto Hop", 3)
+local NearMoonTab = CreateTab("Near Moon", 4)
+local FullMoonTab = CreateTab("Full Moon", 5)
+local DoughKingTab = CreateTab("Dough King", 6)
+local RipIndraTab = CreateTab("Rip indra", 7)
+local CakePrinceTab = CreateTab("Cake Prince", 8)
+local CakeQueenTab = CreateTab("Cake Queen", 9)
+local EliteHunterTab = CreateTab("Elite Hunter", 10)
+local SoulReaperTab = CreateTab("Soul Reaper", 11)
+local PirateRaidTab = CreateTab("Pirate Raid", 12)
+local TyrantSkiesTab = CreateTab("tyrant of the skies", 13)
+local MirageIslandTab = CreateTab("Mirage Island", 14)
+local PrehistoricIslandTab = CreateTab("Prehistoric Island", 15)
+local KitsuneIslandTab = CreateTab("Kitsune Island", 16)
+local HakiLegendaryTab = CreateTab("Haki Legendary", 17)
+local FruitTab = CreateTab("Fruit", 18)
+local BerryTab = CreateTab("Berry", 19)
+local SettingTab = CreateTab("Setting", 20)
 
 -- Tab Map
 local Tabs = {
     [InfoTab] = InfoPage,
+    [ShopTab] = ShopPage,
     [AutoHopTab] = AutoHopPage,
     [NearMoonTab] = NearMoonPage,
     [FullMoonTab] = FullMoonPage,
@@ -111,7 +114,7 @@ end
 SelectTab(InfoTab, InfoPage)
 
 -- ==================================================
--- REFRESH BUTTONS (ទុក Refresh Button)
+-- REFRESH BUTTONS
 -- ==================================================
 CreateRefreshButton(NearMoonPage, 1)
 CreateRefreshButton(FullMoonPage, 1)
@@ -135,6 +138,20 @@ CreateRefreshButton(BerryPage, 1)
 -- ==================================================
 
 -- ==================================================
+-- SHOP TAB (មាន Auto Unlock Haki)
+-- ==================================================
+CreateSectionTitle(ShopPage, "Shop", 1)
+
+-- Auto Unlock Haki
+local unlockHakiFrame, unlockHakiCheckbox, getUnlockHakiState = CreateCheckbox(ShopPage, "Auto Unlock Haki", 2)
+
+unlockHakiCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoUnlockHaki then
+        _G.YOKUDO_ToggleAutoUnlockHaki()
+    end
+end)
+
+-- ==================================================
 -- AUTO HOP TAB (គ្មាន Refresh Button)
 -- ==================================================
 CreateSectionTitle(AutoHopPage, "Select Weapon for attack", 1)
@@ -147,70 +164,6 @@ clickAttackCheckbox.MouseButton1Click:Connect(function()
         _G.YOKUDO_ToggleAutoClickAttack()
     end
 end)
-
--- ==================================================
--- NEAR MOON TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- FULL MOON TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- DOUGH KING TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- RIP INDRA TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- CAKE PRINCE TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- CAKE QUEEN TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- ELITE HUNTER TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- SOUL REAPER TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- PIRATE RAID TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- TYRANT OF THE SKIES TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- MIRAGE ISLAND TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- PREHISTORIC ISLAND TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- KITSUNE ISLAND TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- HAKI LEGENDARY TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- FRUIT TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
-
--- ==================================================
--- BERRY TAB (មានតែ Refresh Button - គ្មាន Features)
--- ==================================================
 
 -- ==================================================
 -- SETTING TAB (គ្មាន Refresh Button)
