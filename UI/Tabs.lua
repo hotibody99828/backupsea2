@@ -138,16 +138,121 @@ CreateRefreshButton(BerryPage, 1)
 -- ==================================================
 
 -- ==================================================
--- SHOP TAB (មាន Auto Unlock Haki)
+-- SHOP TAB (មាន Auto Unlock Haki + Join Server)
 -- ==================================================
 CreateSectionTitle(ShopPage, "Shop", 1)
 
--- Auto Unlock Haki
-local unlockHakiFrame, unlockHakiCheckbox, getUnlockHakiState = CreateCheckbox(ShopPage, "Auto Unlock Haki", 2)
+-- Auto Unlock Haki Legendary
+local unlockHakiFrame, unlockHakiCheckbox, getUnlockHakiState = CreateCheckbox(ShopPage, "Auto Unlock Haki Legendary", 2)
 
 unlockHakiCheckbox.MouseButton1Click:Connect(function()
     if _G.YOKUDO_ToggleAutoUnlockHaki then
         _G.YOKUDO_ToggleAutoUnlockHaki()
+    end
+end)
+
+-- ==================================================
+-- TITLE: Join Server With Jobid
+-- ==================================================
+CreateSectionTitle(ShopPage, "Join Server With Jobid", 3)
+
+-- JobId TextBox + Button
+local jobIdHolder = Instance.new("Frame")
+jobIdHolder.Name = "JobIdHolder"
+jobIdHolder.Size = UDim2.new(1, 0, 0, 32)
+jobIdHolder.BackgroundTransparency = 1
+jobIdHolder.BorderSizePixel = 0
+jobIdHolder.LayoutOrder = 4
+jobIdHolder.ZIndex = 9
+jobIdHolder.Parent = ShopPage
+
+local jobIdLabel = Instance.new("TextLabel")
+jobIdLabel.Name = "JobIdLabel"
+jobIdLabel.Size = UDim2.new(0, 80, 1, 0)
+jobIdLabel.Position = UDim2.new(0, 0, 0, 0)
+jobIdLabel.BackgroundTransparency = 1
+jobIdLabel.Text = "JobId:"
+jobIdLabel.TextColor3 = Color3.fromRGB(205, 205, 220)
+jobIdLabel.TextSize = 12
+jobIdLabel.TextXAlignment = Enum.TextXAlignment.Left
+jobIdLabel.TextYAlignment = Enum.TextYAlignment.Center
+jobIdLabel.Font = Enum.Font.GothamMedium
+jobIdLabel.ZIndex = 10
+jobIdLabel.Parent = jobIdHolder
+
+local jobIdTextBox = Instance.new("TextBox")
+jobIdTextBox.Name = "JobIdTextBox"
+jobIdTextBox.Size = UDim2.new(0, 200, 1, -6)
+jobIdTextBox.Position = UDim2.new(0, 85, 0, 3)
+jobIdTextBox.BackgroundColor3 = Color3.fromRGB(30, 31, 45)
+jobIdTextBox.BorderSizePixel = 0
+jobIdTextBox.Text = ""
+jobIdTextBox.PlaceholderText = "Enter JobId here..."
+jobIdTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+jobIdTextBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 170)
+jobIdTextBox.TextSize = 12
+jobIdTextBox.TextXAlignment = Enum.TextXAlignment.Left
+jobIdTextBox.TextYAlignment = Enum.TextYAlignment.Center
+jobIdTextBox.Font = Enum.Font.GothamMedium
+jobIdTextBox.ZIndex = 11
+jobIdTextBox.Parent = jobIdHolder
+
+local TBoxCorner = Instance.new("UICorner")
+TBoxCorner.CornerRadius = UDim.new(0, 4)
+TBoxCorner.Parent = jobIdTextBox
+
+local TBoxStroke = Instance.new("UIStroke")
+TBoxStroke.Color = Color3.fromRGB(200, 200, 220)
+TBoxStroke.Thickness = 0.5
+TBoxStroke.Transparency = 0.2
+TBoxStroke.Parent = jobIdTextBox
+
+local joinButton = Instance.new("TextButton")
+joinButton.Name = "JoinButton"
+joinButton.Size = UDim2.new(0, 80, 1, -6)
+joinButton.Position = UDim2.new(1, -85, 0, 3)
+joinButton.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+joinButton.BorderSizePixel = 0
+joinButton.Text = "Join"
+joinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+joinButton.TextSize = 12
+joinButton.TextXAlignment = Enum.TextXAlignment.Center
+joinButton.TextYAlignment = Enum.TextYAlignment.Center
+joinButton.Font = Enum.Font.GothamBold
+joinButton.ZIndex = 11
+joinButton.Parent = jobIdHolder
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 4)
+BtnCorner.Parent = joinButton
+
+local BtnStroke = Instance.new("UIStroke")
+BtnStroke.Color = Color3.fromRGB(200, 200, 220)
+BtnStroke.Thickness = 0.5
+BtnStroke.Transparency = 0.2
+BtnStroke.Parent = joinButton
+
+joinButton.MouseEnter:Connect(function()
+    joinButton.BackgroundColor3 = Color3.fromRGB(135, 120, 225)
+end)
+
+joinButton.MouseLeave:Connect(function()
+    joinButton.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+end)
+
+-- ==================================================
+-- JOIN BUTTON EVENT
+-- ==================================================
+joinButton.MouseButton1Click:Connect(function()
+    local jobId = jobIdTextBox.Text
+    if jobId and jobId ~= "" then
+        if _G.YOKUDO_JoinServerByJobId then
+            _G.YOKUDO_JoinServerByJobId(jobId)
+        else
+            warn("⚠️ _G.YOKUDO_JoinServerByJobId not found!")
+        end
+    else
+        print("⚠️ Please enter a JobId!")
     end
 end)
 
