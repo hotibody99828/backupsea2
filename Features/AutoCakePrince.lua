@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (គ្មាន No Clip - Y ដើម)
+-- AUTO CAKE PRINCE (ធ្លុះផ្ទះ)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -14,7 +14,7 @@ local Player = Players.LocalPlayer
 -- POSITIONS
 -- ==================================================
 local POSITION_1 = Vector3.new(-12464, 376, -7562)
-local POSITION_2 = Vector3.new(-2157, 160, -12400)  -- Y 160 ដើម
+local POSITION_2 = Vector3.new(-2157, 160, -12400)
 
 -- ==================================================
 -- TWEEN SPEED
@@ -46,7 +46,40 @@ local lockConnection = nil
 local isLocked = false
 
 -- ==================================================
--- TWEEN TELEPORT FUNCTIONS (គ្មាន No Clip)
+-- DISABLE BOAT CASTLE WALLS (ធ្លុះផ្ទះ)
+-- ==================================================
+local function disableBoatCastleWalls()
+    pcall(function()
+        local wall1 = workspace.Map["Boat Castle"].IslandModel:GetChildren()[5]:GetChildren()[171]
+        if wall1 then
+            wall1.CanCollide = false
+        end
+    end)
+    
+    pcall(function()
+        local wall2 = workspace.Map["Boat Castle"].IslandModel:GetChildren()[6]:GetChildren()[31]
+        if wall2 then
+            wall2.CanCollide = false
+        end
+    end)
+    
+    pcall(function()
+        local wall3 = workspace.Map["Boat Castle"].IslandModel:GetChildren()[6]:GetChildren()[92]
+        if wall3 then
+            wall3.CanCollide = false
+        end
+    end)
+    
+    pcall(function()
+        local union = workspace.Map["Boat Castle"].IslandModel.unions:GetChildren()[5].Group.Part
+        if union then
+            union.CanCollide = false
+        end
+    end)
+end
+
+-- ==================================================
+-- TWEEN TELEPORT FUNCTIONS
 -- ==================================================
 
 local function cleanupBody()
@@ -121,6 +154,9 @@ local function tweenToPosition(targetPos, speed)
         lockConnection = nil
     end
     isLocked = false
+    
+    -- បិទផ្ទះមុន Tween
+    disableBoatCastleWalls()
     
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
@@ -198,6 +234,9 @@ local function tweenToBoss(bossPos, speed)
         lockConnection = nil
     end
     isLocked = false
+    
+    -- បិទផ្ទះមុន Tween
+    disableBoatCastleWalls()
     
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
@@ -364,23 +403,14 @@ local function cakePrinceLoop()
         
         local boss, location = findCakePrince()
         
-        -- ==================================================
-        -- CASE 1: Boss នៅឆ្ងាយ (ReplicatedStorage)
-        -- ==================================================
         if location == "replicatedstorage" then
             local distance = (POSITION_2 - root.Position).Magnitude
             
             if distance > 3000 and not hasBypassTeleported then
-                -- Bypass Teleport ទៅ Position 1
                 bypassTeleport(POSITION_1)
-                
-                -- wait 2s
                 task.wait(2)
-                
-                -- Tween Teleport ទៅ Position 2 (Y 160 ដើម)
                 tweenToPosition(POSITION_2, TWEEN_SPEED)
                 
-                -- Start Invoke Loop (SetLastSpawnPoint "Loaf") រាល់ 0.05s
                 task.spawn(function()
                     while _G.YOKUDO_AutoCakePrinceEnabled do
                         pcall(function()
@@ -400,11 +430,9 @@ local function cakePrinceLoop()
                     end
                 end)
                 
-                -- ពិនិត្យ LastSpawnPoint
                 task.spawn(function()
                     while _G.YOKUDO_AutoCakePrinceEnabled do
                         if checkLastSpawnPoint() and not respawnDone then
-                            -- Respawn
                             respawnPlayer()
                             respawnDone = true
                             hasBypassTeleported = false
@@ -419,11 +447,7 @@ local function cakePrinceLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 2: Boss នៅជិត (workspace)
-        -- ==================================================
         if location == "workspace" then
-            -- Auto Equip
             if _G.YOKUDO_EquipWeaponFromBackpack then
                 local weaponType = "Melee"
                 if _G.YOKUDO_AutoEquip then
@@ -505,9 +529,6 @@ local function cakePrinceLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 3: Boss Dead
-        -- ==================================================
         if location == "dead" then
             if not isBossDead then
                 isBossDead = true
@@ -537,9 +558,10 @@ Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     
     if _G.YOKUDO_AutoCakePrinceEnabled then
-        -- Bypass Teleport ទៅ Position 2 (Y 160 ដើម)
         bypassTeleport(POSITION_2)
         stopTweenTeleport()
+        -- បិទផ្ទះពេល Respawn
+        disableBoatCastleWalls()
     end
 end)
 
@@ -577,6 +599,9 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         hasBypassTeleported = false
         isBossDead = false
         respawnDone = false
+        
+        -- បិទផ្ទះពេលបើក Feature
+        disableBoatCastleWalls()
         
         if followConnection then
             followConnection:Disconnect()
@@ -616,4 +641,4 @@ function _G.YOKUDO_ToggleAutoCakePrince()
     toggleLock = false
 end
 
-print("✅ AutoCakePrince Loaded (No NoClip - Y 160)")
+print("✅ AutoCakePrince Loaded (Disable Walls)")
