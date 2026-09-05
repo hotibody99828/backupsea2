@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (Remote Portal)
+-- AUTO ELITE HUNTER (Remote Portal + NoCollide Fast)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -54,7 +54,7 @@ local PORTAL_ARGS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 150
+local TWEEN_SPEED = 200
 
 -- ==================================================
 -- STATE
@@ -62,6 +62,8 @@ local TWEEN_SPEED = 150
 local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
+local noCollideActive = false
+local noCollideConnection = nil
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -80,6 +82,55 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
+
+-- ==================================================
+-- NO COLLIDE FUNCTIONS (លឿនបំផុត)
+-- ==================================================
+local function applyNoCollide()
+    local character = Player.Character
+    if not character then return end
+    
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function startNoCollide()
+    if noCollideConnection then return end
+    if noCollideActive then return end
+    
+    noCollideActive = true
+    
+    -- Apply ភ្លាមៗ
+    applyNoCollide()
+    
+    -- Keep applying every frame (លឿនបំផុត)
+    noCollideConnection = RunService.Heartbeat:Connect(function()
+        if not noCollideActive then return end
+        applyNoCollide()
+    end)
+end
+
+local function stopNoCollide()
+    noCollideActive = false
+    
+    if noCollideConnection then
+        noCollideConnection:Disconnect()
+        noCollideConnection = nil
+    end
+    
+    -- បើក CanCollide ឡើងវិញ
+    local character = Player.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
 
 -- ==================================================
 -- REMOTE PORTAL FUNCTION
@@ -138,6 +189,9 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
+    
+    -- បើក CanCollide ឡើងវិញ
+    stopNoCollide()
 end
 
 local function stopTweenToPosition()
@@ -183,12 +237,16 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
+    -- បិទ CanCollide (លឿនបំផុត)
+    startNoCollide()
+    
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
+        stopNoCollide()
         return true 
     end
     
@@ -229,9 +287,11 @@ local function tweenToBoss(bossPos, speed)
     end
     
     if not isTweening then
+        stopNoCollide()
         return false
     end
     
+    stopNoCollide()
     return true
 end
 
@@ -451,7 +511,7 @@ local function eliteHunterLoop()
             -- រង់ចាំ 2s រួច Tween ទៅ Boss
             task.wait(2)
             
-            -- Tween ទៅ Boss
+            -- Tween ទៅ Boss (បិទ CanCollide ដោយស្វ័យប្រវត្តិ)
             tweenToBoss(bossPos, TWEEN_SPEED)
             
             if followConnection then
@@ -589,9 +649,12 @@ end
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     
+    -- បើក CanCollide ឡើងវិញ
+    stopNoCollide()
+    
     if _G.YOKUDO_AutoEliteHunterEnabled then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Remote Portal)")
+print("✅ AutoEliteHunter Loaded (NoCollide Fast)")
