@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (មានការពារច្រលំ)
+-- AUTO ELITE HUNTER (Respawn + Set Point)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -40,6 +40,14 @@ local PORTAL_POSITIONS = {
 }
 
 -- ==================================================
+-- SPAWN POINT NAMES
+-- ==================================================
+local SPAWN_POINTS = {
+    Port = "Default",
+    GreatTree = "GreatTree",
+}
+
+-- ==================================================
 -- TWEEN SPEED
 -- ==================================================
 local TWEEN_SPEED = 200
@@ -48,10 +56,13 @@ local TWEEN_SPEED = 200
 -- STATE
 -- ==================================================
 local hasBypassTeleported = false
+local hasTeleportedToMap = false
 local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
 local isProcessing = false
+local characterAddedConnection = nil
+local hasRespawned = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -95,6 +106,43 @@ end
 -- ==================================================
 local function resetBypassState()
     hasBypassTeleported = false
+    hasTeleportedToMap = false
+end
+
+-- ==================================================
+-- SET SPAWN POINT
+-- ==================================================
+local function setSpawnPoint(location)
+    local Event = ReplicatedStorage:FindFirstChild("Remotes")
+    if Event then
+        local CommF = Event:FindFirstChild("CommF_")
+        if CommF then
+            pcall(function()
+                CommF:InvokeServer("SetLastSpawnPoint", location)
+            end)
+        end
+    end
+end
+
+-- ==================================================
+-- RESPAWN + SET POINT
+-- ==================================================
+local function respawnAndSetPoint(spawnPoint)
+    local character = Player.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            -- Respawn មុន
+            humanoid.Health = 0
+            
+            -- wait 0.01s រួច Set Point
+            task.wait(0.01)
+            setSpawnPoint(spawnPoint)
+            
+            return true
+        end
+    end
+    return false
 end
 
 -- ==================================================
@@ -333,7 +381,7 @@ end
 -- FIND ELITE BOSS
 -- ==================================================
 local function findEliteBoss()
-    -- 1. ពិនិត្យ workspace.Enemies (Boss នៅជិត)
+    -- 1. ពិនិត្យ workspace.Enemies
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         for _, boss in ipairs(ELITE_BOSSES) do
@@ -347,7 +395,7 @@ local function findEliteBoss()
         end
     end
     
-    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
+    -- 2. ពិនិត្យ ReplicatedStorage
     for _, boss in ipairs(ELITE_BOSSES) do
         local stored = ReplicatedStorage:FindFirstChild(boss.Path)
         if stored then
@@ -387,7 +435,6 @@ local function eliteHunterLoop()
     isFeatureRunning = true
     
     while _G.YOKUDO_AutoEliteHunterEnabled do
-        -- ការពារការដំណើរការច្រើនដងក្នុងពេលតែមួយ
         if isProcessing then
             task.wait(0.01)
             continue
@@ -420,7 +467,6 @@ local function eliteHunterLoop()
             continue
         end
         
-        -- Auto Equip
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -512,14 +558,13 @@ local function eliteHunterLoop()
         end
         
         -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Tween
+        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Respawn
         -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
             
-            -- យក Position របស់ Boss
             local bossPos = getBossPosition(boss)
             if not bossPos then
                 isProcessing = false
@@ -527,7 +572,6 @@ local function eliteHunterLoop()
                 continue
             end
             
-            -- គណនា Map ដែលនៅជិតជាងគេ
             local closestMap = findClosestMap(bossPos)
             if not closestMap then
                 isProcessing = false
@@ -535,7 +579,6 @@ local function eliteHunterLoop()
                 continue
             end
             
-            -- យក Portal Position នៃ Map នោះ
             local portalPos = PORTAL_POSITIONS[closestMap]
             if not portalPos then
                 isProcessing = false
@@ -548,11 +591,57 @@ local function eliteHunterLoop()
                 bypassTeleport(portalPos)
             end
             
-            -- រង់ចាំ 2s រួច Tween ទៅ Boss
-            if hasBypassTeleported then
-                task.wait(2)
+            -- Bypass Teleport ទៅ Map Position
+            if hasBypassTeleported and not hasTeleportedToMap then
+                local mapPos = MAP_POSITIONS[closestMap]
+                if mapPos then
+                    bypassTeleport(mapPos)
+                    hasTeleportedToMap = true
+                end
+            end
+            
+            -- Respawn + Set Point (សម្រាប់ Port និង GreatTree)
+            if hasTeleportedToMap and not hasRespawned then
+                if closestMap == "Port" then
+                    respawnAndSetPoint("Default")
+                    hasRespawned = true
+                elseif closestMap == "GreatTree" then
+                    respawnAndSetPoint("GreatTree")
+                    hasRespawned = true
+                end
+            end
+            
+            isProcessing = false
+            task.wait(0.01)
+            continue
+        end
+        
+        isProcessing = false
+        task.wait(0.01)
+    end
+    
+    isFeatureRunning = false
+end
+
+-- ==================================================
+-- CHARACTER RESPAWN HANDLER
+-- ==================================================
+local function onCharacterAdded()
+    task.wait(0.5)
+    resetBypassState()
+    
+    if _G.YOKUDO_AutoEliteHunterEnabled then
+        -- Tween ទៅ Boss ភ្លាមៗ
+        local boss, location, bossName = findEliteBoss()
+        if boss and location == "workspace" then
+            local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
+            if bossRoot then
+                local bossPos = bossRoot.Position
+                bossTarget = boss
+                currentBossPos = bossPos
+                bossFound = true
+                isFollowingBoss = true
                 
-                -- Tween ទៅ Boss
                 tweenToBoss(bossPos, TWEEN_SPEED)
                 
                 if followConnection then
@@ -600,17 +689,10 @@ local function eliteHunterLoop()
                 
                 isLocked = true
             end
-            
-            isProcessing = false
-            task.wait(0.01)
-            continue
         end
         
-        isProcessing = false
-        task.wait(0.01)
+        stopTweenTeleport()
     end
-    
-    isFeatureRunning = false
 end
 
 -- ==================================================
@@ -623,7 +705,6 @@ _G.YOKUDO_AutoEliteHunterLoop = nil
 -- TOGGLE AUTO ELITE HUNTER
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
-    -- ការពារការចុចភ្លាមៗ
     if toggleLock then
         return
     end
@@ -638,7 +719,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
     _G.YOKUDO_AutoEliteHunterEnabled = not _G.YOKUDO_AutoEliteHunterEnabled
     
     if _G.YOKUDO_AutoEliteHunterEnabled then
-        -- START
         if isFeatureRunning then
             isToggling = false
             toggleLock = false
@@ -646,6 +726,8 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         end
         
         hasBypassTeleported = false
+        hasTeleportedToMap = false
+        hasRespawned = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -663,12 +745,22 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
             _G.YOKUDO_AutoEliteHunterLoop = nil
         end
         
+        if characterAddedConnection then
+            characterAddedConnection:Disconnect()
+            characterAddedConnection = nil
+        end
+        characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
+        
         _G.YOKUDO_AutoEliteHunterLoop = task.spawn(eliteHunterLoop)
     else
-        -- STOP
         if _G.YOKUDO_AutoEliteHunterLoop then
             task.cancel(_G.YOKUDO_AutoEliteHunterLoop)
             _G.YOKUDO_AutoEliteHunterLoop = nil
+        end
+        
+        if characterAddedConnection then
+            characterAddedConnection:Disconnect()
+            characterAddedConnection = nil
         end
         
         if followConnection then
@@ -688,6 +780,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         isLocked = false
         isFeatureRunning = false
         isProcessing = false
+        hasRespawned = false
     end
     
     task.wait(0.3)
@@ -695,16 +788,4 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
     toggleLock = false
 end
 
--- ==================================================
--- CHARACTER RESPAWN HANDLER
--- ==================================================
-Player.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    resetBypassState()
-    
-    if _G.YOKUDO_AutoEliteHunterEnabled then
-        stopTweenTeleport()
-    end
-end)
-
-print("✅ AutoEliteHunter Loaded (With Protection)")
+print("✅ AutoEliteHunter Loaded (Respawn + Set Point)")
