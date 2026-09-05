@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO RIP INDRA 
+-- AUTO RIP INDRA (Remote Portal + NoCollide Fast)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -16,25 +16,27 @@ local Player = Players.LocalPlayer
 local RIP_INDRA_POSITION = Vector3.new(-12465, 376, -7563)
 
 -- ==================================================
+-- PORTAL REMOTE ARGS (Great Tree / Port)
+-- ==================================================
+local PORTAL_ARGS = {
+    "requestEntrance",
+    Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)
+}
+
+-- ==================================================
 -- TWEEN SPEED
 -- ==================================================
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- TOGGLE DEBOUNCE
--- ==================================================
-local isToggling = false
-
--- ==================================================
--- BYPASS TELEPORT STATE
--- ==================================================
-local hasBypassTeleported = false
-
--- ==================================================
--- TOGGLE PROTECTION
+-- STATE
 -- ==================================================
 local isFeatureRunning = false
+local isToggling = false
 local toggleLock = false
+local noCollideActive = false
+local noCollideConnection = nil
+local hasUsedPortal = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -55,6 +57,70 @@ local isAtPosition = false
 local isFollowingBoss = false
 
 -- ==================================================
+-- NO COLLIDE FUNCTIONS (លឿនបំផុត)
+-- ==================================================
+local function applyNoCollide()
+    local character = Player.Character
+    if not character then return end
+    
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function startNoCollide()
+    if noCollideConnection then return end
+    if noCollideActive then return end
+    
+    noCollideActive = true
+    applyNoCollide()
+    
+    noCollideConnection = RunService.Heartbeat:Connect(function()
+        if not noCollideActive then return end
+        applyNoCollide()
+    end)
+end
+
+local function stopNoCollide()
+    noCollideActive = false
+    
+    if noCollideConnection then
+        noCollideConnection:Disconnect()
+        noCollideConnection = nil
+    end
+    
+    local character = Player.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+-- ==================================================
+-- REMOTE PORTAL FUNCTION
+-- ==================================================
+local function usePortal()
+    pcall(function()
+        local Remote = ReplicatedStorage:FindFirstChild("Remotes")
+        if Remote then
+            local CommF = Remote:FindFirstChild("CommF_")
+            if CommF then
+                CommF:InvokeServer(unpack(PORTAL_ARGS))
+                hasUsedPortal = true
+                print("🚪 Used Portal to Rip Indra Area!")
+                return true
+            end
+        end
+    end)
+    return false
+end
+
+-- ==================================================
 -- BYPASS TELEPORT FUNCTION
 -- ==================================================
 local function bypassTeleport(targetPos)
@@ -68,16 +134,15 @@ local function bypassTeleport(targetPos)
     if humanoid and humanoid.Health <= 0 then return false end
     
     root.CFrame = CFrame.new(targetPos)
-    hasBypassTeleported = true
     
     return true
 end
 
 -- ==================================================
--- RESET BYPASS STATE (ពេល Character Respawn)
+-- RESET STATE
 -- ==================================================
-local function resetBypassState()
-    hasBypassTeleported = false
+local function resetState()
+    hasUsedPortal = false
 end
 
 -- ==================================================
@@ -116,6 +181,7 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
+    stopNoCollide()
 end
 
 local function stopTweenToPosition()
@@ -161,12 +227,15 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
+    startNoCollide()
+    
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
+        stopNoCollide()
         return true 
     end
     
@@ -207,23 +276,19 @@ local function tweenToBoss(bossPos, speed)
     end
     
     if not isTweening then
+        stopNoCollide()
         return false
     end
     
+    stopNoCollide()
     return true
 end
 
 -- ==================================================
--- FIND RIP INDRA BOSS (Check ReplicatedStorage មុន)
+-- FIND RIP INDRA BOSS
 -- ==================================================
 local function findRipIndra()
-    -- 1. ពិនិត្យ ReplicatedStorage មុន (Boss នៅឆ្ងាយ)
-    local stored = ReplicatedStorage:FindFirstChild("rip_indra True Form")
-    if stored then
-        return stored, "replicatedstorage"
-    end
-    
-    -- 2. ពិនិត្យ workspace (Boss នៅជិត)
+    -- 1. ពិនិត្យ workspace (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("rip_indra True Form")
@@ -235,6 +300,12 @@ local function findRipIndra()
                 return nil, "dead"
             end
         end
+    end
+    
+    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
+    local stored = ReplicatedStorage:FindFirstChild("rip_indra True Form")
+    if stored then
+        return stored, "replicatedstorage"
     end
     
     return nil, nil
@@ -272,6 +343,7 @@ local function ripIndraLoop()
                     end
                     isFollowingBoss = false
                     isTweeningToPosition = false
+                    resetState()
                 end
                 task.wait(5)
                 isBossDead = false
@@ -296,23 +368,7 @@ local function ripIndraLoop()
         end
         
         -- ==================================================
-        -- CASE 1: Boss នៅឆ្ងាយ (ReplicatedStorage) → Bypass Teleport
-        -- ==================================================
-        if location == "replicatedstorage" then
-            bossFound = false
-            isAtPosition = false
-            isFollowingBoss = false
-            
-            if not hasBypassTeleported then
-                bypassTeleport(RIP_INDRA_POSITION)
-            end
-            
-            task.wait(0.01)
-            continue
-        end
-        
-        -- ==================================================
-        -- CASE 2: Boss នៅជិត (workspace) → Tween ទៅ Boss
+        -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
         -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
@@ -390,6 +446,90 @@ local function ripIndraLoop()
             task.wait(0.01)
             continue
         end
+        
+        -- ==================================================
+        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Tween
+        -- ==================================================
+        if location == "replicatedstorage" then
+            bossFound = false
+            isAtPosition = false
+            isFollowingBoss = false
+            
+            -- ប្រើ Remote Portal (តែម្តង)
+            if not hasUsedPortal then
+                usePortal()
+            end
+            
+            -- Bypass Teleport ទៅ Position
+            bypassTeleport(RIP_INDRA_POSITION)
+            
+            -- រង់ចាំ 2s រួច Tween ទៅ Boss
+            task.wait(2)
+            
+            -- ស្វែងរក Boss ម្តងទៀត (ឥឡូវគួរតែនៅជិត)
+            local newBoss, newLocation = findRipIndra()
+            
+            if newLocation == "workspace" then
+                local bossRoot = newBoss:FindFirstChild("HumanoidRootPart") or newBoss:FindFirstChild("Torso")
+                if bossRoot then
+                    local bossPos = bossRoot.Position
+                    bossTarget = newBoss
+                    currentBossPos = bossPos
+                    bossFound = true
+                    isFollowingBoss = true
+                    
+                    tweenToBoss(bossPos, TWEEN_SPEED)
+                    
+                    if followConnection then
+                        followConnection:Disconnect()
+                        followConnection = nil
+                    end
+                    
+                    followConnection = RunService.Heartbeat:Connect(function()
+                        if not _G.YOKUDO_AutoRipIndraEnabled then
+                            if followConnection then
+                                followConnection:Disconnect()
+                                followConnection = nil
+                            end
+                            return
+                        end
+                        
+                        if not bossTarget or not bossTarget.Parent then
+                            return
+                        end
+                        
+                        local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
+                        if not bossRoot then return end
+                        
+                        local currentBossPos = bossRoot.Position
+                        local char = Player.Character
+                        if not char then return end
+                        
+                        local rootPart = char:FindFirstChild("HumanoidRootPart")
+                        if not rootPart then return end
+                        
+                        local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
+                        
+                        local distToLock = (lockPos - rootPart.Position).Magnitude
+                        if distToLock > 5 then
+                            rootPart.CFrame = CFrame.new(lockPos)
+                        end
+                        
+                        local distToBoss = (currentBossPos - rootPart.Position).Magnitude
+                        if distToBoss <= 60 then
+                            if _G.YOKUDO_AttackTarget then
+                                _G.YOKUDO_AttackTarget(bossTarget)
+                            end
+                        end
+                    end)
+                    
+                    isLocked = true
+                end
+            end
+            
+            task.wait(0.01)
+            continue
+        end
     end
     
     isFeatureRunning = false
@@ -425,7 +565,7 @@ function _G.YOKUDO_ToggleAutoRipIndra()
             return
         end
         
-        hasBypassTeleported = false
+        hasUsedPortal = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -477,11 +617,13 @@ end
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
-    resetBypassState()
+    
+    resetState()
+    stopNoCollide()
     
     if _G.YOKUDO_AutoRipIndraEnabled then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoRipIndra Loaded")
+print("✅ AutoRipIndra Loaded (Remote Portal + NoCollide)")
