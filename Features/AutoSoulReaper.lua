@@ -16,13 +16,14 @@ local Player = Players.LocalPlayer
 local SOUL_REAPER_POSITION = Vector3.new(-12465, 376, -7563)
 
 -- ==================================================
+-- HAUNTED CASTLE POSITION
+-- ==================================================
+local HAUNTED_CASTLE_POSITION = Vector3.new(-12465, 376, -7563)
+
+-- ==================================================
 -- TWEEN SPEED
 -- ==================================================
 local TWEEN_SPEED = 200
-
--- ==================================================
--- DISTANCE CHECK
--- ==================================================
 local DISTANCE_THRESHOLD = 3000
 
 -- ==================================================
@@ -97,6 +98,19 @@ local function setSpawnPoint(location)
 end
 
 -- ==================================================
+-- CHECK DISTANCE TO HAUNTED CASTLE
+-- ==================================================
+local function getDistanceToHauntedCastle()
+    local character = Player.Character
+    if not character then return 99999
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return 99999
+    
+    return (HAUNTED_CASTLE_POSITION - root.Position).Magnitude
+end
+
+-- ==================================================
 -- INVOKE LOOP (រាល់ 0.05s)
 -- ==================================================
 local function startInvokeLoop()
@@ -116,12 +130,14 @@ local function startInvokeLoop()
             if boss and boss:FindFirstChild("Humanoid") then
                 local humanoid = boss.Humanoid
                 if humanoid.Health > 0 then
+                    -- ឃើញ Boss → ឈប់ Invoke
                     stopInvokeLoop()
                     return
                 end
             end
         end
         
+        -- Invoke SetLastSpawnPoint
         setSpawnPoint("HauntedCastle")
     end)
 end
@@ -146,12 +162,14 @@ local function startSpawnPointCheck()
             return
         end
         
+        -- ពិនិត្យថាឃើញ Boss ក្នុង workspace ឬអត់
         local enemies = workspace:FindFirstChild("Enemies")
         if enemies then
             local boss = enemies:FindFirstChild("Soul Reaper")
             if boss and boss:FindFirstChild("Humanoid") then
                 local humanoid = boss.Humanoid
                 if humanoid.Health > 0 then
+                    -- ឃើញ Boss → ឈប់ Check
                     stopSpawnPointCheck()
                     return
                 end
@@ -160,13 +178,19 @@ local function startSpawnPointCheck()
         
         local spawnPoint = getSpawnPoint()
         if spawnPoint == "HauntedCastle" then
+            -- Respawn
             local character = Player.Character
             if character then
                 local humanoid = character:FindFirstChild("Humanoid")
                 if humanoid then
+                    -- Respawn មុន
                     humanoid.Health = 0
+                    
+                    -- wait 0.01s រួច Invoke
                     task.wait(0.01)
                     setSpawnPoint("HauntedCastle")
+                    
+                    -- ចាប់ផ្ដើម Invoke Loop ម្តងទៀត
                     startInvokeLoop()
                 end
             end
@@ -359,21 +383,6 @@ local function findSoulReaper()
 end
 
 -- ==================================================
--- CHECK DISTANCE FROM BOSS
--- ==================================================
-local function checkDistanceToBoss()
-    local character = Player.Character
-    if not character then return false
-    
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return false
-    
-    local distance = (SOUL_REAPER_POSITION - root.Position).Magnitude
-    
-    return distance > DISTANCE_THRESHOLD
-end
-
--- ==================================================
 -- AUTO SOUL REAPER LOOP
 -- ==================================================
 local function soulReaperLoop()
@@ -392,6 +401,32 @@ local function soulReaperLoop()
             continue
         end
         
+        -- ==================================================
+        -- CHECK DISTANCE TO HAUNTED CASTLE
+        -- ==================================================
+        local distance = getDistanceToHauntedCastle()
+        
+        if distance > DISTANCE_THRESHOLD then
+            -- ==================================================
+            -- ចម្ងាយ > 3000m → Bypass Teleport + Invoke + Respawn
+            -- ==================================================
+            if not hasBypassTeleported then
+                bypassTeleport(SOUL_REAPER_POSITION)
+                
+                -- ចាប់ផ្ដើម Invoke Loop
+                startInvokeLoop()
+                
+                -- ចាប់ផ្ដើម Spawn Point Check
+                startSpawnPointCheck()
+            end
+            
+            task.wait(0.01)
+            continue
+        end
+        
+        -- ==================================================
+        -- ចម្ងាយ <= 3000m → ស្វែងរក Boss ធម្មតា
+        -- ==================================================
         local boss, location = findSoulReaper()
         
         if not boss then
@@ -428,10 +463,9 @@ local function soulReaperLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
-        -- ==================================================
         -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
-        -- ==================================================
         if location == "workspace" then
+            -- ឈប់ Invoke និង Spawn Point Check
             stopInvokeLoop()
             stopSpawnPointCheck()
             
@@ -511,98 +545,20 @@ local function soulReaperLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage)
-        -- ==================================================
+        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Bypass Teleport
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
             
-            -- ពិនិត្យចម្ងាយ
-            local isFar = checkDistanceToBoss()
-            
-            if isFar then
-                if not hasBypassTeleported then
-                    bypassTeleport(SOUL_REAPER_POSITION)
-                    startInvokeLoop()
-                    startSpawnPointCheck()
-                end
-            else
-                -- ប្រសិនបើចម្ងាយ <= 3000m → Tween ទៅ Boss ធម្មតា
-                if isTweeningToPosition then
-                    stopTweenToPosition()
-                    isTweeningToPosition = false
-                end
+            if not hasBypassTeleported then
+                bypassTeleport(SOUL_REAPER_POSITION)
                 
-                -- ស្វែងរក Boss ក្នុង workspace ម្តងទៀត
-                local enemies = workspace:FindFirstChild("Enemies")
-                if enemies then
-                    local bossInWorkspace = enemies:FindFirstChild("Soul Reaper")
-                    if bossInWorkspace and bossInWorkspace:FindFirstChild("Humanoid") then
-                        local humanoid = bossInWorkspace.Humanoid
-                        if humanoid.Health > 0 then
-                            local bossRoot = bossInWorkspace:FindFirstChild("HumanoidRootPart") or bossInWorkspace:FindFirstChild("Torso")
-                            if bossRoot then
-                                local bossPos = bossRoot.Position
-                                bossTarget = bossInWorkspace
-                                currentBossPos = bossPos
-                                bossFound = true
-                                isFollowingBoss = true
-                                
-                                stopInvokeLoop()
-                                stopSpawnPointCheck()
-                                
-                                tweenToBoss(bossPos, TWEEN_SPEED)
-                                
-                                if followConnection then
-                                    followConnection:Disconnect()
-                                    followConnection = nil
-                                end
-                                
-                                followConnection = RunService.Heartbeat:Connect(function()
-                                    if not _G.YOKUDO_AutoSoulReaperEnabled then
-                                        if followConnection then
-                                            followConnection:Disconnect()
-                                            followConnection = nil
-                                        end
-                                        return
-                                    end
-                                    
-                                    if not bossTarget or not bossTarget.Parent then
-                                        return
-                                    end
-                                    
-                                    local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
-                                    if not bossRoot then return end
-                                    
-                                    local currentBossPos = bossRoot.Position
-                                    local char = Player.Character
-                                    if not char then return end
-                                    
-                                    local rootPart = char:FindFirstChild("HumanoidRootPart")
-                                    if not rootPart then return end
-                                    
-                                    local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
-                                    
-                                    local distToLock = (lockPos - rootPart.Position).Magnitude
-                                    if distToLock > 5 then
-                                        rootPart.CFrame = CFrame.new(lockPos)
-                                    end
-                                    
-                                    local distToBoss = (currentBossPos - rootPart.Position).Magnitude
-                                    if distToBoss <= 60 then
-                                        if _G.YOKUDO_AttackTarget then
-                                            _G.YOKUDO_AttackTarget(bossTarget)
-                                        end
-                                    end
-                                end)
-                                
-                                isLocked = true
-                            end
-                        end
-                    end
-                end
+                -- ចាប់ផ្ដើម Invoke Loop
+                startInvokeLoop()
+                
+                -- ចាប់ផ្ដើម Spawn Point Check
+                startSpawnPointCheck()
             end
             
             task.wait(0.01)
@@ -619,77 +575,86 @@ end
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     
+    -- Reset bypass state
     hasBypassTeleported = false
     
     if _G.YOKUDO_AutoSoulReaperEnabled then
-        local enemies = workspace:FindFirstChild("Enemies")
-        if enemies then
-            local boss = enemies:FindFirstChild("Soul Reaper")
-            if boss and boss:FindFirstChild("Humanoid") then
-                local humanoid = boss.Humanoid
-                if humanoid.Health > 0 then
-                    local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
-                    if bossRoot then
-                        local bossPos = bossRoot.Position
-                        bossTarget = boss
-                        currentBossPos = bossPos
-                        bossFound = true
-                        isFollowingBoss = true
-                        
-                        stopInvokeLoop()
-                        stopSpawnPointCheck()
-                        
-                        if isTweeningToPosition then
-                            stopTweenToPosition()
-                            isTweeningToPosition = false
-                        end
-                        
-                        tweenToBoss(bossPos, TWEEN_SPEED)
-                        
-                        if followConnection then
-                            followConnection:Disconnect()
-                            followConnection = nil
-                        end
-                        
-                        followConnection = RunService.Heartbeat:Connect(function()
-                            if not _G.YOKUDO_AutoSoulReaperEnabled then
-                                if followConnection then
-                                    followConnection:Disconnect()
-                                    followConnection = nil
+        -- ពិនិត្យចម្ងាយមុន
+        local distance = getDistanceToHauntedCastle()
+        
+        if distance <= DISTANCE_THRESHOLD then
+            -- ពិនិត្យ workspace.Enemies["Soul Reaper"] ភ្លាមៗ
+            local enemies = workspace:FindFirstChild("Enemies")
+            if enemies then
+                local boss = enemies:FindFirstChild("Soul Reaper")
+                if boss and boss:FindFirstChild("Humanoid") then
+                    local humanoid = boss.Humanoid
+                    if humanoid.Health > 0 then
+                        -- ឃើញ Boss → Tween ទៅ Attack ភ្លាមៗ
+                        local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
+                        if bossRoot then
+                            local bossPos = bossRoot.Position
+                            bossTarget = boss
+                            currentBossPos = bossPos
+                            bossFound = true
+                            isFollowingBoss = true
+                            
+                            -- ឈប់ Invoke និង Spawn Point Check
+                            stopInvokeLoop()
+                            stopSpawnPointCheck()
+                            
+                            if isTweeningToPosition then
+                                stopTweenToPosition()
+                                isTweeningToPosition = false
+                            end
+                            
+                            tweenToBoss(bossPos, TWEEN_SPEED)
+                            
+                            if followConnection then
+                                followConnection:Disconnect()
+                                followConnection = nil
+                            end
+                            
+                            followConnection = RunService.Heartbeat:Connect(function()
+                                if not _G.YOKUDO_AutoSoulReaperEnabled then
+                                    if followConnection then
+                                        followConnection:Disconnect()
+                                        followConnection = nil
+                                    end
+                                    return
                                 end
-                                return
-                            end
-                            
-                            if not bossTarget or not bossTarget.Parent then
-                                return
-                            end
-                            
-                            local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
-                            if not bossRoot then return end
-                            
-                            local currentBossPos = bossRoot.Position
-                            local char = Player.Character
-                            if not char then return end
-                            
-                            local rootPart = char:FindFirstChild("HumanoidRootPart")
-                            if not rootPart then return end
-                            
-                            local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
-                            
-                            local distToLock = (lockPos - rootPart.Position).Magnitude
-                            if distToLock > 5 then
-                                rootPart.CFrame = CFrame.new(lockPos)
-                            end
-                            
-                            local distToBoss = (currentBossPos - rootPart.Position).Magnitude
-                            if distToBoss <= 60 then
-                                if _G.YOKUDO_AttackTarget then
-                                    _G.YOKUDO_AttackTarget(bossTarget)
+                                
+                                if not bossTarget or not bossTarget.Parent then
+                                    return
                                 end
-                            end
-                        end)
-                        
-                        isLocked = true
+                                
+                                local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
+                                if not bossRoot then return end
+                                
+                                local currentBossPos = bossRoot.Position
+                                local char = Player.Character
+                                if not char then return end
+                                
+                                local rootPart = char:FindFirstChild("HumanoidRootPart")
+                                if not rootPart then return end
+                                
+                                local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
+                                
+                                local distToLock = (lockPos - rootPart.Position).Magnitude
+                                if distToLock > 5 then
+                                    rootPart.CFrame = CFrame.new(lockPos)
+                                end
+                                
+                                local distToBoss = (currentBossPos - rootPart.Position).Magnitude
+                                if distToBoss <= 60 then
+                                    if _G.YOKUDO_AttackTarget then
+                                        _G.YOKUDO_AttackTarget(bossTarget)
+                                    end
+                                end
+                            end)
+                            
+                            isLocked = true
+                        end
                     end
                 end
             end
@@ -778,4 +743,4 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
     toggleLock = false
 end
 
-print("✅ AutoSoulReaper Loaded (Distance Check 3000m)")
+print("✅ AutoSoulReaper Loaded (Check Distance 3000m)")
