@@ -9,9 +9,6 @@ local BASE_URL = "https://raw.githubusercontent.com/hotibody99828/backupsea2/mai
 
 print("🔵 Loading YOKUDO HUB | SEA3 | [Premium]...")
 
--- ==================================================
--- WAIT UNTIL GAME IS LOADED
--- ==================================================
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 local Player = game.Players.LocalPlayer
@@ -19,9 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 print("✅ Game loaded, Player: " .. Player.Name)
 
--- ==================================================
--- AUTO JOIN MARINES
--- ==================================================
+-- Auto Join Marines
 if _G.YOKUDO_HasJoinedMarines == nil then
     _G.YOKUDO_HasJoinedMarines = false
 end
@@ -70,22 +65,16 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
--- ==================================================
--- LOAD CONFIG & CORE
--- ==================================================
+-- Load Config & Core
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
 
--- ==================================================
--- LOAD SAVE SYSTEM
--- ==================================================
+-- Load Save System
 loadstring(game:HttpGet(BASE_URL .. "Features/SaveLoad.lua"))()
 
--- ==================================================
--- LOAD UI & TABS
--- ==================================================
+-- Load UI & Tabs
 task.spawn(function()
     loadstring(game:HttpGet(BASE_URL .. "UI/Toggle.lua"))()
     loadstring(game:HttpGet(BASE_URL .. "UI/Main.lua"))()
@@ -95,9 +84,7 @@ task.spawn(function()
     print("✅ UI & Tabs Loaded")
 end)
 
--- ==================================================
--- LOAD FEATURES & APPLY STATE
--- ==================================================
+-- Load Features & Apply State
 task.spawn(function()
     local Features = {
         "SpeedHack",
@@ -132,9 +119,6 @@ task.spawn(function()
     end
     print("✅ All Features Loaded")
     
-    -- ==================================================
-    -- LOAD & APPLY STATE
-    -- ==================================================
     task.wait(0.5)
     local loaded = _G.YOKUDO_LoadConfig()
     if loaded then
