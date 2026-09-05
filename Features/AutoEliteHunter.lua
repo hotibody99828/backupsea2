@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (Check Port & GreatTree Only)
+-- AUTO ELITE HUNTER (FIXED)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -63,7 +63,7 @@ local PORTAL_ARGS = {
 -- SET SPAWN POINT REMOTE
 -- ==================================================
 local function setSpawnPoint(location)
-    pcall(function()
+    local success, err = pcall(function()
         local args = {
             "SetLastSpawnPoint",
             location
@@ -73,9 +73,13 @@ local function setSpawnPoint(location)
             local CommF = Remote:FindFirstChild("CommF_")
             if CommF then
                 CommF:InvokeServer(unpack(args))
+                print("📍 Spawn Point Set to: " .. location)
+                return true
             end
         end
+        return false
     end)
+    return success
 end
 
 -- ==================================================
@@ -109,6 +113,7 @@ local function respawnPlayer()
         local humanoid = character:FindFirstChild("Humanoid")
         if humanoid then
             humanoid.Health = 0
+            print("💀 Respawning...")
             return true
         end
     end
@@ -497,6 +502,7 @@ end
 -- FIND ELITE BOSS
 -- ==================================================
 local function findEliteBoss()
+    -- 1. ពិនិត្យ workspace.Enemies (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         for _, boss in ipairs(ELITE_BOSSES) do
@@ -510,6 +516,7 @@ local function findEliteBoss()
         end
     end
     
+    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
     for _, boss in ipairs(ELITE_BOSSES) do
         local stored = ReplicatedStorage:FindFirstChild(boss.Path)
         if stored then
@@ -521,23 +528,57 @@ local function findEliteBoss()
 end
 
 -- ==================================================
--- GET BOSS POSITION
+-- GET BOSS POSITION (FIXED)
 -- ==================================================
 local function getBossPosition(boss)
+    if not boss then return nil
+    
+    -- ប្រសិនបើ Boss ជា Model (ក្នុង workspace)
     if boss:IsA("Model") then
         local root = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
         if root then
             return root.Position
         end
-    else
-        local pos = boss:FindFirstChild("Position")
-        if pos then
+        return nil
+    end
+    
+    -- ប្រសិនបើ Boss ក្នុង ReplicatedStorage
+    -- ព្យាយាមយក Position ពី Properties
+    local pos = boss:FindFirstChild("Position")
+    if pos then
+        if typeof(pos.Value) == "Vector3" then
             return pos.Value
         end
-        local cframe = boss:FindFirstChild("CFrame")
-        if cframe then
+    end
+    
+    local cframe = boss:FindFirstChild("CFrame")
+    if cframe then
+        if typeof(cframe.Value) == "CFrame" then
             return cframe.Value.Position
         end
+    end
+    
+    -- ប្រសិនបើ Boss ជា ObjectValue
+    local objPos = boss:FindFirstChildWhichIsA("ObjectValue")
+    if objPos then
+        local obj = objPos.Value
+        if obj and obj:IsA("BasePart") then
+            return obj.Position
+        end
+    end
+    
+    -- ប្រសិនបើរកមិនឃើញ → ប្រើ Map Position
+    print("⚠️ Cannot find Boss position, using default map position")
+    return nil
+end
+
+-- ==================================================
+-- GET BOSS POSITION FROM REPLICATEDSTORAGE
+-- ==================================================
+local function getBossPositionFromStorage(bossName)
+    local stored = ReplicatedStorage:FindFirstChild(bossName)
+    if stored then
+        return getBossPosition(stored)
     end
     return nil
 end
@@ -579,6 +620,9 @@ local function eliteHunterLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
+        -- ==================================================
+        -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
+        -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -660,15 +704,31 @@ local function eliteHunterLoop()
             continue
         end
         
+        -- ==================================================
+        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage)
+        -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
             
+            -- យក Position របស់ Boss
             local bossPos = getBossPosition(boss)
+            
+            -- ប្រសិនបើរកមិនឃើញ → សាកល្បងយកពី ReplicatedStorage ដោយផ្ទាល់
             if not bossPos then
-                task.wait(0.01)
-                continue
+                bossPos = getBossPositionFromStorage(bossName)
+            end
+            
+            -- ប្រសិនបើនៅតែមិនឃើញ → ប្រើ Map Position
+            if not bossPos then
+                local closestMap = findClosestMap(Vector3.new(0, 0, 0))
+                if closestMap then
+                    bossPos = MAP_POSITIONS[closestMap]
+                else
+                    task.wait(0.01)
+                    continue
+                end
             end
             
             local closestMap = findClosestMap(bossPos)
@@ -682,10 +742,13 @@ local function eliteHunterLoop()
             -- ==================================================
             if isRespawnMap(closestMap) then
                 local distanceToMap = getDistanceToMap(closestMap)
+                print("📏 Distance to " .. closestMap .. ": " .. math.floor(distanceToMap) .. "m")
                 
                 -- បើចម្ងាយ > 5000m → Respawn + Set Point
                 if distanceToMap > DISTANCE_THRESHOLD and not hasRespawned then
                     local spawnLocation = (closestMap == "GreatTree") and "GreatTree" or "Default"
+                    print("🔄 Respawn triggered! (Distance > 5000m)")
+                    
                     setSpawnPoint(spawnLocation)
                     respawnPlayer()
                     hasRespawned = true
@@ -857,4 +920,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Check Port & GreatTree Only)")
+print("✅ AutoEliteHunter Loaded (FIXED)")
