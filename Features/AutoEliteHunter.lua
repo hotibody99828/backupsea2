@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (Remote Portal + NoCollide Fast)
+-- AUTO ELITE HUNTER (FIXED Toggle)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -84,7 +84,7 @@ local isAtPosition = false
 local isFollowingBoss = false
 
 -- ==================================================
--- NO COLLIDE FUNCTIONS (លឿនបំផុត)
+-- NO COLLIDE FUNCTIONS
 -- ==================================================
 local function applyNoCollide()
     local character = Player.Character
@@ -102,11 +102,8 @@ local function startNoCollide()
     if noCollideActive then return end
     
     noCollideActive = true
-    
-    -- Apply ភ្លាមៗ
     applyNoCollide()
     
-    -- Keep applying every frame (លឿនបំផុត)
     noCollideConnection = RunService.Heartbeat:Connect(function()
         if not noCollideActive then return end
         applyNoCollide()
@@ -121,7 +118,6 @@ local function stopNoCollide()
         noCollideConnection = nil
     end
     
-    -- បើក CanCollide ឡើងវិញ
     local character = Player.Character
     if character then
         for _, part in ipairs(character:GetDescendants()) do
@@ -189,8 +185,6 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
-    
-    -- បើក CanCollide ឡើងវិញ
     stopNoCollide()
 end
 
@@ -237,7 +231,6 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
-    -- បិទ CanCollide (លឿនបំផុត)
     startNoCollide()
     
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
@@ -317,7 +310,6 @@ end
 -- FIND ELITE BOSS
 -- ==================================================
 local function findEliteBoss()
-    -- 1. ពិនិត្យ workspace.Enemies (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         for _, boss in ipairs(ELITE_BOSSES) do
@@ -331,7 +323,6 @@ local function findEliteBoss()
         end
     end
     
-    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
     for _, boss in ipairs(ELITE_BOSSES) do
         local stored = ReplicatedStorage:FindFirstChild(boss.Path)
         if stored then
@@ -352,7 +343,6 @@ local function getBossPosition(boss)
             return root.Position
         end
     else
-        -- ReplicatedStorage Boss
         local pos = boss:FindFirstChild("Position")
         if pos then
             return pos.Value
@@ -394,7 +384,6 @@ local function eliteHunterLoop()
             continue
         end
         
-        -- Auto Equip
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -403,9 +392,6 @@ local function eliteHunterLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
-        -- ==================================================
-        -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
-        -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -483,35 +469,27 @@ local function eliteHunterLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Remote Portal + Tween
-        -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
             
-            -- យក Position របស់ Boss
             local bossPos = getBossPosition(boss)
             if not bossPos then
                 task.wait(0.01)
                 continue
             end
             
-            -- គណនា Map ដែលនៅជិតជាងគេ
             local closestMap = findClosestMap(bossPos)
             if not closestMap then
                 task.wait(0.01)
                 continue
             end
             
-            -- ប្រើ Remote Portal
             usePortal(closestMap)
             
-            -- រង់ចាំ 2s រួច Tween ទៅ Boss
             task.wait(2)
             
-            -- Tween ទៅ Boss (បិទ CanCollide ដោយស្វ័យប្រវត្តិ)
             tweenToBoss(bossPos, TWEEN_SPEED)
             
             if followConnection then
@@ -574,24 +552,30 @@ _G.YOKUDO_AutoEliteHunterEnabled = false
 _G.YOKUDO_AutoEliteHunterLoop = nil
 
 -- ==================================================
--- TOGGLE AUTO ELITE HUNTER
+-- TOGGLE AUTO ELITE HUNTER (FIXED)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
-    if toggleLock then
+    -- Debounce
+    if isToggling then
         return
     end
     
-    if isToggling then
+    -- Toggle Lock
+    if toggleLock then
+        print("⏳ Please wait, toggling in progress...")
         return
     end
     
     isToggling = true
     toggleLock = true
     
+    -- ផ្លាស់ប្តូរ State
     _G.YOKUDO_AutoEliteHunterEnabled = not _G.YOKUDO_AutoEliteHunterEnabled
     
     if _G.YOKUDO_AutoEliteHunterEnabled then
+        -- START
         if isFeatureRunning then
+            print("⚠️ Auto Elite Hunter is already running!")
             isToggling = false
             toggleLock = false
             return
@@ -614,7 +598,9 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         end
         
         _G.YOKUDO_AutoEliteHunterLoop = task.spawn(eliteHunterLoop)
+        print("✅ Auto Elite Hunter Started")
     else
+        -- STOP
         if _G.YOKUDO_AutoEliteHunterLoop then
             task.cancel(_G.YOKUDO_AutoEliteHunterLoop)
             _G.YOKUDO_AutoEliteHunterLoop = nil
@@ -636,8 +622,11 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
+        
+        print("❌ Auto Elite Hunter Stopped")
     end
     
+    -- Release locks
     task.wait(0.3)
     isToggling = false
     toggleLock = false
@@ -648,8 +637,6 @@ end
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
-    
-    -- បើក CanCollide ឡើងវិញ
     stopNoCollide()
     
     if _G.YOKUDO_AutoEliteHunterEnabled then
@@ -657,4 +644,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (NoCollide Fast)")
+print("✅ AutoEliteHunter Loaded (Toggle Fixed)")
