@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (FIXED Toggle)
+-- AUTO ELITE HUNTER (NEW TOGGLE SYSTEM)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -54,16 +54,15 @@ local PORTAL_ARGS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 180
+local TWEEN_SPEED = 200
 
 -- ==================================================
--- STATE
+-- STATE (SIMPLE)
 -- ==================================================
-local isFeatureRunning = false
-local isToggling = false
-local toggleLock = false
-local noCollideActive = false
+local isRunning = false
+local loopConnection = nil
 local noCollideConnection = nil
+local noCollideActive = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -141,7 +140,6 @@ local function usePortal(mapName)
             local CommF = Remote:FindFirstChild("CommF_")
             if CommF then
                 CommF:InvokeServer(unpack(args))
-                print("🚪 Used Portal to: " .. mapName)
                 return true
             end
         end
@@ -356,12 +354,10 @@ local function getBossPosition(boss)
 end
 
 -- ==================================================
--- AUTO ELITE HUNTER LOOP
+-- MAIN LOOP
 -- ==================================================
 local function eliteHunterLoop()
-    isFeatureRunning = true
-    
-    while _G.YOKUDO_AutoEliteHunterEnabled do
+    while isRunning do
         local character = Player.Character
         if not character then
             task.wait(0.01)
@@ -421,7 +417,7 @@ local function eliteHunterLoop()
                 end
                 
                 followConnection = RunService.Heartbeat:Connect(function()
-                    if not _G.YOKUDO_AutoEliteHunterEnabled then
+                    if not isRunning then
                         if followConnection then
                             followConnection:Disconnect()
                             followConnection = nil
@@ -488,7 +484,7 @@ local function eliteHunterLoop()
             
             usePortal(closestMap)
             
-            task.wait(0.10)
+            task.wait(2)
             
             tweenToBoss(bossPos, TWEEN_SPEED)
             
@@ -498,7 +494,7 @@ local function eliteHunterLoop()
             end
             
             followConnection = RunService.Heartbeat:Connect(function()
-                if not _G.YOKUDO_AutoEliteHunterEnabled then
+                if not isRunning then
                     if followConnection then
                         followConnection:Disconnect()
                         followConnection = nil
@@ -541,46 +537,16 @@ local function eliteHunterLoop()
             continue
         end
     end
-    
-    isFeatureRunning = false
 end
 
 -- ==================================================
--- STATE
--- ==================================================
-_G.YOKUDO_AutoEliteHunterEnabled = false
-_G.YOKUDO_AutoEliteHunterLoop = nil
-
--- ==================================================
--- TOGGLE AUTO ELITE HUNTER (FIXED)
+-- TOGGLE FUNCTION (SIMPLE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
-    -- Debounce
-    if isToggling then
-        return
-    end
+    isRunning = not isRunning
     
-    -- Toggle Lock
-    if toggleLock then
-        print("⏳ Please wait, toggling in progress...")
-        return
-    end
-    
-    isToggling = true
-    toggleLock = true
-    
-    -- ផ្លាស់ប្តូរ State
-    _G.YOKUDO_AutoEliteHunterEnabled = not _G.YOKUDO_AutoEliteHunterEnabled
-    
-    if _G.YOKUDO_AutoEliteHunterEnabled then
+    if isRunning then
         -- START
-        if isFeatureRunning then
-            print("⚠️ Auto Elite Hunter is already running!")
-            isToggling = false
-            toggleLock = false
-            return
-        end
-        
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -592,18 +558,18 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
             followConnection = nil
         end
         
-        if _G.YOKUDO_AutoEliteHunterLoop then
-            _G.YOKUDO_AutoEliteHunterLoop:Disconnect()
-            _G.YOKUDO_AutoEliteHunterLoop = nil
+        if loopConnection then
+            loopConnection:Disconnect()
+            loopConnection = nil
         end
         
-        _G.YOKUDO_AutoEliteHunterLoop = task.spawn(eliteHunterLoop)
+        loopConnection = task.spawn(eliteHunterLoop)
         print("✅ Auto Elite Hunter Started")
     else
         -- STOP
-        if _G.YOKUDO_AutoEliteHunterLoop then
-            task.cancel(_G.YOKUDO_AutoEliteHunterLoop)
-            _G.YOKUDO_AutoEliteHunterLoop = nil
+        if loopConnection then
+            task.cancel(loopConnection)
+            loopConnection = nil
         end
         
         if followConnection then
@@ -621,16 +587,15 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        isFeatureRunning = false
         
         print("❌ Auto Elite Hunter Stopped")
     end
-    
-    -- Release locks
-    task.wait(0.3)
-    isToggling = false
-    toggleLock = false
 end
+
+-- ==================================================
+-- STATE
+-- ==================================================
+_G.YOKUDO_AutoEliteHunterEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
@@ -639,9 +604,9 @@ Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     stopNoCollide()
     
-    if _G.YOKUDO_AutoEliteHunterEnabled then
+    if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Toggle Fixed)")
+print("✅ AutoEliteHunter Loaded (New Toggle System)")
