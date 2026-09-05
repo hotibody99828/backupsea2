@@ -2,13 +2,16 @@
 -- YOKUDO HUB | SEA3 | [Premium] | Loader
 -- ==================================================
 -- URL តែមួយគត់៖
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/your-username/YOKUDO-HUB-SEA3/main/Loader.lua"))()
 -- ==================================================
 
 local BASE_URL = "https://raw.githubusercontent.com/hotibody99828/backupsea2/main/"
 
 print("🔵 Loading YOKUDO HUB | SEA3 | [Premium]...")
 
+-- ==================================================
+-- WAIT UNTIL GAME IS LOADED
+-- ==================================================
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 local Player = game.Players.LocalPlayer
@@ -16,7 +19,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 print("✅ Game loaded, Player: " .. Player.Name)
 
--- Auto Join Marines
+-- ==================================================
+-- AUTO JOIN MARINES (តែម្ដង)
+-- ==================================================
 if _G.YOKUDO_HasJoinedMarines == nil then
     _G.YOKUDO_HasJoinedMarines = false
 end
@@ -65,16 +70,17 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
--- Load Config & Core
+-- ==================================================
+-- LOAD CONFIG & CORE
+-- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
 
--- Load Save System
-loadstring(game:HttpGet(BASE_URL .. "Features/SaveLoad.lua"))()
-
--- Load UI & Tabs
+-- ==================================================
+-- LOAD UI & TABS
+-- ==================================================
 task.spawn(function()
     loadstring(game:HttpGet(BASE_URL .. "UI/Toggle.lua"))()
     loadstring(game:HttpGet(BASE_URL .. "UI/Main.lua"))()
@@ -84,7 +90,9 @@ task.spawn(function()
     print("✅ UI & Tabs Loaded")
 end)
 
--- Load Features & Apply State
+-- ==================================================
+-- LOAD FEATURES
+-- ==================================================
 task.spawn(function()
     local Features = {
         "SpeedHack",
@@ -114,21 +122,9 @@ task.spawn(function()
     for _, Feature in ipairs(Features) do
         pcall(function()
             loadstring(game:HttpGet(BASE_URL .. "Features/" .. Feature .. ".lua"))()
-            print("✅ " .. Feature .. " Loaded")
         end)
     end
     print("✅ All Features Loaded")
-    
-    task.wait(0.5)
-    local loaded = _G.YOKUDO_LoadConfig()
-    if loaded then
-        print("📂 Config loaded!")
-    else
-        print("📝 No config found, using defaults")
-    end
-    
-    task.wait(0.3)
-    _G.YOKUDO_ApplyState()
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
