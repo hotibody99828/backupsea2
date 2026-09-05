@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (Portal + Tween)
+-- AUTO ELITE HUNTER (មានការពារច្រលំ)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -30,7 +30,7 @@ local MAP_POSITIONS = {
 }
 
 -- ==================================================
--- PORTAL POSITIONS (សម្រាប់ Bypass Teleport)
+-- PORTAL POSITIONS
 -- ==================================================
 local PORTAL_POSITIONS = {
     Waterfall = Vector3.new(-5027, 316, -3202),
@@ -42,7 +42,7 @@ local PORTAL_POSITIONS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 190
+local TWEEN_SPEED = 200
 
 -- ==================================================
 -- STATE
@@ -51,6 +51,7 @@ local hasBypassTeleported = false
 local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
+local isProcessing = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -186,7 +187,7 @@ local function tweenToPosition(targetPos, speed)
         return true 
     end
     
-    local duration = math.max(0.5, distance / speed)
+    local duration = math.max(0.10, distance / speed)
     
     local direction = (targetPos - root.Position).Unit
     if not bodyVelocity then
@@ -367,7 +368,6 @@ local function getBossPosition(boss)
             return root.Position
         end
     else
-        -- ReplicatedStorage Boss
         local pos = boss:FindFirstChild("Position")
         if pos then
             return pos.Value
@@ -387,14 +387,24 @@ local function eliteHunterLoop()
     isFeatureRunning = true
     
     while _G.YOKUDO_AutoEliteHunterEnabled do
+        -- ការពារការដំណើរការច្រើនដងក្នុងពេលតែមួយ
+        if isProcessing then
+            task.wait(0.01)
+            continue
+        end
+        
+        isProcessing = true
+        
         local character = Player.Character
         if not character then
+            isProcessing = false
             task.wait(0.01)
             continue
         end
         
         local root = character:FindFirstChild("HumanoidRootPart")
         if not root then
+            isProcessing = false
             task.wait(0.01)
             continue
         end
@@ -405,6 +415,7 @@ local function eliteHunterLoop()
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
+            isProcessing = false
             task.wait(0.01)
             continue
         end
@@ -429,6 +440,7 @@ local function eliteHunterLoop()
             
             local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
             if not bossRoot then
+                isProcessing = false
                 task.wait(0.01)
                 continue
             end
@@ -494,6 +506,7 @@ local function eliteHunterLoop()
                 end
             end
             
+            isProcessing = false
             task.wait(0.01)
             continue
         end
@@ -509,6 +522,7 @@ local function eliteHunterLoop()
             -- យក Position របស់ Boss
             local bossPos = getBossPosition(boss)
             if not bossPos then
+                isProcessing = false
                 task.wait(0.01)
                 continue
             end
@@ -516,6 +530,7 @@ local function eliteHunterLoop()
             -- គណនា Map ដែលនៅជិតជាងគេ
             local closestMap = findClosestMap(bossPos)
             if not closestMap then
+                isProcessing = false
                 task.wait(0.01)
                 continue
             end
@@ -523,6 +538,7 @@ local function eliteHunterLoop()
             -- យក Portal Position នៃ Map នោះ
             local portalPos = PORTAL_POSITIONS[closestMap]
             if not portalPos then
+                isProcessing = false
                 task.wait(0.01)
                 continue
             end
@@ -530,7 +546,6 @@ local function eliteHunterLoop()
             -- Bypass Teleport ទៅ Portal
             if not hasBypassTeleported then
                 bypassTeleport(portalPos)
-                print("⚡ Bypass Teleport to Portal: " .. closestMap)
             end
             
             -- រង់ចាំ 2s រួច Tween ទៅ Boss
@@ -586,9 +601,13 @@ local function eliteHunterLoop()
                 isLocked = true
             end
             
+            isProcessing = false
             task.wait(0.01)
             continue
         end
+        
+        isProcessing = false
+        task.wait(0.01)
     end
     
     isFeatureRunning = false
@@ -604,6 +623,7 @@ _G.YOKUDO_AutoEliteHunterLoop = nil
 -- TOGGLE AUTO ELITE HUNTER
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
+    -- ការពារការចុចភ្លាមៗ
     if toggleLock then
         return
     end
@@ -618,6 +638,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
     _G.YOKUDO_AutoEliteHunterEnabled = not _G.YOKUDO_AutoEliteHunterEnabled
     
     if _G.YOKUDO_AutoEliteHunterEnabled then
+        -- START
         if isFeatureRunning then
             isToggling = false
             toggleLock = false
@@ -630,6 +651,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
+        isProcessing = false
         
         if followConnection then
             followConnection:Disconnect()
@@ -643,6 +665,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         
         _G.YOKUDO_AutoEliteHunterLoop = task.spawn(eliteHunterLoop)
     else
+        -- STOP
         if _G.YOKUDO_AutoEliteHunterLoop then
             task.cancel(_G.YOKUDO_AutoEliteHunterLoop)
             _G.YOKUDO_AutoEliteHunterLoop = nil
@@ -664,6 +687,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
+        isProcessing = false
     end
     
     task.wait(0.3)
@@ -683,4 +707,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded")
+print("✅ AutoEliteHunter Loaded (With Protection)")
