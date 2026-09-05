@@ -464,7 +464,7 @@ local function ripIndraLoop()
             bypassTeleport(RIP_INDRA_POSITION)
             
             -- រង់ចាំ 2s រួច Tween ទៅ Boss
-            task.wait(2)
+            task.wait(0.10)
             
             -- ស្វែងរក Boss ម្តងទៀត (ឥឡូវគួរតែនៅជិត)
             local newBoss, newLocation = findRipIndra()
