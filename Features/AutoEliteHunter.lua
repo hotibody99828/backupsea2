@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (Remote Portal + NoCollide)
+-- AUTO ELITE HUNTER (Remote Portal)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -54,7 +54,7 @@ local PORTAL_ARGS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 200
+local TWEEN_SPEED = 150
 
 -- ==================================================
 -- STATE
@@ -62,7 +62,6 @@ local TWEEN_SPEED = 200
 local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
-local noCollideActive = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -81,22 +80,6 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
-
--- ==================================================
--- NO COLLIDE FUNCTIONS
--- ==================================================
-local function setNoCollide(enable)
-    local character = Player.Character
-    if not character then return end
-    
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = not enable
-        end
-    end
-    
-    noCollideActive = enable
-end
 
 -- ==================================================
 -- REMOTE PORTAL FUNCTION
@@ -155,9 +138,6 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
-    
-    -- បើក CanCollide ឡើងវិញ
-    setNoCollide(false)
 end
 
 local function stopTweenToPosition()
@@ -203,16 +183,12 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
-    -- បិទ CanCollide មុន Tween
-    setNoCollide(true)
-    
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
-        setNoCollide(false)
         return true 
     end
     
@@ -253,11 +229,9 @@ local function tweenToBoss(bossPos, speed)
     end
     
     if not isTweening then
-        setNoCollide(false)
         return false
     end
     
-    setNoCollide(false)
     return true
 end
 
@@ -477,7 +451,7 @@ local function eliteHunterLoop()
             -- រង់ចាំ 2s រួច Tween ទៅ Boss
             task.wait(2)
             
-            -- Tween ទៅ Boss (បិទ CanCollide ដោយស្វ័យប្រវត្តិ)
+            -- Tween ទៅ Boss
             tweenToBoss(bossPos, TWEEN_SPEED)
             
             if followConnection then
@@ -615,12 +589,9 @@ end
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     
-    -- បើក CanCollide ឡើងវិញ
-    setNoCollide(false)
-    
     if _G.YOKUDO_AutoEliteHunterEnabled then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Remote Portal + NoCollide)")
+print("✅ AutoEliteHunter Loaded (Remote Portal)")
