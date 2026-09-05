@@ -2,7 +2,7 @@
 -- YOKUDO HUB | SEA3 | [Premium] | Loader
 -- ==================================================
 -- URL តែមួយគត់៖
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/your-username/YOKUDO-HUB-SEA3/main/Loader.lua"))()
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
 -- ==================================================
 
 local BASE_URL = "https://raw.githubusercontent.com/hotibody99828/backupsea2/main/"
@@ -20,7 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 print("✅ Game loaded, Player: " .. Player.Name)
 
 -- ==================================================
--- AUTO JOIN MARINES (តែម្ដង)
+-- AUTO JOIN MARINES
 -- ==================================================
 if _G.YOKUDO_HasJoinedMarines == nil then
     _G.YOKUDO_HasJoinedMarines = false
@@ -79,6 +79,11 @@ loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
 
 -- ==================================================
+-- LOAD SAVE SYSTEM
+-- ==================================================
+loadstring(game:HttpGet(BASE_URL .. "Features/SaveLoad.lua"))()
+
+-- ==================================================
 -- LOAD UI & TABS
 -- ==================================================
 task.spawn(function()
@@ -91,7 +96,7 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- LOAD FEATURES
+-- LOAD FEATURES & APPLY STATE
 -- ==================================================
 task.spawn(function()
     local Features = {
@@ -122,9 +127,24 @@ task.spawn(function()
     for _, Feature in ipairs(Features) do
         pcall(function()
             loadstring(game:HttpGet(BASE_URL .. "Features/" .. Feature .. ".lua"))()
+            print("✅ " .. Feature .. " Loaded")
         end)
     end
     print("✅ All Features Loaded")
+    
+    -- ==================================================
+    -- LOAD & APPLY STATE
+    -- ==================================================
+    task.wait(0.5)
+    local loaded = _G.YOKUDO_LoadConfig()
+    if loaded then
+        print("📂 Config loaded!")
+    else
+        print("📝 No config found, using defaults")
+    end
+    
+    task.wait(0.3)
+    _G.YOKUDO_ApplyState()
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
