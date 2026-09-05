@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (Respawn + Set Point)
+-- AUTO ELITE HUNTER (FIXED - Check Map ឲ្យច្បាស់)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -36,15 +36,7 @@ local PORTAL_POSITIONS = {
     Waterfall = Vector3.new(-5027, 316, -3202),
     Turtle = Vector3.new(-5061, 316, -3192),
     GreatTree = Vector3.new(-12468, 376, -7560),
-    Port = Vector3.new(-12469, 376, -7560),
-}
-
--- ==================================================
--- SPAWN POINT NAMES
--- ==================================================
-local SPAWN_POINTS = {
-    Port = "Default",
-    GreatTree = "GreatTree",
+    Port = Vector3.new(-12469, 376, -7561),
 }
 
 -- ==================================================
@@ -56,13 +48,11 @@ local TWEEN_SPEED = 200
 -- STATE
 -- ==================================================
 local hasBypassTeleported = false
-local hasTeleportedToMap = false
 local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
 local isProcessing = false
-local characterAddedConnection = nil
-local hasRespawned = false
+local currentMap = nil
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -106,43 +96,7 @@ end
 -- ==================================================
 local function resetBypassState()
     hasBypassTeleported = false
-    hasTeleportedToMap = false
-end
-
--- ==================================================
--- SET SPAWN POINT
--- ==================================================
-local function setSpawnPoint(location)
-    local Event = ReplicatedStorage:FindFirstChild("Remotes")
-    if Event then
-        local CommF = Event:FindFirstChild("CommF_")
-        if CommF then
-            pcall(function()
-                CommF:InvokeServer("SetLastSpawnPoint", location)
-            end)
-        end
-    end
-end
-
--- ==================================================
--- RESPAWN + SET POINT
--- ==================================================
-local function respawnAndSetPoint(spawnPoint)
-    local character = Player.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            -- Respawn មុន
-            humanoid.Health = 0
-            
-            -- wait 0.01s រួច Set Point
-            task.wait(0.01)
-            setSpawnPoint(spawnPoint)
-            
-            return true
-        end
-    end
-    return false
+    currentMap = nil
 end
 
 -- ==================================================
@@ -378,10 +332,24 @@ local function findClosestMap(bossPos)
 end
 
 -- ==================================================
+-- CHECK IF MAP EXISTS (ពិនិត្យ Map ឲ្យច្បាស់)
+-- ==================================================
+local function checkMapExists(mapName)
+    local map = workspace:FindFirstChild("Map")
+    if not map then return false end
+    
+    local mapObj = map:FindFirstChild(mapName)
+    if mapObj then
+        return true
+    end
+    
+    return false
+end
+
+-- ==================================================
 -- FIND ELITE BOSS
 -- ==================================================
 local function findEliteBoss()
-    -- 1. ពិនិត្យ workspace.Enemies
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         for _, boss in ipairs(ELITE_BOSSES) do
@@ -395,7 +363,6 @@ local function findEliteBoss()
         end
     end
     
-    -- 2. ពិនិត្យ ReplicatedStorage
     for _, boss in ipairs(ELITE_BOSSES) do
         local stored = ReplicatedStorage:FindFirstChild(boss.Path)
         if stored then
@@ -558,7 +525,7 @@ local function eliteHunterLoop()
         end
         
         -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Respawn
+        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Tween
         -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
@@ -572,6 +539,9 @@ local function eliteHunterLoop()
                 continue
             end
             
+            -- ==================================================
+            -- FIX: គណនា Map ដែលនៅជិតជាងគេ
+            -- ==================================================
             local closestMap = findClosestMap(bossPos)
             if not closestMap then
                 isProcessing = false
@@ -579,68 +549,51 @@ local function eliteHunterLoop()
                 continue
             end
             
-            local portalPos = PORTAL_POSITIONS[closestMap]
-            if not portalPos then
+            -- ==================================================
+            -- FIX: ពិនិត្យ Map ឲ្យច្បាស់ (Check Map Exists)
+            -- ==================================================
+            if not checkMapExists(closestMap) then
                 isProcessing = false
                 task.wait(0.01)
                 continue
             end
             
-            -- Bypass Teleport ទៅ Portal
-            if not hasBypassTeleported then
-                bypassTeleport(portalPos)
+            -- ==================================================
+            -- FIX: ប្រសិនបើ Map ខុសពី Map មុន → Reset Bypass
+            -- ==================================================
+            if currentMap ~= closestMap then
+                hasBypassTeleported = false
+                currentMap = closestMap
             end
             
-            -- Bypass Teleport ទៅ Map Position
-            if hasBypassTeleported and not hasTeleportedToMap then
+            local portalPos = PORTAL_POSITIONS[closestMap]
+            
+            -- Fallback: ប្រសិនបើ Portal មិនមាន → ប្រើ Map Position
+            if not portalPos then
                 local mapPos = MAP_POSITIONS[closestMap]
                 if mapPos then
                     bypassTeleport(mapPos)
-                    hasTeleportedToMap = true
+                    task.wait(1)
+                    tweenToBoss(bossPos, TWEEN_SPEED)
                 end
+                isProcessing = false
+                task.wait(0.01)
+                continue
             end
             
-            -- Respawn + Set Point (សម្រាប់ Port និង GreatTree)
-            if hasTeleportedToMap and not hasRespawned then
-                if closestMap == "Port" then
-                    respawnAndSetPoint("Default")
-                    hasRespawned = true
-                elseif closestMap == "GreatTree" then
-                    respawnAndSetPoint("GreatTree")
-                    hasRespawned = true
-                end
+            -- ==================================================
+            -- FIX: Bypass Teleport ទៅ Portal តែប្រសិនបើ Map ត្រឹមត្រូវ
+            -- ==================================================
+            if not hasBypassTeleported and currentMap == closestMap then
+                bypassTeleport(portalPos)
+                print("⚡ Bypass Teleport to Portal: " .. closestMap)
             end
             
-            isProcessing = false
-            task.wait(0.01)
-            continue
-        end
-        
-        isProcessing = false
-        task.wait(0.01)
-    end
-    
-    isFeatureRunning = false
-end
-
--- ==================================================
--- CHARACTER RESPAWN HANDLER
--- ==================================================
-local function onCharacterAdded()
-    task.wait(0.5)
-    resetBypassState()
-    
-    if _G.YOKUDO_AutoEliteHunterEnabled then
-        -- Tween ទៅ Boss ភ្លាមៗ
-        local boss, location, bossName = findEliteBoss()
-        if boss and location == "workspace" then
-            local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
-            if bossRoot then
-                local bossPos = bossRoot.Position
-                bossTarget = boss
-                currentBossPos = bossPos
-                bossFound = true
-                isFollowingBoss = true
+            -- ==================================================
+            -- FIX: រង់ចាំ 2s រួច Tween ទៅ Boss
+            -- ==================================================
+            if hasBypassTeleported and currentMap == closestMap then
+                task.wait(2)
                 
                 tweenToBoss(bossPos, TWEEN_SPEED)
                 
@@ -689,10 +642,17 @@ local function onCharacterAdded()
                 
                 isLocked = true
             end
+            
+            isProcessing = false
+            task.wait(0.01)
+            continue
         end
         
-        stopTweenTeleport()
+        isProcessing = false
+        task.wait(0.01)
     end
+    
+    isFeatureRunning = false
 end
 
 -- ==================================================
@@ -726,14 +686,13 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         end
         
         hasBypassTeleported = false
-        hasTeleportedToMap = false
-        hasRespawned = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
         isProcessing = false
+        currentMap = nil
         
         if followConnection then
             followConnection:Disconnect()
@@ -745,22 +704,11 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
             _G.YOKUDO_AutoEliteHunterLoop = nil
         end
         
-        if characterAddedConnection then
-            characterAddedConnection:Disconnect()
-            characterAddedConnection = nil
-        end
-        characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
-        
         _G.YOKUDO_AutoEliteHunterLoop = task.spawn(eliteHunterLoop)
     else
         if _G.YOKUDO_AutoEliteHunterLoop then
             task.cancel(_G.YOKUDO_AutoEliteHunterLoop)
             _G.YOKUDO_AutoEliteHunterLoop = nil
-        end
-        
-        if characterAddedConnection then
-            characterAddedConnection:Disconnect()
-            characterAddedConnection = nil
         end
         
         if followConnection then
@@ -780,7 +728,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         isLocked = false
         isFeatureRunning = false
         isProcessing = false
-        hasRespawned = false
+        currentMap = nil
     end
     
     task.wait(0.3)
@@ -788,4 +736,16 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
     toggleLock = false
 end
 
-print("✅ AutoEliteHunter Loaded (Respawn + Set Point)")
+-- ==================================================
+-- CHARACTER RESPAWN HANDLER
+-- ==================================================
+Player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    resetBypassState()
+    
+    if _G.YOKUDO_AutoEliteHunterEnabled then
+        stopTweenTeleport()
+    end
+end)
+
+print("✅ AutoEliteHunter Loaded (Check Map Fixed)")
