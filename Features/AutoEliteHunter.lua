@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (FIXED - Check Map ឲ្យច្បាស់)
+-- AUTO ELITE HUNTER (Remote Portal)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -30,13 +30,25 @@ local MAP_POSITIONS = {
 }
 
 -- ==================================================
--- PORTAL POSITIONS
+-- PORTAL REMOTE ARGS
 -- ==================================================
-local PORTAL_POSITIONS = {
-    Waterfall = Vector3.new(-5027, 316, -3202),
-    Turtle = Vector3.new(-5061, 316, -3192),
-    GreatTree = Vector3.new(-12468, 376, -7560),
-    Port = Vector3.new(-12469, 376, -7561),
+local PORTAL_ARGS = {
+    Waterfall = {
+        "requestEntrance",
+        Vector3.new(5700.94775390625, 1013.2747802734375, -277.3791809082031)
+    },
+    Turtle = {
+        "requestEntrance",
+        Vector3.new(-12550.6025390625, 337.3270568847656, -7543.0830078125)
+    },
+    Port = {
+        "requestEntrance",
+        Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)
+    },
+    GreatTree = {
+        "requestEntrance",
+        Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)
+    },
 }
 
 -- ==================================================
@@ -47,12 +59,9 @@ local TWEEN_SPEED = 200
 -- ==================================================
 -- STATE
 -- ==================================================
-local hasBypassTeleported = false
 local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
-local isProcessing = false
-local currentMap = nil
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -73,30 +82,24 @@ local isAtPosition = false
 local isFollowingBoss = false
 
 -- ==================================================
--- BYPASS TELEPORT FUNCTION
+-- REMOTE PORTAL FUNCTION
 -- ==================================================
-local function bypassTeleport(targetPos)
-    local character = Player.Character
-    if not character then return false end
+local function usePortal(mapName)
+    local args = PORTAL_ARGS[mapName]
+    if not args then return false end
     
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return false end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid and humanoid.Health <= 0 then return false end
-    
-    root.CFrame = CFrame.new(targetPos)
-    hasBypassTeleported = true
-    
-    return true
-end
-
--- ==================================================
--- RESET BYPASS STATE
--- ==================================================
-local function resetBypassState()
-    hasBypassTeleported = false
-    currentMap = nil
+    pcall(function()
+        local Remote = ReplicatedStorage:FindFirstChild("Remotes")
+        if Remote then
+            local CommF = Remote:FindFirstChild("CommF_")
+            if CommF then
+                CommF:InvokeServer(unpack(args))
+                print("🚪 Used Portal to: " .. mapName)
+                return true
+            end
+        end
+    end)
+    return false
 end
 
 -- ==================================================
@@ -151,87 +154,6 @@ local function stopTweenToPosition()
     if bodyVelocity then
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     end
-end
-
-local function tweenToPosition(targetPos, speed)
-    local character = Player.Character
-    if not character then return false end
-    
-    local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return false end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid and humanoid.Health <= 0 then return false end
-    
-    if currentTween then
-        currentTween:Cancel()
-        currentTween = nil
-    end
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-    isTweening = false
-    isTweeningToPosition = true
-    
-    if lockConnection then
-        lockConnection:Disconnect()
-        lockConnection = nil
-    end
-    isLocked = false
-    
-    local distance = (targetPos - root.Position).Magnitude
-    if distance < 3 then 
-        isTweeningToPosition = false
-        if bodyVelocity then
-            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        end
-        return true 
-    end
-    
-    local duration = math.max(0.10, distance / speed)
-    
-    local direction = (targetPos - root.Position).Unit
-    if not bodyVelocity then
-        bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
-        bodyVelocity.Parent = root
-    end
-    bodyVelocity.Velocity = direction * speed
-    
-    if not bodyGyro then
-        bodyGyro = Instance.new("BodyGyro")
-        bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 10000
-        bodyGyro.Parent = root
-    end
-    bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
-    
-    local tweenInfo = TweenInfo.new(
-        duration,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out
-    )
-    
-    currentTween = TweenService:Create(root, tweenInfo, {
-        CFrame = CFrame.new(targetPos)
-    })
-    
-    isTweening = true
-    
-    currentTween:Play()
-    currentTween.Completed:Wait()
-    
-    if bodyVelocity then
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    end
-    
-    if not isTweening then
-        isTweeningToPosition = false
-        return false
-    end
-    
-    isTweeningToPosition = false
-    return true
 end
 
 local function tweenToBoss(bossPos, speed)
@@ -332,24 +254,10 @@ local function findClosestMap(bossPos)
 end
 
 -- ==================================================
--- CHECK IF MAP EXISTS (ពិនិត្យ Map ឲ្យច្បាស់)
--- ==================================================
-local function checkMapExists(mapName)
-    local map = workspace:FindFirstChild("Map")
-    if not map then return false end
-    
-    local mapObj = map:FindFirstChild(mapName)
-    if mapObj then
-        return true
-    end
-    
-    return false
-end
-
--- ==================================================
 -- FIND ELITE BOSS
 -- ==================================================
 local function findEliteBoss()
+    -- 1. ពិនិត្យ workspace.Enemies (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         for _, boss in ipairs(ELITE_BOSSES) do
@@ -363,6 +271,7 @@ local function findEliteBoss()
         end
     end
     
+    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
     for _, boss in ipairs(ELITE_BOSSES) do
         local stored = ReplicatedStorage:FindFirstChild(boss.Path)
         if stored then
@@ -383,6 +292,7 @@ local function getBossPosition(boss)
             return root.Position
         end
     else
+        -- ReplicatedStorage Boss
         local pos = boss:FindFirstChild("Position")
         if pos then
             return pos.Value
@@ -402,23 +312,14 @@ local function eliteHunterLoop()
     isFeatureRunning = true
     
     while _G.YOKUDO_AutoEliteHunterEnabled do
-        if isProcessing then
-            task.wait(0.01)
-            continue
-        end
-        
-        isProcessing = true
-        
         local character = Player.Character
         if not character then
-            isProcessing = false
             task.wait(0.01)
             continue
         end
         
         local root = character:FindFirstChild("HumanoidRootPart")
         if not root then
-            isProcessing = false
             task.wait(0.01)
             continue
         end
@@ -429,11 +330,11 @@ local function eliteHunterLoop()
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
-            isProcessing = false
             task.wait(0.01)
             continue
         end
         
+        -- Auto Equip
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -453,7 +354,6 @@ local function eliteHunterLoop()
             
             local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
             if not bossRoot then
-                isProcessing = false
                 task.wait(0.01)
                 continue
             end
@@ -519,137 +419,89 @@ local function eliteHunterLoop()
                 end
             end
             
-            isProcessing = false
             task.wait(0.01)
             continue
         end
         
         -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Tween
+        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Remote Portal + Tween
         -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
             
+            -- យក Position របស់ Boss
             local bossPos = getBossPosition(boss)
             if not bossPos then
-                isProcessing = false
                 task.wait(0.01)
                 continue
             end
             
-            -- ==================================================
-            -- FIX: គណនា Map ដែលនៅជិតជាងគេ
-            -- ==================================================
+            -- គណនា Map ដែលនៅជិតជាងគេ
             local closestMap = findClosestMap(bossPos)
             if not closestMap then
-                isProcessing = false
                 task.wait(0.01)
                 continue
             end
             
-            -- ==================================================
-            -- FIX: ពិនិត្យ Map ឲ្យច្បាស់ (Check Map Exists)
-            -- ==================================================
-            if not checkMapExists(closestMap) then
-                isProcessing = false
-                task.wait(0.01)
-                continue
+            -- ប្រើ Remote Portal
+            usePortal(closestMap)
+            
+            -- រង់ចាំ 2s រួច Tween ទៅ Boss
+            task.wait(2)
+            
+            -- Tween ទៅ Boss
+            tweenToBoss(bossPos, TWEEN_SPEED)
+            
+            if followConnection then
+                followConnection:Disconnect()
+                followConnection = nil
             end
             
-            -- ==================================================
-            -- FIX: ប្រសិនបើ Map ខុសពី Map មុន → Reset Bypass
-            -- ==================================================
-            if currentMap ~= closestMap then
-                hasBypassTeleported = false
-                currentMap = closestMap
-            end
-            
-            local portalPos = PORTAL_POSITIONS[closestMap]
-            
-            -- Fallback: ប្រសិនបើ Portal មិនមាន → ប្រើ Map Position
-            if not portalPos then
-                local mapPos = MAP_POSITIONS[closestMap]
-                if mapPos then
-                    bypassTeleport(mapPos)
-                    task.wait(1)
-                    tweenToBoss(bossPos, TWEEN_SPEED)
-                end
-                isProcessing = false
-                task.wait(0.01)
-                continue
-            end
-            
-            -- ==================================================
-            -- FIX: Bypass Teleport ទៅ Portal តែប្រសិនបើ Map ត្រឹមត្រូវ
-            -- ==================================================
-            if not hasBypassTeleported and currentMap == closestMap then
-                bypassTeleport(portalPos)
-                print("⚡ Bypass Teleport to Portal: " .. closestMap)
-            end
-            
-            -- ==================================================
-            -- FIX: រង់ចាំ 2s រួច Tween ទៅ Boss
-            -- ==================================================
-            if hasBypassTeleported and currentMap == closestMap then
-                task.wait(2)
-                
-                tweenToBoss(bossPos, TWEEN_SPEED)
-                
-                if followConnection then
-                    followConnection:Disconnect()
-                    followConnection = nil
+            followConnection = RunService.Heartbeat:Connect(function()
+                if not _G.YOKUDO_AutoEliteHunterEnabled then
+                    if followConnection then
+                        followConnection:Disconnect()
+                        followConnection = nil
+                    end
+                    return
                 end
                 
-                followConnection = RunService.Heartbeat:Connect(function()
-                    if not _G.YOKUDO_AutoEliteHunterEnabled then
-                        if followConnection then
-                            followConnection:Disconnect()
-                            followConnection = nil
-                        end
-                        return
-                    end
-                    
-                    if not bossTarget or not bossTarget.Parent then
-                        return
-                    end
-                    
-                    local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
-                    if not bossRoot then return end
-                    
-                    local currentBossPos = bossRoot.Position
-                    local char = Player.Character
-                    if not char then return end
-                    
-                    local rootPart = char:FindFirstChild("HumanoidRootPart")
-                    if not rootPart then return end
-                    
-                    local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
-                    
-                    local distToLock = (lockPos - rootPart.Position).Magnitude
-                    if distToLock > 5 then
-                        rootPart.CFrame = CFrame.new(lockPos)
-                    end
-                    
-                    local distToBoss = (currentBossPos - rootPart.Position).Magnitude
-                    if distToBoss <= 60 then
-                        if _G.YOKUDO_AttackTarget then
-                            _G.YOKUDO_AttackTarget(bossTarget)
-                        end
-                    end
-                end)
+                if not bossTarget or not bossTarget.Parent then
+                    return
+                end
                 
-                isLocked = true
-            end
+                local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
+                if not bossRoot then return end
+                
+                local currentBossPos = bossRoot.Position
+                local char = Player.Character
+                if not char then return end
+                
+                local rootPart = char:FindFirstChild("HumanoidRootPart")
+                if not rootPart then return end
+                
+                local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
+                
+                local distToLock = (lockPos - rootPart.Position).Magnitude
+                if distToLock > 5 then
+                    rootPart.CFrame = CFrame.new(lockPos)
+                end
+                
+                local distToBoss = (currentBossPos - rootPart.Position).Magnitude
+                if distToBoss <= 60 then
+                    if _G.YOKUDO_AttackTarget then
+                        _G.YOKUDO_AttackTarget(bossTarget)
+                    end
+                end
+            end)
             
-            isProcessing = false
+            isLocked = true
+            
             task.wait(0.01)
             continue
         end
-        
-        isProcessing = false
-        task.wait(0.01)
     end
     
     isFeatureRunning = false
@@ -685,14 +537,11 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
             return
         end
         
-        hasBypassTeleported = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
-        isProcessing = false
-        currentMap = nil
         
         if followConnection then
             followConnection:Disconnect()
@@ -727,8 +576,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
-        isProcessing = false
-        currentMap = nil
     end
     
     task.wait(0.3)
@@ -741,11 +588,10 @@ end
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
-    resetBypassState()
     
     if _G.YOKUDO_AutoEliteHunterEnabled then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Check Map Fixed)")
+print("✅ AutoEliteHunter Loaded (Remote Portal)")
