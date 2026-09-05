@@ -1,13 +1,10 @@
 -- ==================================================
--- SAVE & LOAD SYSTEM (Full)
+-- SAVE & LOAD SYSTEM
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
 local CONFIG_PATH = "YOKUDOHUB/config.json"
 
--- ==================================================
--- FEATURE LIST (ទាំងអស់)
--- ==================================================
 local FEATURE_LIST = {
     "SpeedHack",
     "JumpHack",
@@ -29,9 +26,6 @@ local FEATURE_LIST = {
     "AutoCore",
 }
 
--- ==================================================
--- GET ALL FEATURE STATES
--- ==================================================
 local function getAllStates()
     local states = {}
     for _, name in ipairs(FEATURE_LIST) do
@@ -41,14 +35,8 @@ local function getAllStates()
     return states
 end
 
--- ==================================================
--- SAVE CONFIG
--- ==================================================
 function _G.YOKUDO_SaveConfig()
-    local data = {
-        Features = getAllStates()
-    }
-    
+    local data = { Features = getAllStates() }
     pcall(function()
         local json = HttpService:JSONEncode(data)
         writefile(CONFIG_PATH, json)
@@ -56,9 +44,6 @@ function _G.YOKUDO_SaveConfig()
     end)
 end
 
--- ==================================================
--- LOAD CONFIG
--- ==================================================
 function _G.YOKUDO_LoadConfig()
     local success, raw = pcall(function()
         if isfile(CONFIG_PATH) then
@@ -86,9 +71,6 @@ function _G.YOKUDO_LoadConfig()
     return true
 end
 
--- ==================================================
--- APPLY STATE (ចុចធិកដូចមនុស្សចុច)
--- ==================================================
 function _G.YOKUDO_ApplyState()
     print("🔄 Applying saved states...")
     local count = 0
@@ -114,9 +96,6 @@ function _G.YOKUDO_ApplyState()
     print("✅ Applied " .. count .. " features!")
 end
 
--- ==================================================
--- MARK DIRTY (Auto Save)
--- ==================================================
 local isDirty = false
 local saveDebounce = nil
 
@@ -135,9 +114,6 @@ function _G.YOKUDO_MarkDirty()
     end)
 end
 
--- ==================================================
--- SAVE ON CLOSE
--- ==================================================
 game:BindToClose(function()
     if isDirty then
         _G.YOKUDO_SaveConfig()
