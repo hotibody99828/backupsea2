@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (NEW TOGGLE SYSTEM)
+-- AUTO ELITE HUNTER (NEW TOGGLE SYSTEM + SAVE)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -540,7 +540,7 @@ local function eliteHunterLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (SIMPLE)
+-- TOGGLE FUNCTION (SIMPLE + SAVE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
     isRunning = not isRunning
@@ -590,6 +590,13 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         
         print("❌ Auto Elite Hunter Stopped")
     end
+    
+    -- ==================================================
+    -- ✅ AUTO SAVE
+    -- ==================================================
+    if _G.YOKUDO_MarkDirty then
+        _G.YOKUDO_MarkDirty()
+    end
 end
 
 -- ==================================================
@@ -609,4 +616,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (New Toggle System)")
+print("✅ AutoEliteHunter Loaded (New Toggle System + Save)")
