@@ -42,7 +42,7 @@ local PORTAL_POSITIONS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 200
+local TWEEN_SPEED = 190
 
 -- ==================================================
 -- STATE
@@ -186,7 +186,7 @@ local function tweenToPosition(targetPos, speed)
         return true 
     end
     
-    local duration = math.max(0.10, distance / speed)
+    local duration = math.max(0.5, distance / speed)
     
     local direction = (targetPos - root.Position).Unit
     if not bodyVelocity then
