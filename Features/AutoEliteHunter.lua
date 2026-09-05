@@ -488,7 +488,7 @@ local function eliteHunterLoop()
             
             usePortal(closestMap)
             
-            task.wait(2)
+            task.wait(0.10)
             
             tweenToBoss(bossPos, TWEEN_SPEED)
             
