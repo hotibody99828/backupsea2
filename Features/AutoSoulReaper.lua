@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO SOUL REAPER (SIMPLE)
+-- AUTO SOUL REAPER (FINAL)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -11,26 +11,28 @@ local workspace = game:GetService("Workspace")
 local Player = Players.LocalPlayer
 
 -- ==================================================
--- SOUL REAPER POSITION
+-- POSITIONS
 -- ==================================================
-local SOUL_REAPER_POSITION = Vector3.new(-12465, 376, -7563)
+local SOUL_REAPER_BYPASS = Vector3.new(-12465, 376, -7563)   -- Bypass Teleport Position
+local SOUL_REAPER_TWEEN = Vector3.new(-9524, 327, 6660)      -- Tween Teleport Position
 
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
 local TWEEN_SPEED = 200
+local DISTANCE_THRESHOLD = 3000
 
 -- ==================================================
 -- STATE
 -- ==================================================
 local hasBypassTeleported = false
-
--- ==================================================
--- TOGGLE DEBOUNCE
--- ==================================================
+local hasTweenedToPosition = false
+local isInvoking = false
+local invokeLoopConnection = nil
+local spawnPointCheckConnection = nil
+local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
-local isFeatureRunning = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -51,7 +53,141 @@ local isAtPosition = false
 local isFollowingBoss = false
 
 -- ==================================================
--- BYPASS TELEPORT FUNCTION
+-- GET SPAWN POINT
+-- ==================================================
+local function getSpawnPoint()
+    local success, result = pcall(function()
+        local data = Player:FindFirstChild("Data")
+        if data then
+            local lastSpawnPoint = data:FindFirstChild("LastSpawnPoint")
+            if lastSpawnPoint then
+                return lastSpawnPoint.Value
+            end
+        end
+        return ""
+    end)
+    
+    if success then
+        return result
+    else
+        return ""
+    end
+end
+
+-- ==================================================
+-- SET SPAWN POINT
+-- ==================================================
+local function setSpawnPoint(location)
+    local Event = ReplicatedStorage:FindFirstChild("Remotes")
+    if Event then
+        local CommF = Event:FindFirstChild("CommF_")
+        if CommF then
+            pcall(function()
+                CommF:InvokeServer("SetLastSpawnPoint", location)
+            end)
+        end
+    end
+end
+
+-- ==================================================
+-- GET DISTANCE TO TWEEN POSITION
+-- ==================================================
+local function getDistanceToTweenPosition()
+    local character = Player.Character
+    if not character then return 99999
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return 99999
+    
+    return (SOUL_REAPER_TWEEN - root.Position).Magnitude
+end
+
+-- ==================================================
+-- INVOKE LOOP (រាល់ 0.05s)
+-- ==================================================
+local function startInvokeLoop()
+    if isInvoking then return end
+    isInvoking = true
+    
+    invokeLoopConnection = RunService.Heartbeat:Connect(function()
+        if not _G.YOKUDO_AutoSoulReaperEnabled then
+            stopInvokeLoop()
+            return
+        end
+        
+        local enemies = workspace:FindFirstChild("Enemies")
+        if enemies then
+            local boss = enemies:FindFirstChild("Soul Reaper")
+            if boss and boss:FindFirstChild("Humanoid") then
+                local humanoid = boss.Humanoid
+                if humanoid.Health > 0 then
+                    stopInvokeLoop()
+                    return
+                end
+            end
+        end
+        
+        setSpawnPoint("HauntedCastle")
+    end)
+end
+
+local function stopInvokeLoop()
+    isInvoking = false
+    if invokeLoopConnection then
+        invokeLoopConnection:Disconnect()
+        invokeLoopConnection = nil
+    end
+end
+
+-- ==================================================
+-- CHECK SPAWN POINT
+-- ==================================================
+local function startSpawnPointCheck()
+    if spawnPointCheckConnection then return end
+    
+    spawnPointCheckConnection = RunService.Heartbeat:Connect(function()
+        if not _G.YOKUDO_AutoSoulReaperEnabled then
+            stopSpawnPointCheck()
+            return
+        end
+        
+        local enemies = workspace:FindFirstChild("Enemies")
+        if enemies then
+            local boss = enemies:FindFirstChild("Soul Reaper")
+            if boss and boss:FindFirstChild("Humanoid") then
+                local humanoid = boss.Humanoid
+                if humanoid.Health > 0 then
+                    stopSpawnPointCheck()
+                    return
+                end
+            end
+        end
+        
+        local spawnPoint = getSpawnPoint()
+        if spawnPoint == "HauntedCastle" then
+            local character = Player.Character
+            if character then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.Health = 0
+                    task.wait(0.01)
+                    setSpawnPoint("HauntedCastle")
+                    startInvokeLoop()
+                end
+            end
+        end
+    end)
+end
+
+local function stopSpawnPointCheck()
+    if spawnPointCheckConnection then
+        spawnPointCheckConnection:Disconnect()
+        spawnPointCheckConnection = nil
+    end
+end
+
+-- ==================================================
+-- BYPASS TELEPORT
 -- ==================================================
 local function bypassTeleport(targetPos)
     local character = Player.Character
@@ -67,13 +203,6 @@ local function bypassTeleport(targetPos)
     hasBypassTeleported = true
     
     return true
-end
-
--- ==================================================
--- RESET BYPASS STATE
--- ==================================================
-local function resetBypassState()
-    hasBypassTeleported = false
 end
 
 -- ==================================================
@@ -128,6 +257,87 @@ local function stopTweenToPosition()
     if bodyVelocity then
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     end
+end
+
+local function tweenToPosition(targetPos, speed)
+    local character = Player.Character
+    if not character then return false end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return false end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid and humanoid.Health <= 0 then return false end
+    
+    if currentTween then
+        currentTween:Cancel()
+        currentTween = nil
+    end
+    if followConnection then
+        followConnection:Disconnect()
+        followConnection = nil
+    end
+    isTweening = false
+    isTweeningToPosition = true
+    
+    if lockConnection then
+        lockConnection:Disconnect()
+        lockConnection = nil
+    end
+    isLocked = false
+    
+    local distance = (targetPos - root.Position).Magnitude
+    if distance < 3 then 
+        isTweeningToPosition = false
+        if bodyVelocity then
+            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        end
+        return true 
+    end
+    
+    local duration = math.max(0.10, distance / speed)
+    
+    local direction = (targetPos - root.Position).Unit
+    if not bodyVelocity then
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
+        bodyVelocity.Parent = root
+    end
+    bodyVelocity.Velocity = direction * speed
+    
+    if not bodyGyro then
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 10000
+        bodyGyro.Parent = root
+    end
+    bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
+    
+    local tweenInfo = TweenInfo.new(
+        duration,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out
+    )
+    
+    currentTween = TweenService:Create(root, tweenInfo, {
+        CFrame = CFrame.new(targetPos)
+    })
+    
+    isTweening = true
+    
+    currentTween:Play()
+    currentTween.Completed:Wait()
+    
+    if bodyVelocity then
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    end
+    
+    if not isTweening then
+        isTweeningToPosition = false
+        return false
+    end
+    
+    isTweeningToPosition = false
+    return true
 end
 
 local function tweenToBoss(bossPos, speed)
@@ -213,7 +423,6 @@ end
 -- FIND SOUL REAPER BOSS
 -- ==================================================
 local function findSoulReaper()
-    -- 1. ពិនិត្យ workspace មុន (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("Soul Reaper")
@@ -227,7 +436,6 @@ local function findSoulReaper()
         end
     end
     
-    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
     local stored = ReplicatedStorage:FindFirstChild("Soul Reaper")
     if stored then
         return stored, "replicatedstorage"
@@ -255,47 +463,67 @@ local function soulReaperLoop()
             continue
         end
         
+        -- ==================================================
+        -- 1. CHECK ReplicatedStorage["Soul Reaper"]
+        -- ==================================================
         local boss, location = findSoulReaper()
         
-        if not boss then
-            if location == "dead" then
-                if not isBossDead then
-                    isBossDead = true
-                    cleanupBody()
-                    if followConnection then
-                        followConnection:Disconnect()
-                        followConnection = nil
-                    end
-                    isFollowingBoss = false
-                    isTweeningToPosition = false
+        if location == "replicatedstorage" then
+            local distance = getDistanceToTweenPosition()
+            
+            if distance > DISTANCE_THRESHOLD then
+                -- Bypass Teleport
+                if not hasBypassTeleported then
+                    bypassTeleport(SOUL_REAPER_BYPASS)
+                    print("⚡ Bypass Teleport to Soul Reaper Position!")
                 end
-                task.wait(5)
-                isBossDead = false
-                continue
+                
+                -- រង់ចាំ 3s រួច Tween ទៅ TWEEN Position
+                if hasBypassTeleported and not hasTweenedToPosition then
+                    task.wait(3)
+                    tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
+                    hasTweenedToPosition = true
+                    print("🚀 Tween to Tween Position!")
+                    
+                    -- ចាប់ផ្ដើម Invoke + Spawn Point Check
+                    startInvokeLoop()
+                    startSpawnPointCheck()
+                end
+            else
+                -- Tween Teleport ទៅ TWEEN Position ភ្លាមៗ
+                if not hasTweenedToPosition then
+                    tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
+                    hasTweenedToPosition = true
+                    print("🚀 Tween to Tween Position!")
+                    
+                    startInvokeLoop()
+                    startSpawnPointCheck()
+                end
             end
             
-            bossFound = false
-            isAtPosition = false
-            isFollowingBoss = false
             task.wait(0.01)
             continue
         end
         
-        isBossDead = false
-        
-        if _G.YOKUDO_EquipWeaponFromBackpack then
-            local weaponType = "Melee"
-            if _G.YOKUDO_AutoEquip then
-                weaponType = _G.YOKUDO_AutoEquip.SelectedType
-            end
-            _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
-        end
-        
-        -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
+        -- ==================================================
+        -- 2. CHECK workspace.Enemies["Soul Reaper"]
+        -- ==================================================
         if location == "workspace" then
+            -- ឈប់ Invoke + Spawn Point Check
+            stopInvokeLoop()
+            stopSpawnPointCheck()
+            
             if isTweeningToPosition then
                 stopTweenToPosition()
                 isTweeningToPosition = false
+            end
+            
+            if _G.YOKUDO_EquipWeaponFromBackpack then
+                local weaponType = "Melee"
+                if _G.YOKUDO_AutoEquip then
+                    weaponType = _G.YOKUDO_AutoEquip.SelectedType
+                end
+                _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
             end
             
             local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
@@ -369,16 +597,29 @@ local function soulReaperLoop()
             continue
         end
         
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Bypass Teleport
-        if location == "replicatedstorage" then
+        -- ==================================================
+        -- 3. Boss Dead
+        -- ==================================================
+        if not boss then
+            if location == "dead" then
+                if not isBossDead then
+                    isBossDead = true
+                    cleanupBody()
+                    if followConnection then
+                        followConnection:Disconnect()
+                        followConnection = nil
+                    end
+                    isFollowingBoss = false
+                    isTweeningToPosition = false
+                end
+                task.wait(5)
+                isBossDead = false
+                continue
+            end
+            
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
-            
-            if not hasBypassTeleported then
-                bypassTeleport(SOUL_REAPER_POSITION)
-            end
-            
             task.wait(0.01)
             continue
         end
@@ -386,6 +627,27 @@ local function soulReaperLoop()
     
     isFeatureRunning = false
 end
+
+-- ==================================================
+-- CHARACTER RESPAWN HANDLER
+-- ==================================================
+Player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    
+    hasBypassTeleported = false
+    hasTweenedToPosition = false
+    
+    if _G.YOKUDO_AutoSoulReaperEnabled then
+        -- Tween ទៅ TWEEN Position ភ្លាមៗ
+        tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
+        hasTweenedToPosition = true
+        
+        startInvokeLoop()
+        startSpawnPointCheck()
+        
+        stopTweenTeleport()
+    end
+end)
 
 -- ==================================================
 -- STATE
@@ -418,6 +680,7 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
         end
         
         hasBypassTeleported = false
+        hasTweenedToPosition = false
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -447,6 +710,8 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
         end
         
         stopTweenTeleport()
+        stopInvokeLoop()
+        stopSpawnPointCheck()
         
         isBossDead = false
         bossFound = false
@@ -464,16 +729,4 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
     toggleLock = false
 end
 
--- ==================================================
--- CHARACTER RESPAWN HANDLER
--- ==================================================
-Player.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    resetBypassState()
-    
-    if _G.YOKUDO_AutoSoulReaperEnabled then
-        stopTweenTeleport()
-    end
-end)
-
-print("✅ AutoSoulReaper Loaded")
+print("✅ AutoSoulReaper Loaded (Final)")
