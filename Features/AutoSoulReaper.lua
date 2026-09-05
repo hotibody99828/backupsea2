@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO SOUL REAPER (Check Distance 3000m)
+-- AUTO SOUL REAPER (FIXED)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -16,7 +16,7 @@ local Player = Players.LocalPlayer
 local SOUL_REAPER_POSITION = Vector3.new(-12465, 376, -7563)
 
 -- ==================================================
--- HAUNTED CASTLE POSITION
+-- HAUNTED CASTLE POSITION (យកពី Map)
 -- ==================================================
 local HAUNTED_CASTLE_POSITION = Vector3.new(-12465, 376, -7563)
 
@@ -32,15 +32,10 @@ local DISTANCE_THRESHOLD = 3000
 local hasBypassTeleported = false
 local isInvoking = false
 local invokeLoopConnection = nil
-local hasRespawned = false
 local spawnPointCheckConnection = nil
-
--- ==================================================
--- TOGGLE DEBOUNCE
--- ==================================================
+local isFeatureRunning = false
 local isToggling = false
 local toggleLock = false
-local isFeatureRunning = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -98,7 +93,7 @@ local function setSpawnPoint(location)
 end
 
 -- ==================================================
--- CHECK DISTANCE TO HAUNTED CASTLE
+-- GET DISTANCE TO HAUNTED CASTLE
 -- ==================================================
 local function getDistanceToHauntedCastle()
     local character = Player.Character
@@ -108,6 +103,21 @@ local function getDistanceToHauntedCastle()
     if not root then return 99999
     
     return (HAUNTED_CASTLE_POSITION - root.Position).Magnitude
+end
+
+-- ==================================================
+-- CHECK HAUNTED CASTLE IN MAP
+-- ==================================================
+local function isHauntedCastleNear()
+    local map = workspace:FindFirstChild("Map")
+    if map then
+        local hauntedCastle = map:FindFirstChild("Haunted Castle")
+        if hauntedCastle then
+            local distance = (hauntedCastle.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+            return distance <= DISTANCE_THRESHOLD
+        end
+    end
+    return false
 end
 
 -- ==================================================
@@ -361,6 +371,7 @@ end
 -- FIND SOUL REAPER BOSS
 -- ==================================================
 local function findSoulReaper()
+    -- 1. ពិនិត្យ workspace មុន
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("Soul Reaper")
@@ -374,6 +385,7 @@ local function findSoulReaper()
         end
     end
     
+    -- 2. ពិនិត្យ ReplicatedStorage
     local stored = ReplicatedStorage:FindFirstChild("Soul Reaper")
     if stored then
         return stored, "replicatedstorage"
@@ -406,10 +418,8 @@ local function soulReaperLoop()
         -- ==================================================
         local distance = getDistanceToHauntedCastle()
         
+        -- ប្រសិនបើ distance > 3000m → Bypass + Invoke + Respawn
         if distance > DISTANCE_THRESHOLD then
-            -- ==================================================
-            -- ចម្ងាយ > 3000m → Bypass Teleport + Invoke + Respawn
-            -- ==================================================
             if not hasBypassTeleported then
                 bypassTeleport(SOUL_REAPER_POSITION)
                 
@@ -455,6 +465,7 @@ local function soulReaperLoop()
         
         isBossDead = false
         
+        -- Auto Equip
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -743,4 +754,4 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
     toggleLock = false
 end
 
-print("✅ AutoSoulReaper Loaded (Check Distance 3000m)")
+print("✅ AutoSoulReaper Loaded (FIXED)")
