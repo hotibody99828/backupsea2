@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (FIXED Toggle)
+-- AUTO ELITE HUNTER (Respawn Port + GreatTree)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -52,9 +52,16 @@ local PORTAL_ARGS = {
 }
 
 -- ==================================================
+-- RESPAWN CONFIG
+-- ==================================================
+local RESPAWN_MAP = "GreatTree"
+local RESPAWN_DEFAULT = "Default"
+local RESPAWN_DISTANCE = 5000
+
+-- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 180
+local TWEEN_SPEED = 200
 
 -- ==================================================
 -- STATE
@@ -64,6 +71,13 @@ local isToggling = false
 local toggleLock = false
 local noCollideActive = false
 local noCollideConnection = nil
+local hasUsedPortal = false
+local isRespawning = false
+local hasRespawned = false
+local invokeLoopConnection = nil
+local spawnPointCheckConnection = nil
+local isInvoking = false
+local currentSpawnMap = RESPAWN_MAP
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -82,6 +96,240 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
+
+-- ==================================================
+-- GET SPAWN POINT
+-- ==================================================
+local function getSpawnPoint()
+    local success, result = pcall(function()
+        local data = Player:FindFirstChild("Data")
+        if data then
+            local lastSpawnPoint = data:FindFirstChild("LastSpawnPoint")
+            if lastSpawnPoint then
+                return lastSpawnPoint.Value
+            end
+        end
+        return ""
+    end)
+    
+    if success then
+        return result
+    else
+        return ""
+    end
+end
+
+-- ==================================================
+-- SET SPAWN POINT
+-- ==================================================
+local function setSpawnPoint(location)
+    local Event = ReplicatedStorage:FindFirstChild("Remotes")
+    if Event then
+        local CommF = Event:FindFirstChild("CommF_")
+        if CommF then
+            pcall(function()
+                CommF:InvokeServer("SetLastSpawnPoint", location)
+            end)
+        end
+    end
+end
+
+-- ==================================================
+-- SET SPAWN POINT DEFAULT (Port)
+-- ==================================================
+local function setSpawnDefault()
+    setSpawnPoint(RESPAWN_DEFAULT)
+end
+
+-- ==================================================
+-- SET SPAWN POINT GREATTREE
+-- ==================================================
+local function setSpawnGreatTree()
+    setSpawnPoint(RESPAWN_MAP)
+end
+
+-- ==================================================
+-- INVOKE LOOP (រាល់ 0.02s)
+-- ==================================================
+local function startInvokeLoop()
+    if isInvoking then return end
+    isInvoking = true
+    
+    invokeLoopConnection = RunService.Heartbeat:Connect(function()
+        if not _G.YOKUDO_AutoEliteHunterEnabled then
+            stopInvokeLoop()
+            return
+        end
+        
+        local enemies = workspace:FindFirstChild("Enemies")
+        if enemies then
+            for _, boss in ipairs(ELITE_BOSSES) do
+                local bossObj = enemies:FindFirstChild(boss.Path)
+                if bossObj and bossObj:FindFirstChild("Humanoid") then
+                    local humanoid = bossObj.Humanoid
+                    if humanoid.Health > 0 then
+                        stopInvokeLoop()
+                        return
+                    end
+                end
+            end
+        end
+        
+        -- Set Spawn Point GreatTree
+        setSpawnGreatTree()
+    end)
+end
+
+local function stopInvokeLoop()
+    isInvoking = false
+    if invokeLoopConnection then
+        invokeLoopConnection:Disconnect()
+        invokeLoopConnection = nil
+    end
+end
+
+-- ==================================================
+-- CHECK SPAWN POINT
+-- ==================================================
+local function startSpawnPointCheck()
+    if spawnPointCheckConnection then return end
+    
+    spawnPointCheckConnection = RunService.Heartbeat:Connect(function()
+        if not _G.YOKUDO_AutoEliteHunterEnabled then
+            stopSpawnPointCheck()
+            return
+        end
+        
+        if hasRespawned then
+            stopSpawnPointCheck()
+            return
+        end
+        
+        local enemies = workspace:FindFirstChild("Enemies")
+        if enemies then
+            for _, boss in ipairs(ELITE_BOSSES) do
+                local bossObj = enemies:FindFirstChild(boss.Path)
+                if bossObj and bossObj:FindFirstChild("Humanoid") then
+                    local humanoid = bossObj.Humanoid
+                    if humanoid.Health > 0 then
+                        stopSpawnPointCheck()
+                        return
+                    end
+                end
+            end
+        end
+        
+        local spawnPoint = getSpawnPoint()
+        if spawnPoint == RESPAWN_MAP then
+            if not hasRespawned then
+                local character = Player.Character
+                if character then
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    if humanoid then
+                        isRespawning = true
+                        humanoid.Health = 0
+                        hasRespawned = true
+                        print("💀 Respawn to GreatTree")
+                        
+                        task.wait(0.01)
+                        setSpawnGreatTree()
+                        
+                        local function onCharacterAdded()
+                            task.wait(0.5)
+                            isRespawning = false
+                            
+                            stopInvokeLoop()
+                            stopSpawnPointCheck()
+                            
+                            -- Set Spawn Default (Port) ក្រោយ Respawn
+                            setSpawnDefault()
+                            print("📍 Spawn Point Set to Default (Port)")
+                            
+                            local enemies = workspace:FindFirstChild("Enemies")
+                            if enemies then
+                                for _, boss in ipairs(ELITE_BOSSES) do
+                                    local bossObj = enemies:FindFirstChild(boss.Path)
+                                    if bossObj and bossObj:FindFirstChild("Humanoid") then
+                                        local humanoid = bossObj.Humanoid
+                                        if humanoid.Health > 0 then
+                                            local bossRoot = bossObj:FindFirstChild("HumanoidRootPart") or bossObj:FindFirstChild("Torso")
+                                            if bossRoot then
+                                                local bossPos = bossRoot.Position
+                                                bossTarget = bossObj
+                                                currentBossPos = bossPos
+                                                bossFound = true
+                                                isFollowingBoss = true
+                                                
+                                                tweenToBoss(bossPos, TWEEN_SPEED)
+                                                
+                                                if followConnection then
+                                                    followConnection:Disconnect()
+                                                    followConnection = nil
+                                                end
+                                                
+                                                followConnection = RunService.Heartbeat:Connect(function()
+                                                    if not _G.YOKUDO_AutoEliteHunterEnabled then
+                                                        if followConnection then
+                                                            followConnection:Disconnect()
+                                                            followConnection = nil
+                                                        end
+                                                        return
+                                                    end
+                                                    
+                                                    if not bossTarget or not bossTarget.Parent then
+                                                        return
+                                                    end
+                                                    
+                                                    local bossRoot = bossTarget:FindFirstChild("HumanoidRootPart") or bossTarget:FindFirstChild("Torso")
+                                                    if not bossRoot then return end
+                                                    
+                                                    local currentBossPos = bossRoot.Position
+                                                    local char = Player.Character
+                                                    if not char then return end
+                                                    
+                                                    local rootPart = char:FindFirstChild("HumanoidRootPart")
+                                                    if not rootPart then return end
+                                                    
+                                                    local lockPos = Vector3.new(currentBossPos.X, currentBossPos.Y + 30, currentBossPos.Z)
+                                                    
+                                                    local distToLock = (lockPos - rootPart.Position).Magnitude
+                                                    if distToLock > 5 then
+                                                        rootPart.CFrame = CFrame.new(lockPos)
+                                                    end
+                                                    
+                                                    local distToBoss = (currentBossPos - rootPart.Position).Magnitude
+                                                    if distToBoss <= 60 then
+                                                        if _G.YOKUDO_AttackTarget then
+                                                            _G.YOKUDO_AttackTarget(bossTarget)
+                                                        end
+                                                    end
+                                                end)
+                                                
+                                                isLocked = true
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            
+                            characterAddedConnection:Disconnect()
+                        end
+                        
+                        local characterAddedConnection
+                        characterAddedConnection = Player.CharacterAdded:Connect(onCharacterAdded)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function stopSpawnPointCheck()
+    if spawnPointCheckConnection then
+        spawnPointCheckConnection:Disconnect()
+        spawnPointCheckConnection = nil
+    end
+end
 
 -- ==================================================
 -- NO COLLIDE FUNCTIONS
@@ -186,6 +434,8 @@ local function stopTweenTeleport()
     bossTarget = nil
     isTweeningToPosition = false
     stopNoCollide()
+    stopInvokeLoop()
+    stopSpawnPointCheck()
 end
 
 local function stopTweenToPosition()
@@ -243,7 +493,7 @@ local function tweenToBoss(bossPos, speed)
         return true 
     end
     
-    local duration = math.max(0.5, distance / speed)
+    local duration = math.max(0.10, distance / speed)
     
     local direction = (targetPos - root.Position).Unit
     if not bodyVelocity then
@@ -353,6 +603,19 @@ local function getBossPosition(boss)
         end
     end
     return nil
+end
+
+-- ==================================================
+-- CHECK DISTANCE TO BOSS
+-- ==================================================
+local function getDistanceToBoss(bossPos)
+    local character = Player.Character
+    if not character then return 99999
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return 99999
+    
+    return (bossPos - root.Position).Magnitude
 end
 
 -- ==================================================
@@ -480,16 +743,20 @@ local function eliteHunterLoop()
                 continue
             end
             
-            local closestMap = findClosestMap(bossPos)
-            if not closestMap then
-                task.wait(0.01)
-                continue
+            local distance = getDistanceToBoss(bossPos)
+            
+            if distance > RESPAWN_DISTANCE and not hasRespawned then
+                setSpawnGreatTree()
+                startInvokeLoop()
+                startSpawnPointCheck()
             end
             
-            usePortal(closestMap)
+            local closestMap = findClosestMap(bossPos)
+            if closestMap then
+                usePortal(closestMap)
+            end
             
-            task.wait(0.10)
-            
+            task.wait(0.1)
             tweenToBoss(bossPos, TWEEN_SPEED)
             
             if followConnection then
@@ -552,30 +819,24 @@ _G.YOKUDO_AutoEliteHunterEnabled = false
 _G.YOKUDO_AutoEliteHunterLoop = nil
 
 -- ==================================================
--- TOGGLE AUTO ELITE HUNTER (FIXED)
+-- TOGGLE AUTO ELITE HUNTER
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
-    -- Debounce
-    if isToggling then
+    if toggleLock then
         return
     end
     
-    -- Toggle Lock
-    if toggleLock then
-        print("⏳ Please wait, toggling in progress...")
+    if isToggling then
         return
     end
     
     isToggling = true
     toggleLock = true
     
-    -- ផ្លាស់ប្តូរ State
     _G.YOKUDO_AutoEliteHunterEnabled = not _G.YOKUDO_AutoEliteHunterEnabled
     
     if _G.YOKUDO_AutoEliteHunterEnabled then
-        -- START
         if isFeatureRunning then
-            print("⚠️ Auto Elite Hunter is already running!")
             isToggling = false
             toggleLock = false
             return
@@ -586,6 +847,8 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
+        hasRespawned = false
+        isRespawning = false
         
         if followConnection then
             followConnection:Disconnect()
@@ -600,7 +863,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         _G.YOKUDO_AutoEliteHunterLoop = task.spawn(eliteHunterLoop)
         print("✅ Auto Elite Hunter Started")
     else
-        -- STOP
         if _G.YOKUDO_AutoEliteHunterLoop then
             task.cancel(_G.YOKUDO_AutoEliteHunterLoop)
             _G.YOKUDO_AutoEliteHunterLoop = nil
@@ -612,6 +874,8 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         end
         
         stopTweenTeleport()
+        stopInvokeLoop()
+        stopSpawnPointCheck()
         
         isBossDead = false
         bossFound = false
@@ -622,11 +886,11 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         currentBossPos = nil
         isLocked = false
         isFeatureRunning = false
+        isRespawning = false
         
         print("❌ Auto Elite Hunter Stopped")
     end
     
-    -- Release locks
     task.wait(0.3)
     isToggling = false
     toggleLock = false
@@ -644,4 +908,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Toggle Fixed)")
+print("✅ AutoEliteHunter Loaded (Respawn Port + GreatTree)")
