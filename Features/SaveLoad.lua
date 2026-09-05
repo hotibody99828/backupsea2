@@ -1,10 +1,13 @@
 -- ==================================================
--- SAVE & LOAD SYSTEM
+-- SAVE & LOAD SYSTEM (FIXED - គ្មាន BindToClose)
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
 local CONFIG_PATH = "YOKUDOHUB/config.json"
 
+-- ==================================================
+-- FEATURE LIST
+-- ==================================================
 local FEATURE_LIST = {
     "SpeedHack",
     "JumpHack",
@@ -26,6 +29,9 @@ local FEATURE_LIST = {
     "AutoCore",
 }
 
+-- ==================================================
+-- GET ALL STATES
+-- ==================================================
 local function getAllStates()
     local states = {}
     for _, name in ipairs(FEATURE_LIST) do
@@ -35,6 +41,9 @@ local function getAllStates()
     return states
 end
 
+-- ==================================================
+-- SAVE CONFIG
+-- ==================================================
 function _G.YOKUDO_SaveConfig()
     local data = { Features = getAllStates() }
     pcall(function()
@@ -44,6 +53,9 @@ function _G.YOKUDO_SaveConfig()
     end)
 end
 
+-- ==================================================
+-- LOAD CONFIG
+-- ==================================================
 function _G.YOKUDO_LoadConfig()
     local success, raw = pcall(function()
         if isfile(CONFIG_PATH) then
@@ -71,6 +83,9 @@ function _G.YOKUDO_LoadConfig()
     return true
 end
 
+-- ==================================================
+-- APPLY STATE
+-- ==================================================
 function _G.YOKUDO_ApplyState()
     print("🔄 Applying saved states...")
     local count = 0
@@ -96,6 +111,9 @@ function _G.YOKUDO_ApplyState()
     print("✅ Applied " .. count .. " features!")
 end
 
+-- ==================================================
+-- MARK DIRTY (Auto Save)
+-- ==================================================
 local isDirty = false
 local saveDebounce = nil
 
@@ -114,10 +132,13 @@ function _G.YOKUDO_MarkDirty()
     end)
 end
 
-game:BindToClose(function()
-    if isDirty then
-        _G.YOKUDO_SaveConfig()
-    end
-end)
+-- ==================================================
+-- ❌ លុប BindToClose ចេញ (មិនអាចប្រើក្នុង Client)
+-- ==================================================
+-- game:BindToClose(function()
+--     if isDirty then
+--         _G.YOKUDO_SaveConfig()
+--     end
+-- end)
 
 print("✅ Save/Load System Loaded")
