@@ -54,7 +54,7 @@ local PORTAL_ARGS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 200
+local TWEEN_SPEED = 180
 
 -- ==================================================
 -- STATE (SIMPLE)
@@ -484,7 +484,7 @@ local function eliteHunterLoop()
             
             usePortal(closestMap)
             
-            task.wait(2)
+            task.wait(0.10)
             
             tweenToBoss(bossPos, TWEEN_SPEED)
             
