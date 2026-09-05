@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (FULL - ជាមួយ Auto Save)
+-- AUTO ELITE HUNTER (NEW TOGGLE SYSTEM)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -57,7 +57,7 @@ local PORTAL_ARGS = {
 local TWEEN_SPEED = 180
 
 -- ==================================================
--- STATE
+-- STATE (SIMPLE)
 -- ==================================================
 local isRunning = false
 local loopConnection = nil
@@ -540,7 +540,7 @@ local function eliteHunterLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (ជាមួយ Auto Save)
+-- TOGGLE FUNCTION (SIMPLE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
     isRunning = not isRunning
@@ -590,13 +590,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         
         print("❌ Auto Elite Hunter Stopped")
     end
-    
-    -- ==================================================
-    -- ✅ AUTO SAVE (បន្ថែមនេះ)
-    -- ==================================================
-    if _G.YOKUDO_MarkDirty then
-        _G.YOKUDO_MarkDirty()
-    end
 end
 
 -- ==================================================
@@ -616,4 +609,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (ជាមួយ Auto Save)")
+print("✅ AutoEliteHunter Loaded (New Toggle System)")
