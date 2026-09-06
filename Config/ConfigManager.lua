@@ -1,8 +1,9 @@
 -- ==================================================
--- CONFIG MANAGER (SEA3 - Save & Load)
+-- CONFIG MANAGER (Auto Save & Load - Test)
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 
 -- ==================================================
 -- CONFIG PATH
@@ -10,46 +11,23 @@ local HttpService = game:GetService("HttpService")
 local CONFIG_PATH = "YOKUDOHUB/sea3_config.json"
 
 -- ==================================================
--- DEFAULT CONFIG (SEA3)
+-- DEFAULT CONFIG (សម្រាប់ Test)
 -- ==================================================
 local DEFAULT_CONFIG = {
-    -- Auto Hop
-    AutoClickAttack = false,
-    
-    -- Auto Dough King
-    AutoDoughKing = false,
-    AutoHopDoughKing = false,
-    
-    -- Auto Rip Indra
-    AutoRipIndra = false,
-    AutoHopRipIndra = false,
-    
-    -- Auto Cake Prince
-    AutoCakePrince = false,
-    AutoHopCakePrince = false,
-    
-    -- Auto Soul Reaper
-    AutoSoulReaper = false,
-    AutoHopSoulReaper = false,
-    
     -- Auto Elite Hunter
     AutoEliteHunter = false,
-    AutoHopEliteHunter = false,
     
-    -- Shop
-    AutoUnlockHaki = false,
-    
-    -- Setting
+    -- Auto Buso
     AutoBuso = false,
-    AutoKen = false,
-    WalkOnWater = false,
-    NoClip = false,
-    
-    -- Values
-    SpeedHack = 16,
-    JumpHack = 50,
-    SelectedWeapon = "Melee",
 }
+
+-- ==================================================
+-- STATE
+-- ==================================================
+local currentConfig = nil
+local isSaving = false
+local lastSaveTime = 0
+local SAVE_INTERVAL = 1 -- រក្សាទុករាល់ 1 វិនាទី
 
 -- ==================================================
 -- LOAD CONFIG
@@ -73,35 +51,48 @@ end
 -- SAVE CONFIG
 -- ==================================================
 local function saveConfig(data)
+    if isSaving then return end
+    isSaving = true
+    
     local success, err = pcall(function()
         local json = HttpService:JSONEncode(data)
         writefile(CONFIG_PATH, json)
+        print("💾 Config Auto-Saved!")
     end)
     
     if not success then
         warn("⚠️ Failed to save config: " .. tostring(err))
     end
+    
+    isSaving = false
 end
 
 -- ==================================================
 -- GET CONFIG
 -- ==================================================
 function _G.YOKUDO_GetConfig()
+    if currentConfig then
+        return currentConfig
+    end
+    
     local config = loadConfig()
     if config then
-        return config
+        currentConfig = config
+        return currentConfig
     end
     
     saveConfig(DEFAULT_CONFIG)
-    return DEFAULT_CONFIG
+    currentConfig = DEFAULT_CONFIG
+    return currentConfig
 end
 
 -- ==================================================
--- UPDATE CONFIG
+-- UPDATE CONFIG (Auto Save)
 -- ==================================================
 function _G.YOKUDO_UpdateConfig(key, value)
     local config = _G.YOKUDO_GetConfig()
     config[key] = value
+    currentConfig = config
     saveConfig(config)
 end
 
@@ -109,19 +100,42 @@ end
 -- RESET CONFIG
 -- ==================================================
 function _G.YOKUDO_ResetConfig()
+    currentConfig = DEFAULT_CONFIG
     saveConfig(DEFAULT_CONFIG)
-    print("✅ Config Reset to Default")
+    print("🔄 Config Reset to Default")
 end
 
 -- ==================================================
--- PRINT CONFIG
+-- AUTO SAVE LOOP (រាល់ 1 វិនាទី)
 -- ==================================================
-function _G.YOKUDO_PrintConfig()
-    local config = _G.YOKUDO_GetConfig()
-    print("📋 Current Config:")
-    for key, value in pairs(config) do
-        print("   " .. key .. ": " .. tostring(value))
+task.spawn(function()
+    while true do
+        task.wait(SAVE_INTERVAL)
+        
+        if currentConfig and tick() - lastSaveTime >= SAVE_INTERVAL then
+            local currentState = {
+                AutoEliteHunter = _G.YOKUDO_AutoEliteHunterEnabled or false,
+                AutoBuso = _G.YOKUDO_BusoEnabled or false,
+            }
+            
+            -- ពិនិត្យថាមានការផ្លាស់ប្តូរឬអត់
+            local hasChanged = false
+            for key, value in pairs(currentState) do
+                if currentConfig[key] ~= value then
+                    hasChanged = true
+                    break
+                end
+            end
+            
+            if hasChanged then
+                for key, value in pairs(currentState) do
+                    currentConfig[key] = value
+                end
+                saveConfig(currentConfig)
+                lastSaveTime = tick()
+            end
+        end
     end
-end
+end)
 
-print("✅ ConfigManager Loaded")
+print("✅ ConfigManager Loaded (Auto Save & Load)")
