@@ -7,14 +7,11 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
 -- ==================================================
--- CONFIG PATH (ប្រើ Username)
+-- CONFIG PATH
 -- ==================================================
 local CONFIG_FOLDER = "YOKUDOSEA3/"
 local CONFIG_FILE = CONFIG_FOLDER .. Player.Name .. ".json"
 
--- ==================================================
--- CREATE FOLDER IF NOT EXISTS
--- ==================================================
 pcall(function()
     if makefolder then
         makefolder(CONFIG_FOLDER)
@@ -25,27 +22,9 @@ end)
 -- DEFAULT CONFIG
 -- ==================================================
 local DEFAULT = {
-    -- Movement
     WalkOnWater = false,
-    
-    -- Auto Abilities
     AutoBuso = false,
-    AutoKen = false,
-    
-    -- Combat
-    AutoClickAttack = false,
-    
-    -- Shop
     AutoUnlockHaki = false,
-    
-    -- Farm Bosses
-    AutoDoughKing = false,
-    AutoRipIndra = false,
-    AutoCakePrince = false,
-    AutoSoulReaper = false,
-    AutoEliteHunter = false,
-    
-    -- Weapon
     WeaponType = "Melee",
 }
 
@@ -55,12 +34,9 @@ local DEFAULT = {
 _G.YOKUDO_Config = _G.YOKUDO_Config or {}
 
 -- ==================================================
--- LOAD CONFIG
+-- LOAD
 -- ==================================================
 function _G.YOKUDO_LoadConfig()
-    print("📁 Loading config for: " .. Player.Name)
-    print("📁 Config file: " .. CONFIG_FILE)
-    
     local json = nil
     
     if readfile then
@@ -78,11 +54,14 @@ function _G.YOKUDO_LoadConfig()
                 _G.YOKUDO_Config[k] = config[k] ~= nil and config[k] or v
             end
             print("✅ Config Loaded for: " .. Player.Name)
+            print("   WalkOnWater: " .. tostring(_G.YOKUDO_Config.WalkOnWater))
+            print("   AutoBuso: " .. tostring(_G.YOKUDO_Config.AutoBuso))
+            print("   AutoUnlockHaki: " .. tostring(_G.YOKUDO_Config.AutoUnlockHaki))
+            print("   WeaponType: " .. tostring(_G.YOKUDO_Config.WeaponType))
             return
         end
     end
     
-    print("📁 No config found, creating default...")
     for k, v in pairs(DEFAULT) do
         _G.YOKUDO_Config[k] = v
     end
@@ -90,7 +69,7 @@ function _G.YOKUDO_LoadConfig()
 end
 
 -- ==================================================
--- SAVE CONFIG
+-- SAVE
 -- ==================================================
 function _G.YOKUDO_SaveConfig()
     local json = HttpService:JSONEncode(_G.YOKUDO_Config)
@@ -105,7 +84,7 @@ function _G.YOKUDO_SaveConfig()
 end
 
 -- ==================================================
--- UPDATE SINGLE CONFIG
+-- UPDATE
 -- ==================================================
 function _G.YOKUDO_UpdateConfig(key, value)
     _G.YOKUDO_Config[key] = value
@@ -121,98 +100,41 @@ function _G.YOKUDO_ApplyConfig()
     local c = _G.YOKUDO_Config
     
     -- Walk on Water
-    if c.WalkOnWater and _G.YOKUDO_ToggleWalkOnWater then
-        _G.YOKUDO_WalkEnabled = true
-        enableWalkOnWater()
-        print("✅ Walk on Water: ON")
+    if c.WalkOnWater and _G.YOKUDO_SetWalk then
+        _G.YOKUDO_SetWalk(true)
+        print("✅ Walk on Water applied from config")
+    elseif _G.YOKUDO_SetWalk then
+        _G.YOKUDO_SetWalk(false)
     end
     if _G.YOKUDO_UpdateUI_Walk then
         _G.YOKUDO_UpdateUI_Walk(c.WalkOnWater)
     end
     
     -- Auto Buso
-    if c.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
-        _G.YOKUDO_BusoEnabled = true
-        startAutoBuso()
-        print("✅ Auto Buso: ON")
+    if c.AutoBuso and _G.YOKUDO_SetBuso then
+        _G.YOKUDO_SetBuso(true)
+        print("✅ Auto Buso applied from config")
+    elseif _G.YOKUDO_SetBuso then
+        _G.YOKUDO_SetBuso(false)
     end
     if _G.YOKUDO_UpdateUI_Buso then
         _G.YOKUDO_UpdateUI_Buso(c.AutoBuso)
     end
     
-    -- Auto Ken
-    if c.AutoKen and _G.YOKUDO_ToggleAutoKen then
-        _G.YOKUDO_ObservationEnabled = true
-        startAutoObservation()
-        print("✅ Auto Ken: ON")
-    end
-    if _G.YOKUDO_UpdateUI_Ken then
-        _G.YOKUDO_UpdateUI_Ken(c.AutoKen)
-    end
-    
-    -- Auto Click Attack
-    if c.AutoClickAttack and _G.YOKUDO_ToggleAutoClickAttack then
-        _G.YOKUDO_AutoClickAttackEnabled = true
-        _G.YOKUDO_ClickAttackLoopConnection = task.spawn(clickAttackLoop)
-        print("✅ Auto Click Attack: ON")
-    end
-    if _G.YOKUDO_UpdateUI_ClickAttack then
-        _G.YOKUDO_UpdateUI_ClickAttack(c.AutoClickAttack)
-    end
-    
     -- Auto Unlock Haki
     if c.AutoUnlockHaki and _G.YOKUDO_ToggleAutoUnlockHaki then
-        _G.YOKUDO_AutoUnlockHakiEnabled = true
-        _G.YOKUDO_AutoUnlockHakiLoop = task.spawn(unlockHakiLoop)
-        print("✅ Auto Unlock Haki: ON")
+        if not _G.YOKUDO_AutoUnlockHakiEnabled then
+            _G.YOKUDO_ToggleAutoUnlockHaki()
+            print("✅ Auto Unlock Haki applied from config")
+        end
+    else
+        if _G.YOKUDO_AutoUnlockHakiEnabled and _G.YOKUDO_ToggleAutoUnlockHaki then
+            _G.YOKUDO_ToggleAutoUnlockHaki()
+            print("❌ Auto Unlock Haki stopped from config")
+        end
     end
     if _G.YOKUDO_UpdateUI_UnlockHaki then
         _G.YOKUDO_UpdateUI_UnlockHaki(c.AutoUnlockHaki)
-    end
-    
-    -- Auto Dough King
-    if c.AutoDoughKing and _G.YOKUDO_ToggleAutoDoughKing then
-        _G.YOKUDO_ToggleAutoDoughKing()
-        print("✅ Auto Dough King: ON")
-    end
-    if _G.YOKUDO_UpdateUI_DoughKing then
-        _G.YOKUDO_UpdateUI_DoughKing(c.AutoDoughKing)
-    end
-    
-    -- Auto Rip Indra
-    if c.AutoRipIndra and _G.YOKUDO_ToggleAutoRipIndra then
-        _G.YOKUDO_ToggleAutoRipIndra()
-        print("✅ Auto Rip Indra: ON")
-    end
-    if _G.YOKUDO_UpdateUI_RipIndra then
-        _G.YOKUDO_UpdateUI_RipIndra(c.AutoRipIndra)
-    end
-    
-    -- Auto Cake Prince
-    if c.AutoCakePrince and _G.YOKUDO_ToggleAutoCakePrince then
-        _G.YOKUDO_ToggleAutoCakePrince()
-        print("✅ Auto Cake Prince: ON")
-    end
-    if _G.YOKUDO_UpdateUI_CakePrince then
-        _G.YOKUDO_UpdateUI_CakePrince(c.AutoCakePrince)
-    end
-    
-    -- Auto Soul Reaper
-    if c.AutoSoulReaper and _G.YOKUDO_ToggleAutoSoulReaper then
-        _G.YOKUDO_ToggleAutoSoulReaper()
-        print("✅ Auto Soul Reaper: ON")
-    end
-    if _G.YOKUDO_UpdateUI_SoulReaper then
-        _G.YOKUDO_UpdateUI_SoulReaper(c.AutoSoulReaper)
-    end
-    
-    -- Auto Elite Hunter
-    if c.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
-        _G.YOKUDO_ToggleAutoEliteHunter()
-        print("✅ Auto Elite Hunter: ON")
-    end
-    if _G.YOKUDO_UpdateUI_EliteHunter then
-        _G.YOKUDO_UpdateUI_EliteHunter(c.AutoEliteHunter)
     end
     
     -- Weapon Type
@@ -227,10 +149,6 @@ function _G.YOKUDO_ApplyConfig()
     print("✅ Config applied for: " .. Player.Name)
 end
 
--- ==================================================
--- LOAD CONFIG ON START
--- ==================================================
 _G.YOKUDO_LoadConfig()
-
 print("✅ ConfigManager Loaded")
 print("📁 Config file: " .. CONFIG_FILE)
