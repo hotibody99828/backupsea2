@@ -36,6 +36,11 @@ local invokeLoopConnection = nil
 local spawnPointCheckConnection = nil
 
 -- ==================================================
+-- STATE (សម្រាប់ Config)
+-- ==================================================
+_G.YOKUDO_AutoSoulReaperEnabled = false
+
+-- ==================================================
 -- TWEEN TELEPORT VARIABLES
 -- ==================================================
 local currentTween = nil
@@ -677,11 +682,6 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
         _G.YOKUDO_UpdateConfig("AutoSoulReaper", isRunning)
     end
 end
-
--- ==================================================
--- STATE
--- ==================================================
-_G.YOKUDO_AutoSoulReaperEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
