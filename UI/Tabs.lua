@@ -1,5 +1,5 @@
 -- ==================================================
--- TABS (SEA3 - ជាមួយ Update Checkbox Functions)
+-- TABS (SEA3)
 -- ==================================================
 
 local Y = _G.Y
@@ -264,27 +264,37 @@ end)
 
 -- Farm Boss: Dough King
 CreateSectionTitle(AutoHopPage, "Farm Boss", 4)
+
 local doughKingFrame, doughKingCheckbox, getDoughKingState = CreateCheckbox(AutoHopPage, "Auto Dough King", 5)
+
 local hopDoughKingFrame, hopDoughKingCheckbox, getHopDoughKingState = CreateCheckbox(AutoHopPage, "Auto Hop Dough King", 6)
 
 -- Farm Boss: Rip Indra
 CreateSectionTitle(AutoHopPage, "Farm Boss", 7)
+
 local ripIndraFrame, ripIndraCheckbox, getRipIndraState = CreateCheckbox(AutoHopPage, "Auto Rip indra", 8)
+
 local hopRipIndraFrame, hopRipIndraCheckbox, getHopRipIndraState = CreateCheckbox(AutoHopPage, "Auto Hop Rip indra", 9)
 
 -- Farm Boss: Cake Prince
 CreateSectionTitle(AutoHopPage, "Farm Boss", 10)
+
 local cakePrinceFrame, cakePrinceCheckbox, getCakePrinceState = CreateCheckbox(AutoHopPage, "Auto Cake Prince", 11)
+
 local hopCakePrinceFrame, hopCakePrinceCheckbox, getHopCakePrinceState = CreateCheckbox(AutoHopPage, "Auto Hop Cake Prince", 12)
 
 -- Farm Boss: Soul Reaper
 CreateSectionTitle(AutoHopPage, "Farm Boss", 13)
+
 local soulReaperFrame, soulReaperCheckbox, getSoulReaperState = CreateCheckbox(AutoHopPage, "Auto Soul Reaper", 14)
+
 local hopSoulReaperFrame, hopSoulReaperCheckbox, getHopSoulReaperState = CreateCheckbox(AutoHopPage, "Auto Hop Soul Reaper", 15)
 
 -- Farm Boss: Elite Hunter
 CreateSectionTitle(AutoHopPage, "Farm Boss", 16)
+
 local eliteHunterFrame, eliteHunterCheckbox, getEliteHunterState = CreateCheckbox(AutoHopPage, "Auto Elite Hunter", 17)
+
 local hopEliteHunterFrame, hopEliteHunterCheckbox, getHopEliteHunterState = CreateCheckbox(AutoHopPage, "Auto Hop Elite Hunter", 18)
 
 -- ==================================================
@@ -400,60 +410,6 @@ noClipCheckbox.MouseButton1Click:Connect(function()
         _G.YOKUDO_ToggleNoClip()
     end
 end)
-
--- ==================================================
--- UPDATE CHECKBOX UI FUNCTIONS (សម្រាប់ Load Config)
--- ==================================================
-
--- Update Auto Elite Hunter Checkbox
-function _G.YOKUDO_UpdateEliteHunterCheckbox(enabled)
-    local page = EliteHunterPage
-    if page then
-        for _, child in ipairs(page:GetDescendants()) do
-            if child.Name == "CheckBox" and child.Parent and child.Parent.Name == "Auto_Elite_Hunter" then
-                local check = child:FindFirstChild("Check")
-                if check then
-                    check.Visible = enabled
-                    if enabled then
-                        child.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
-                        local stroke = child:FindFirstChildOfClass("UIStroke")
-                        if stroke then stroke.Color = Color3.fromRGB(135, 120, 225) end
-                    else
-                        child.BackgroundColor3 = Color3.fromRGB(28, 29, 39)
-                        local stroke = child:FindFirstChildOfClass("UIStroke")
-                        if stroke then stroke.Color = Color3.fromRGB(200, 200, 220) end
-                    end
-                end
-                break
-            end
-        end
-    end
-end
-
--- Update Auto Buso Checkbox
-function _G.YOKUDO_UpdateBusoCheckbox(enabled)
-    local page = SettingPage
-    if page then
-        for _, child in ipairs(page:GetDescendants()) do
-            if child.Name == "CheckBox" and child.Parent and child.Parent.Name == "Auto_Buso" then
-                local check = child:FindFirstChild("Check")
-                if check then
-                    check.Visible = enabled
-                    if enabled then
-                        child.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
-                        local stroke = child:FindFirstChildOfClass("UIStroke")
-                        if stroke then stroke.Color = Color3.fromRGB(135, 120, 225) end
-                    else
-                        child.BackgroundColor3 = Color3.fromRGB(28, 29, 39)
-                        local stroke = child:FindFirstChildOfClass("UIStroke")
-                        if stroke then stroke.Color = Color3.fromRGB(200, 200, 220) end
-                    end
-                end
-                break
-            end
-        end
-    end
-end
 
 -- ==================================================
 -- OTHER PAGES
