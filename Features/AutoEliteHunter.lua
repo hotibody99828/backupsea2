@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (NEW TOGGLE SYSTEM)
+-- AUTO ELITE HUNTER (ជាមួយ Config Save)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -33,22 +33,10 @@ local MAP_POSITIONS = {
 -- PORTAL REMOTE ARGS
 -- ==================================================
 local PORTAL_ARGS = {
-    Waterfall = {
-        "requestEntrance",
-        Vector3.new(5700.94775390625, 1013.2747802734375, -277.3791809082031)
-    },
-    Turtle = {
-        "requestEntrance",
-        Vector3.new(-12550.6025390625, 337.3270568847656, -7543.0830078125)
-    },
-    Port = {
-        "requestEntrance",
-        Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)
-    },
-    GreatTree = {
-        "requestEntrance",
-        Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)
-    },
+    Waterfall = {"requestEntrance", Vector3.new(5700.94775390625, 1013.2747802734375, -277.3791809082031)},
+    Turtle = {"requestEntrance", Vector3.new(-12550.6025390625, 337.3270568847656, -7543.0830078125)},
+    Port = {"requestEntrance", Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)},
+    GreatTree = {"requestEntrance", Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)},
 }
 
 -- ==================================================
@@ -57,7 +45,7 @@ local PORTAL_ARGS = {
 local TWEEN_SPEED = 180
 
 -- ==================================================
--- STATE (SIMPLE)
+-- STATE
 -- ==================================================
 local isRunning = false
 local loopConnection = nil
@@ -88,7 +76,6 @@ local isFollowingBoss = false
 local function applyNoCollide()
     local character = Player.Character
     if not character then return end
-    
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = false
@@ -99,10 +86,8 @@ end
 local function startNoCollide()
     if noCollideConnection then return end
     if noCollideActive then return end
-    
     noCollideActive = true
     applyNoCollide()
-    
     noCollideConnection = RunService.Heartbeat:Connect(function()
         if not noCollideActive then return end
         applyNoCollide()
@@ -111,12 +96,10 @@ end
 
 local function stopNoCollide()
     noCollideActive = false
-    
     if noCollideConnection then
         noCollideConnection:Disconnect()
         noCollideConnection = nil
     end
-    
     local character = Player.Character
     if character then
         for _, part in ipairs(character:GetDescendants()) do
@@ -133,7 +116,6 @@ end
 local function usePortal(mapName)
     local args = PORTAL_ARGS[mapName]
     if not args then return false end
-    
     pcall(function()
         local Remote = ReplicatedStorage:FindFirstChild("Remotes")
         if Remote then
@@ -150,7 +132,6 @@ end
 -- ==================================================
 -- TWEEN TELEPORT FUNCTIONS
 -- ==================================================
-
 local function cleanupBody()
     if bodyVelocity then
         bodyVelocity:Destroy()
@@ -205,10 +186,8 @@ end
 local function tweenToBoss(bossPos, speed)
     local character = Player.Character
     if not character then return false end
-    
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return false end
-    
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
     
@@ -242,8 +221,8 @@ local function tweenToBoss(bossPos, speed)
     end
     
     local duration = math.max(0.10, distance / speed)
-    
     local direction = (targetPos - root.Position).Unit
+    
     if not bodyVelocity then
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
@@ -258,18 +237,9 @@ local function tweenToBoss(bossPos, speed)
     end
     bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
     
-    local tweenInfo = TweenInfo.new(
-        duration,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out
-    )
-    
-    currentTween = TweenService:Create(root, tweenInfo, {
-        CFrame = CFrame.new(targetPos)
-    })
-    
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    currentTween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(targetPos)})
     isTweening = true
-    
     currentTween:Play()
     currentTween.Completed:Wait()
     
@@ -292,7 +262,6 @@ end
 local function findClosestMap(bossPos)
     local closestMap = nil
     local closestDist = math.huge
-    
     for mapName, mapPos in pairs(MAP_POSITIONS) do
         local dist = (bossPos - mapPos).Magnitude
         if dist < closestDist then
@@ -300,7 +269,6 @@ local function findClosestMap(bossPos)
             closestMap = mapName
         end
     end
-    
     return closestMap
 end
 
@@ -380,6 +348,7 @@ local function eliteHunterLoop()
             continue
         end
         
+        -- Equip Weapon
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -453,14 +422,12 @@ local function eliteHunterLoop()
                         end
                     end
                 end)
-                
                 isLocked = true
             else
                 if _G.YOKUDO_AttackTarget then
                     _G.YOKUDO_AttackTarget(boss)
                 end
             end
-            
             task.wait(0.01)
             continue
         end
@@ -483,9 +450,7 @@ local function eliteHunterLoop()
             end
             
             usePortal(closestMap)
-            
             task.wait(0.10)
-            
             tweenToBoss(bossPos, TWEEN_SPEED)
             
             if followConnection then
@@ -530,9 +495,7 @@ local function eliteHunterLoop()
                     end
                 end
             end)
-            
             isLocked = true
-            
             task.wait(0.01)
             continue
         end
@@ -540,13 +503,13 @@ local function eliteHunterLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (SIMPLE)
+-- TOGGLE FUNCTION (ជាមួយ Config Save)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
     isRunning = not isRunning
+    _G.YOKUDO_AutoEliteHunterEnabled = isRunning
     
     if isRunning then
-        -- START
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -566,7 +529,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         loopConnection = task.spawn(eliteHunterLoop)
         print("✅ Auto Elite Hunter Started")
     else
-        -- STOP
         if loopConnection then
             task.cancel(loopConnection)
             loopConnection = nil
@@ -587,8 +549,17 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        
         print("❌ Auto Elite Hunter Stopped")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_EliteHunter then
+        _G.YOKUDO_UpdateUI_EliteHunter(isRunning)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoEliteHunter", isRunning)
     end
 end
 
@@ -603,10 +574,9 @@ _G.YOKUDO_AutoEliteHunterEnabled = false
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     stopNoCollide()
-    
     if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (New Toggle System)")
+print("✅ AutoEliteHunter Loaded (Config Ready)")
