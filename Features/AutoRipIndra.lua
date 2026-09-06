@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO RIP INDRA (New Toggle + No Collide)
+-- AUTO RIP INDRA (ជាមួយ Config Save)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -16,12 +16,9 @@ local Player = Players.LocalPlayer
 local RIP_INDRA_POSITION = Vector3.new(-12465, 376, -7563)
 
 -- ==================================================
--- PORTAL REMOTE ARGS (Great Tree / Port)
+-- PORTAL REMOTE ARGS
 -- ==================================================
-local PORTAL_ARGS = {
-    "requestEntrance",
-    Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)
-}
+local PORTAL_ARGS = {"requestEntrance", Vector3.new(-4936.41162109375, 314.50201416015625, -3103.224853515625)}
 
 -- ==================================================
 -- TWEEN SPEED
@@ -29,7 +26,7 @@ local PORTAL_ARGS = {
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- STATE (SIMPLE - New Toggle System)
+-- STATE
 -- ==================================================
 local isRunning = false
 local loopConnection = nil
@@ -56,12 +53,11 @@ local isAtPosition = false
 local isFollowingBoss = false
 
 -- ==================================================
--- NO COLLIDE FUNCTIONS (លឿនបំផុត)
+-- NO COLLIDE FUNCTIONS
 -- ==================================================
 local function applyNoCollide()
     local character = Player.Character
     if not character then return end
-    
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = false
@@ -72,10 +68,8 @@ end
 local function startNoCollide()
     if noCollideConnection then return end
     if noCollideActive then return end
-    
     noCollideActive = true
     applyNoCollide()
-    
     noCollideConnection = RunService.Heartbeat:Connect(function()
         if not noCollideActive then return end
         applyNoCollide()
@@ -84,12 +78,10 @@ end
 
 local function stopNoCollide()
     noCollideActive = false
-    
     if noCollideConnection then
         noCollideConnection:Disconnect()
         noCollideConnection = nil
     end
-    
     local character = Player.Character
     if character then
         for _, part in ipairs(character:GetDescendants()) do
@@ -119,26 +111,19 @@ local function usePortal()
 end
 
 -- ==================================================
--- BYPASS TELEPORT FUNCTION
+-- BYPASS TELEPORT
 -- ==================================================
 local function bypassTeleport(targetPos)
     local character = Player.Character
     if not character then return false end
-    
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return false end
-    
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
-    
     root.CFrame = CFrame.new(targetPos)
-    
     return true
 end
 
--- ==================================================
--- RESET STATE
--- ==================================================
 local function resetState()
     hasUsedPortal = false
 end
@@ -146,7 +131,6 @@ end
 -- ==================================================
 -- TWEEN TELEPORT FUNCTIONS
 -- ==================================================
-
 local function cleanupBody()
     if bodyVelocity then
         bodyVelocity:Destroy()
@@ -201,10 +185,8 @@ end
 local function tweenToBoss(bossPos, speed)
     local character = Player.Character
     if not character then return false end
-    
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return false end
-    
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
     
@@ -238,8 +220,8 @@ local function tweenToBoss(bossPos, speed)
     end
     
     local duration = math.max(0.5, distance / speed)
-    
     local direction = (targetPos - root.Position).Unit
+    
     if not bodyVelocity then
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
@@ -254,18 +236,9 @@ local function tweenToBoss(bossPos, speed)
     end
     bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
     
-    local tweenInfo = TweenInfo.new(
-        duration,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out
-    )
-    
-    currentTween = TweenService:Create(root, tweenInfo, {
-        CFrame = CFrame.new(targetPos)
-    })
-    
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    currentTween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(targetPos)})
     isTweening = true
-    
     currentTween:Play()
     currentTween.Completed:Wait()
     
@@ -286,7 +259,6 @@ end
 -- FIND RIP INDRA BOSS
 -- ==================================================
 local function findRipIndra()
-    -- 1. ពិនិត្យ workspace (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("rip_indra True Form")
@@ -300,7 +272,6 @@ local function findRipIndra()
         end
     end
     
-    -- 2. ពិនិត្យ ReplicatedStorage (Boss នៅឆ្ងាយ)
     local stored = ReplicatedStorage:FindFirstChild("rip_indra True Form")
     if stored then
         return stored, "replicatedstorage"
@@ -345,7 +316,6 @@ local function ripIndraLoop()
                 isBossDead = false
                 continue
             end
-            
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
@@ -355,6 +325,7 @@ local function ripIndraLoop()
         
         isBossDead = false
         
+        -- Equip Weapon
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -428,14 +399,12 @@ local function ripIndraLoop()
                         end
                     end
                 end)
-                
                 isLocked = true
             else
                 if _G.YOKUDO_AttackTarget then
                     _G.YOKUDO_AttackTarget(boss)
                 end
             end
-            
             task.wait(0.01)
             continue
         end
@@ -450,7 +419,6 @@ local function ripIndraLoop()
             end
             
             bypassTeleport(RIP_INDRA_POSITION)
-            
             task.wait(0.10)
             
             local newBoss, newLocation = findRipIndra()
@@ -508,11 +476,9 @@ local function ripIndraLoop()
                             end
                         end
                     end)
-                    
                     isLocked = true
                 end
             end
-            
             task.wait(0.01)
             continue
         end
@@ -520,13 +486,13 @@ local function ripIndraLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (NEW - SIMPLE)
+-- TOGGLE FUNCTION (ជាមួយ Config Save)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoRipIndra()
     isRunning = not isRunning
+    _G.YOKUDO_AutoRipIndraEnabled = isRunning
     
     if isRunning then
-        -- START
         hasUsedPortal = false
         isBossDead = false
         bossFound = false
@@ -547,7 +513,6 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         loopConnection = task.spawn(ripIndraLoop)
         print("⚡ Auto Rip Indra Started")
     else
-        -- STOP
         if loopConnection then
             task.cancel(loopConnection)
             loopConnection = nil
@@ -568,8 +533,17 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        
         print("⚡ Auto Rip Indra Stopped")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_RipIndra then
+        _G.YOKUDO_UpdateUI_RipIndra(isRunning)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
     end
 end
 
@@ -583,13 +557,11 @@ _G.YOKUDO_AutoRipIndraEnabled = false
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
-    
     resetState()
     stopNoCollide()
-    
     if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoRipIndra Loaded (New Toggle + No Collide)")
+print("✅ AutoRipIndra Loaded (Config Ready)")
