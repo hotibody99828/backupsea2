@@ -1,5 +1,5 @@
 -- ==================================================
--- WALK ON WATER (SEA3)
+-- WALK ON WATER (SEA3) - ជាមួយ Config Save
 -- ==================================================
 
 local Y = _G.Y
@@ -11,7 +11,7 @@ _G.YOKUDO_WalkConnection = nil
 _G.YOKUDO_LastX = nil
 _G.YOKUDO_LastZ = nil
 
-local function enableWalkOnWater()
+function enableWalkOnWater()
     if _G.YOKUDO_WaterWalkPart then return end
     local character = Player.GetCharacter()
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
@@ -64,7 +64,7 @@ local function enableWalkOnWater()
     end)
 end
 
-local function disableWalkOnWater()
+function disableWalkOnWater()
     if _G.YOKUDO_WalkConnection then
         _G.YOKUDO_WalkConnection:Disconnect()
         _G.YOKUDO_WalkConnection = nil
@@ -77,13 +77,37 @@ local function disableWalkOnWater()
     _G.YOKUDO_LastZ = nil
 end
 
-function _G.YOKUDO_ToggleWalkOnWater()
-    _G.YOKUDO_WalkEnabled = not _G.YOKUDO_WalkEnabled
-    if _G.YOKUDO_WalkEnabled then
+-- ==================================================
+-- SET FUNCTION (សម្រាប់ Config Load)
+-- ==================================================
+function _G.YOKUDO_SetWalk(enabled)
+    if enabled == _G.YOKUDO_WalkEnabled then return end
+    
+    _G.YOKUDO_WalkEnabled = enabled
+    if enabled then
         enableWalkOnWater()
+        print("✅ Walk on Water: ON (Config)")
     else
         disableWalkOnWater()
+        print("❌ Walk on Water: OFF (Config)")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_Walk then
+        _G.YOKUDO_UpdateUI_Walk(enabled)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("WalkOnWater", enabled)
     end
 end
 
-print("✅ WalkOnWater Loaded")
+-- ==================================================
+-- TOGGLE FUNCTION (សម្រាប់ User Click)
+-- ==================================================
+function _G.YOKUDO_ToggleWalkOnWater()
+    _G.YOKUDO_SetWalk(not _G.YOKUDO_WalkEnabled)
+end
+
+print("✅ WalkOnWater Loaded (Config Ready)")
