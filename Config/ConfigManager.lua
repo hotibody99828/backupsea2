@@ -1,8 +1,9 @@
 -- ==================================================
--- CONFIG MANAGER (Auto Save & Load - FULL)
+-- CONFIG MANAGER (Auto Save & Load - DEBUG)
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 
 -- ==================================================
 -- CONFIG PATH
@@ -22,12 +23,30 @@ local DEFAULT_CONFIG = {
 -- ==================================================
 local currentConfig = nil
 local isSaving = false
-local SAVE_INTERVAL = 0.5
+local SAVE_INTERVAL = 1
+
+-- ==================================================
+-- CHECK WRITEFILE/READFILE SUPPORT
+-- ==================================================
+local function checkFileSupport()
+    local success, err = pcall(function()
+        return isfile and writefile and readfile
+    end)
+    
+    if not success or not isfile or not writefile or not readfile then
+        print("⚠️ Executor does not support writefile/readfile!")
+        print("⚠️ Config System will not work!")
+        return false
+    end
+    return true
+end
 
 -- ==================================================
 -- LOAD CONFIG
 -- ==================================================
 local function loadConfig()
+    if not checkFileSupport() then return nil end
+    
     local success, data = pcall(function()
         if isfile(CONFIG_PATH) then
             local content = readfile(CONFIG_PATH)
@@ -37,8 +56,11 @@ local function loadConfig()
     end)
     
     if success and data then
+        print("📂 Config Loaded from: " .. CONFIG_PATH)
         return data
     end
+    
+    print("📂 Config file not found, using default")
     return nil
 end
 
@@ -46,12 +68,17 @@ end
 -- SAVE CONFIG
 -- ==================================================
 local function saveConfig(data)
+    if not checkFileSupport() then return end
     if isSaving then return end
+    
     isSaving = true
     
     local success, err = pcall(function()
         local json = HttpService:JSONEncode(data)
         writefile(CONFIG_PATH, json)
+        print("💾 Config Saved! (" .. CONFIG_PATH .. ")")
+        print("   EliteHunter: " .. tostring(data.AutoEliteHunter))
+        print("   Buso: " .. tostring(data.AutoBuso))
     end)
     
     if not success then
@@ -85,6 +112,7 @@ function _G.YOKUDO_GetConfig()
         return currentConfig
     end
     
+    print("📂 Creating default config...")
     saveConfig(DEFAULT_CONFIG)
     currentConfig = DEFAULT_CONFIG
     return currentConfig
@@ -94,6 +122,8 @@ end
 -- FORCE SAVE CURRENT STATE
 -- ==================================================
 function _G.YOKUDO_SaveCurrentState()
+    if not checkFileSupport() then return false end
+    
     local currentState = getCurrentState()
     local config = _G.YOKUDO_GetConfig()
     
@@ -114,19 +144,40 @@ function _G.YOKUDO_SaveCurrentState()
 end
 
 -- ==================================================
+-- FORCE LOAD CONFIG (ហៅពេលចង់ Load ឡើងវិញ)
+-- ==================================================
+function _G.YOKUDO_ReloadConfig()
+    currentConfig = nil
+    return _G.YOKUDO_GetConfig()
+end
+
+-- ==================================================
 -- RESET CONFIG
 -- ==================================================
 function _G.YOKUDO_ResetConfig()
     currentConfig = DEFAULT_CONFIG
     saveConfig(DEFAULT_CONFIG)
+    print("🔄 Config Reset to Default")
 end
 
 -- ==================================================
--- AUTO SAVE LOOP (រាល់ 0.5 វិនាទី)
+-- PRINT CONFIG
+-- ==================================================
+function _G.YOKUDO_PrintConfig()
+    local config = _G.YOKUDO_GetConfig()
+    print("📋 Current Config:")
+    print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
+    print("   AutoBuso: " .. tostring(config.AutoBuso))
+end
+
+-- ==================================================
+-- AUTO SAVE LOOP (រាល់ 1 វិនាទី)
 -- ==================================================
 task.spawn(function()
     while true do
         task.wait(SAVE_INTERVAL)
+        
+        if not checkFileSupport() then continue end
         
         local currentState = getCurrentState()
         local config = _G.YOKUDO_GetConfig()
@@ -152,24 +203,41 @@ end)
 -- ==================================================
 -- HOOK INTO TOGGLE FUNCTIONS (Auto Save on Toggle)
 -- ==================================================
--- Hook Auto Elite Hunter
-local oldToggleElite = _G.YOKUDO_ToggleAutoEliteHunter
-if oldToggleElite then
-    _G.YOKUDO_ToggleAutoEliteHunter = function()
-        oldToggleElite()
-        task.wait(0.1)
-        _G.YOKUDO_SaveCurrentState()
+local function setupToggleHooks()
+    -- Hook Auto Elite Hunter
+    local oldToggleElite = _G.YOKUDO_ToggleAutoEliteHunter
+    if oldToggleElite then
+        _G.YOKUDO_ToggleAutoEliteHunter = function()
+            oldToggleElite()
+            task.wait(0.1)
+            _G.YOKUDO_SaveCurrentState()
+            _G.YOKUDO_PrintConfig()
+        end
+        print("🔗 AutoEliteHunter hooked for config")
+    else
+        print("⚠️ AutoEliteHunter toggle not found, hook failed")
+    end
+    
+    -- Hook Auto Buso
+    local oldToggleBuso = _G.YOKUDO_ToggleAutoBuso
+    if oldToggleBuso then
+        _G.YOKUDO_ToggleAutoBuso = function()
+            oldToggleBuso()
+            task.wait(0.1)
+            _G.YOKUDO_SaveCurrentState()
+            _G.YOKUDO_PrintConfig()
+        end
+        print("🔗 AutoBuso hooked for config")
+    else
+        print("⚠️ AutoBuso toggle not found, hook failed")
     end
 end
 
--- Hook Auto Buso
-local oldToggleBuso = _G.YOKUDO_ToggleAutoBuso
-if oldToggleBuso then
-    _G.YOKUDO_ToggleAutoBuso = function()
-        oldToggleBuso()
-        task.wait(0.1)
-        _G.YOKUDO_SaveCurrentState()
-    end
-end
+-- រង់ចាំ Features Load រួច ទើប Hook
+task.spawn(function()
+    task.wait(2)
+    setupToggleHooks()
+    print("✅ ConfigManager Ready")
+end)
 
 print("✅ ConfigManager Loaded")
