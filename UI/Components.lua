@@ -774,10 +774,6 @@ function CreateSmartCheckbox(Parent, LabelText, Order, SetFunction, GetStateFunc
         end
     end)
 
-    -- ==================================================
--- SMART CHECKBOX EXPORT (បន្ថែម AutoClickAttack)
--- ==================================================
-
     -- Export for external update
     if LabelText == "Walk on Water" then
         _G.YOKUDO_UpdateUI_Walk = UpdateUI
@@ -785,8 +781,18 @@ function CreateSmartCheckbox(Parent, LabelText, Order, SetFunction, GetStateFunc
         _G.YOKUDO_UpdateUI_Buso = UpdateUI
     elseif LabelText == "Auto Unlock Haki Legendary" then
         _G.YOKUDO_UpdateUI_UnlockHaki = UpdateUI
-    elseif LabelText == "Auto Click Attack" then  -- ⭐ បន្ថែមនេះ
+    elseif LabelText == "Auto Click Attack" then
         _G.YOKUDO_UpdateUI_ClickAttack = UpdateUI
+    elseif LabelText == "Auto Dough King" then
+        _G.YOKUDO_UpdateUI_DoughKing = UpdateUI
+    elseif LabelText == "Auto Rip indra" then
+        _G.YOKUDO_UpdateUI_RipIndra = UpdateUI
+    elseif LabelText == "Auto Cake Prince" then
+        _G.YOKUDO_UpdateUI_CakePrince = UpdateUI
+    elseif LabelText == "Auto Soul Reaper" then
+        _G.YOKUDO_UpdateUI_SoulReaper = UpdateUI
+    elseif LabelText == "Auto Elite Hunter" then
+        _G.YOKUDO_UpdateUI_EliteHunter = UpdateUI
     end
 
     return {
