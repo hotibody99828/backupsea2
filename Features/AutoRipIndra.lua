@@ -35,11 +35,6 @@ local noCollideActive = false
 local hasUsedPortal = false
 
 -- ==================================================
--- STATE (សម្រាប់ Config)
--- ==================================================
-_G.YOKUDO_AutoRipIndraEnabled = false
-
--- ==================================================
 -- TWEEN TELEPORT VARIABLES
 -- ==================================================
 local currentTween = nil
@@ -541,16 +536,22 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         print("⚡ Auto Rip Indra Stopped")
     end
     
-    -- ⭐ Update UI
+    -- ⭐ Update UI (បន្ថែមពិនិត្យ)
     if _G.YOKUDO_UpdateUI_RipIndra then
         _G.YOKUDO_UpdateUI_RipIndra(isRunning)
     end
     
-    -- ⭐ Save Config
+    -- ⭐ Save Config (បន្ថែមពិនិត្យ)
     if _G.YOKUDO_UpdateConfig then
         _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
+        print("💾 AutoRipIndra Config Saved: " .. tostring(isRunning))
     end
 end
+
+-- ==================================================
+-- STATE
+-- ==================================================
+_G.YOKUDO_AutoRipIndraEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
