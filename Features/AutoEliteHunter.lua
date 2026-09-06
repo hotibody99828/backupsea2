@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (NEW TOGGLE SYSTEM)
+-- AUTO ELITE HUNTER (FULL - with Global State)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -540,10 +540,11 @@ local function eliteHunterLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (SIMPLE)
+-- TOGGLE FUNCTION (SIMPLE - with Global State)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
     isRunning = not isRunning
+    _G.YOKUDO_AutoEliteHunterEnabled = isRunning
     
     if isRunning then
         -- START
@@ -593,7 +594,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
 end
 
 -- ==================================================
--- STATE
+-- STATE (GLOBAL - for Config)
 -- ==================================================
 _G.YOKUDO_AutoEliteHunterEnabled = false
 
