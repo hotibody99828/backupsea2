@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO DOUGH KING (ដូច Auto Cake Prince)
+-- AUTO DOUGH KING (New Toggle + No Collide)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -21,20 +21,17 @@ local DOUGH_KING_POSITION = Vector3.new(-2157, 160, -12400)
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- TOGGLE DEBOUNCE
+-- STATE (SIMPLE - New Toggle System)
 -- ==================================================
-local isToggling = false
+local isRunning = false
+local loopConnection = nil
+local noCollideConnection = nil
+local noCollideActive = false
 
 -- ==================================================
 -- BYPASS TELEPORT STATE
 -- ==================================================
 local hasBypassTeleported = false
-
--- ==================================================
--- TOGGLE PROTECTION
--- ==================================================
-local isFeatureRunning = false
-local toggleLock = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -53,6 +50,51 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
+
+-- ==================================================
+-- NO COLLIDE FUNCTIONS
+-- ==================================================
+local function applyNoCollide()
+    local character = Player.Character
+    if not character then return end
+    
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function startNoCollide()
+    if noCollideConnection then return end
+    if noCollideActive then return end
+    
+    noCollideActive = true
+    applyNoCollide()
+    
+    noCollideConnection = RunService.Heartbeat:Connect(function()
+        if not noCollideActive then return end
+        applyNoCollide()
+    end)
+end
+
+local function stopNoCollide()
+    noCollideActive = false
+    
+    if noCollideConnection then
+        noCollideConnection:Disconnect()
+        noCollideConnection = nil
+    end
+    
+    local character = Player.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
 
 -- ==================================================
 -- BYPASS TELEPORT FUNCTION
@@ -74,7 +116,7 @@ local function bypassTeleport(targetPos)
 end
 
 -- ==================================================
--- RESET BYPASS STATE (ពេល Character Respawn)
+-- RESET BYPASS STATE
 -- ==================================================
 local function resetBypassState()
     hasBypassTeleported = false
@@ -116,6 +158,7 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
+    stopNoCollide()
 end
 
 local function stopTweenToPosition()
@@ -161,16 +204,19 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
+    startNoCollide()
+    
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
+        stopNoCollide()
         return true 
     end
     
-    local duration = math.max(0.10, distance / speed)
+    local duration = math.max(0.5, distance / speed)
     
     local direction = (targetPos - root.Position).Unit
     if not bodyVelocity then
@@ -207,9 +253,11 @@ local function tweenToBoss(bossPos, speed)
     end
     
     if not isTweening then
+        stopNoCollide()
         return false
     end
     
+    stopNoCollide()
     return true
 end
 
@@ -241,12 +289,10 @@ local function findDoughKing()
 end
 
 -- ==================================================
--- AUTO DOUGH KING LOOP
+-- MAIN LOOP
 -- ==================================================
 local function doughKingLoop()
-    isFeatureRunning = true
-    
-    while _G.YOKUDO_AutoDoughKingEnabled do
+    while isRunning do
         local character = Player.Character
         if not character then
             task.wait(0.01)
@@ -295,9 +341,6 @@ local function doughKingLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
-        -- ==================================================
-        -- CASE 1: Boss នៅឆ្ងាយ (ReplicatedStorage) → Bypass Teleport
-        -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
@@ -311,9 +354,6 @@ local function doughKingLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 2: Boss នៅជិត (workspace) → Tween ទៅ Boss
-        -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -343,7 +383,7 @@ local function doughKingLoop()
                 end
                 
                 followConnection = RunService.Heartbeat:Connect(function()
-                    if not _G.YOKUDO_AutoDoughKingEnabled then
+                    if not isRunning then
                         if followConnection then
                             followConnection:Disconnect()
                             followConnection = nil
@@ -391,40 +431,16 @@ local function doughKingLoop()
             continue
         end
     end
-    
-    isFeatureRunning = false
 end
 
 -- ==================================================
--- STATE
--- ==================================================
-_G.YOKUDO_AutoDoughKingEnabled = false
-_G.YOKUDO_AutoDoughKingLoop = nil
-
--- ==================================================
--- TOGGLE AUTO DOUGH KING
+-- TOGGLE FUNCTION (NEW - SIMPLE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoDoughKing()
-    if toggleLock then
-        return
-    end
+    isRunning = not isRunning
     
-    if isToggling then
-        return
-    end
-    
-    isToggling = true
-    toggleLock = true
-    
-    _G.YOKUDO_AutoDoughKingEnabled = not _G.YOKUDO_AutoDoughKingEnabled
-    
-    if _G.YOKUDO_AutoDoughKingEnabled then
-        if isFeatureRunning then
-            isToggling = false
-            toggleLock = false
-            return
-        end
-        
+    if isRunning then
+        -- START
         hasBypassTeleported = false
         isBossDead = false
         bossFound = false
@@ -437,16 +453,18 @@ function _G.YOKUDO_ToggleAutoDoughKing()
             followConnection = nil
         end
         
-        if _G.YOKUDO_AutoDoughKingLoop then
-            _G.YOKUDO_AutoDoughKingLoop:Disconnect()
-            _G.YOKUDO_AutoDoughKingLoop = nil
+        if loopConnection then
+            loopConnection:Disconnect()
+            loopConnection = nil
         end
         
-        _G.YOKUDO_AutoDoughKingLoop = task.spawn(doughKingLoop)
+        loopConnection = task.spawn(doughKingLoop)
+        print("🍩 Auto Dough King Started")
     else
-        if _G.YOKUDO_AutoDoughKingLoop then
-            task.cancel(_G.YOKUDO_AutoDoughKingLoop)
-            _G.YOKUDO_AutoDoughKingLoop = nil
+        -- STOP
+        if loopConnection then
+            task.cancel(loopConnection)
+            loopConnection = nil
         end
         
         if followConnection then
@@ -464,13 +482,15 @@ function _G.YOKUDO_ToggleAutoDoughKing()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        isFeatureRunning = false
+        
+        print("🍩 Auto Dough King Stopped")
     end
-    
-    task.wait(0.3)
-    isToggling = false
-    toggleLock = false
 end
+
+-- ==================================================
+-- STATE
+-- ==================================================
+_G.YOKUDO_AutoDoughKingEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
@@ -478,10 +498,11 @@ end
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     resetBypassState()
+    stopNoCollide()
     
-    if _G.YOKUDO_AutoDoughKingEnabled then
+    if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoDoughKing Loaded")
+print("✅ AutoDoughKing Loaded (New Toggle + No Collide)")
