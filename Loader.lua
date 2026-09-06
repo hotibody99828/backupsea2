@@ -2,7 +2,7 @@
 -- YOKUDO HUB | SEA3 | [Premium] | Loader
 -- ==================================================
 -- URL តែមួយគត់៖
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/your-username/YOKUDO-HUB-SEA3/main/Loader.lua"))()
 -- ==================================================
 
 local BASE_URL = "https://raw.githubusercontent.com/hotibody99828/backupsea2/main/"
@@ -20,7 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 print("✅ Game loaded, Player: " .. Player.Name)
 
 -- ==================================================
--- AUTO JOIN MARINES
+-- AUTO JOIN MARINES (តែម្ដង)
 -- ==================================================
 if _G.YOKUDO_HasJoinedMarines == nil then
     _G.YOKUDO_HasJoinedMarines = false
@@ -74,8 +74,6 @@ end)
 -- LOAD CONFIG & CORE
 -- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
-loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
-
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
@@ -95,16 +93,28 @@ end)
 -- ==================================================
 -- LOAD FEATURES
 -- ==================================================
-local featuresLoaded = false
-
 task.spawn(function()
-    task.wait(0.5)
-    
     local Features = {
+        "SpeedHack",
+        "JumpHack",
         "AutoEquip",
         "AutoAttack",
-        "AutoEliteHunter",
+        "AutoClickAttack",
+        "WalkOnWater",
         "AutoBuso",
+        "AutoKen",
+        "AutoUnlockHaki",
+        "JoinServer",
+        "AutoDoughKing",
+        "AutoHopDoughKing",
+        "AutoRipIndra",
+        "AutoHopRipIndra",
+        "AutoCakePrince",
+        "AutoHopCakePrince",
+        "AutoSoulReaper",
+        "AutoHopSoulReaper",
+        "AutoEliteHunter",
+        "AutoHopEliteHunter",
         "CharacterHandler",
         "WeaponWatcher"
     }
@@ -112,73 +122,9 @@ task.spawn(function()
     for _, Feature in ipairs(Features) do
         pcall(function()
             loadstring(game:HttpGet(BASE_URL .. "Features/" .. Feature .. ".lua"))()
-            print("✅ " .. Feature .. " Loaded")
         end)
     end
-    
-    featuresLoaded = true
     print("✅ All Features Loaded")
-end)
-
--- ==================================================
--- LOAD CONFIG (កុំហៅ Toggle)
--- ==================================================
-task.spawn(function()
-    while not featuresLoaded do
-        task.wait(0.1)
-    end
-    
-    task.wait(1)
-    
-    print("📋 Auto Loading Config...")
-    local config = _G.YOKUDO_GetConfig()
-    
-    if config then
-        print("📋 Config Loaded:")
-        print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
-        print("   AutoBuso: " .. tostring(config.AutoBuso))
-        
-        -- Update State & UI for Elite Hunter
-        if config.AutoEliteHunter then
-            print("▶️ Auto Elite Hunter is ENABLED in config")
-            _G.YOKUDO_AutoEliteHunterEnabled = true
-            if _G.YOKUDO_UpdateEliteHunterUI then
-                _G.YOKUDO_UpdateEliteHunterUI(true)
-            end
-            -- Start the feature without toggling
-            if _G.YOKUDO_StartAutoEliteHunter then
-                _G.YOKUDO_StartAutoEliteHunter()
-            end
-        else
-            _G.YOKUDO_AutoEliteHunterEnabled = false
-            if _G.YOKUDO_UpdateEliteHunterUI then
-                _G.YOKUDO_UpdateEliteHunterUI(false)
-            end
-        end
-        
-        -- Update State & UI for Buso
-        if config.AutoBuso then
-            print("▶️ Auto Buso is ENABLED in config")
-            _G.YOKUDO_BusoEnabled = true
-            if _G.YOKUDO_UpdateBusoUI then
-                _G.YOKUDO_UpdateBusoUI(true)
-            end
-            if _G.YOKUDO_StartAutoBuso then
-                _G.YOKUDO_StartAutoBuso()
-            end
-        else
-            _G.YOKUDO_BusoEnabled = false
-            if _G.YOKUDO_UpdateBusoUI then
-                _G.YOKUDO_UpdateBusoUI(false)
-            end
-        end
-        
-        if not config.AutoEliteHunter and not config.AutoBuso then
-            print("ℹ️ No features enabled in config")
-        end
-    else
-        print("⚠️ Failed to load config!")
-    end
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
