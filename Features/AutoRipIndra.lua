@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO RIP INDRA (Remote Portal + NoCollide Fast)
+-- AUTO RIP INDRA (New Toggle + No Collide)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -29,13 +29,12 @@ local PORTAL_ARGS = {
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- STATE
+-- STATE (SIMPLE - New Toggle System)
 -- ==================================================
-local isFeatureRunning = false
-local isToggling = false
-local toggleLock = false
-local noCollideActive = false
+local isRunning = false
+local loopConnection = nil
 local noCollideConnection = nil
+local noCollideActive = false
 local hasUsedPortal = false
 
 -- ==================================================
@@ -112,7 +111,6 @@ local function usePortal()
             if CommF then
                 CommF:InvokeServer(unpack(PORTAL_ARGS))
                 hasUsedPortal = true
-                print("🚪 Used Portal to Rip Indra Area!")
                 return true
             end
         end
@@ -312,12 +310,10 @@ local function findRipIndra()
 end
 
 -- ==================================================
--- AUTO RIP INDRA LOOP
+-- MAIN LOOP
 -- ==================================================
 local function ripIndraLoop()
-    isFeatureRunning = true
-    
-    while _G.YOKUDO_AutoRipIndraEnabled do
+    while isRunning do
         local character = Player.Character
         if not character then
             task.wait(0.01)
@@ -367,9 +363,6 @@ local function ripIndraLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
-        -- ==================================================
-        -- CASE 1: Boss នៅជិត (workspace) → Tween ទៅ Boss
-        -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -399,7 +392,7 @@ local function ripIndraLoop()
                 end
                 
                 followConnection = RunService.Heartbeat:Connect(function()
-                    if not _G.YOKUDO_AutoRipIndraEnabled then
+                    if not isRunning then
                         if followConnection then
                             followConnection:Disconnect()
                             followConnection = nil
@@ -447,26 +440,19 @@ local function ripIndraLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 2: Boss នៅឆ្ងាយ (ReplicatedStorage) → Portal + Tween
-        -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
             
-            -- ប្រើ Remote Portal (តែម្តង)
             if not hasUsedPortal then
                 usePortal()
             end
             
-            -- Bypass Teleport ទៅ Position
             bypassTeleport(RIP_INDRA_POSITION)
             
-            -- រង់ចាំ 2s រួច Tween ទៅ Boss
             task.wait(0.10)
             
-            -- ស្វែងរក Boss ម្តងទៀត (ឥឡូវគួរតែនៅជិត)
             local newBoss, newLocation = findRipIndra()
             
             if newLocation == "workspace" then
@@ -486,7 +472,7 @@ local function ripIndraLoop()
                     end
                     
                     followConnection = RunService.Heartbeat:Connect(function()
-                        if not _G.YOKUDO_AutoRipIndraEnabled then
+                        if not isRunning then
                             if followConnection then
                                 followConnection:Disconnect()
                                 followConnection = nil
@@ -531,40 +517,16 @@ local function ripIndraLoop()
             continue
         end
     end
-    
-    isFeatureRunning = false
 end
 
 -- ==================================================
--- STATE
--- ==================================================
-_G.YOKUDO_AutoRipIndraEnabled = false
-_G.YOKUDO_AutoRipIndraLoop = nil
-
--- ==================================================
--- TOGGLE AUTO RIP INDRA
+-- TOGGLE FUNCTION (NEW - SIMPLE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoRipIndra()
-    if toggleLock then
-        return
-    end
+    isRunning = not isRunning
     
-    if isToggling then
-        return
-    end
-    
-    isToggling = true
-    toggleLock = true
-    
-    _G.YOKUDO_AutoRipIndraEnabled = not _G.YOKUDO_AutoRipIndraEnabled
-    
-    if _G.YOKUDO_AutoRipIndraEnabled then
-        if isFeatureRunning then
-            isToggling = false
-            toggleLock = false
-            return
-        end
-        
+    if isRunning then
+        -- START
         hasUsedPortal = false
         isBossDead = false
         bossFound = false
@@ -577,16 +539,18 @@ function _G.YOKUDO_ToggleAutoRipIndra()
             followConnection = nil
         end
         
-        if _G.YOKUDO_AutoRipIndraLoop then
-            _G.YOKUDO_AutoRipIndraLoop:Disconnect()
-            _G.YOKUDO_AutoRipIndraLoop = nil
+        if loopConnection then
+            loopConnection:Disconnect()
+            loopConnection = nil
         end
         
-        _G.YOKUDO_AutoRipIndraLoop = task.spawn(ripIndraLoop)
+        loopConnection = task.spawn(ripIndraLoop)
+        print("⚡ Auto Rip Indra Started")
     else
-        if _G.YOKUDO_AutoRipIndraLoop then
-            task.cancel(_G.YOKUDO_AutoRipIndraLoop)
-            _G.YOKUDO_AutoRipIndraLoop = nil
+        -- STOP
+        if loopConnection then
+            task.cancel(loopConnection)
+            loopConnection = nil
         end
         
         if followConnection then
@@ -604,13 +568,15 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        isFeatureRunning = false
+        
+        print("⚡ Auto Rip Indra Stopped")
     end
-    
-    task.wait(0.3)
-    isToggling = false
-    toggleLock = false
 end
+
+-- ==================================================
+-- STATE
+-- ==================================================
+_G.YOKUDO_AutoRipIndraEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
@@ -621,9 +587,9 @@ Player.CharacterAdded:Connect(function()
     resetState()
     stopNoCollide()
     
-    if _G.YOKUDO_AutoRipIndraEnabled then
+    if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoRipIndra Loaded (Remote Portal + NoCollide)")
+print("✅ AutoRipIndra Loaded (New Toggle + No Collide)")
