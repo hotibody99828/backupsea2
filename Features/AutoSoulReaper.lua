@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO SOUL REAPER (FINAL)
+-- AUTO SOUL REAPER (New Toggle + No Collide)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -13,26 +13,31 @@ local Player = Players.LocalPlayer
 -- ==================================================
 -- POSITIONS
 -- ==================================================
-local SOUL_REAPER_BYPASS = Vector3.new(-12465, 376, -7563)   -- Bypass Teleport Position
-local SOUL_REAPER_TWEEN = Vector3.new(-9524, 327, 6660)      -- Tween Teleport Position
+local SOUL_REAPER_BYPASS = Vector3.new(-12465, 376, -7563)
+local SOUL_REAPER_TWEEN = Vector3.new(-9524, 327, 6660)
 
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 200
+local TWEEN_SPEED = 190
 local DISTANCE_THRESHOLD = 3000
 
 -- ==================================================
--- STATE
+-- STATE (SIMPLE - New Toggle System)
+-- ==================================================
+local isRunning = false
+local loopConnection = nil
+local noCollideConnection = nil
+local noCollideActive = false
+
+-- ==================================================
+-- INVOKE STATE
 -- ==================================================
 local hasBypassTeleported = false
 local hasTweenedToPosition = false
 local isInvoking = false
 local invokeLoopConnection = nil
 local spawnPointCheckConnection = nil
-local isFeatureRunning = false
-local isToggling = false
-local toggleLock = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -51,6 +56,51 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
+
+-- ==================================================
+-- NO COLLIDE FUNCTIONS
+-- ==================================================
+local function applyNoCollide()
+    local character = Player.Character
+    if not character then return end
+    
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function startNoCollide()
+    if noCollideConnection then return end
+    if noCollideActive then return end
+    
+    noCollideActive = true
+    applyNoCollide()
+    
+    noCollideConnection = RunService.Heartbeat:Connect(function()
+        if not noCollideActive then return end
+        applyNoCollide()
+    end)
+end
+
+local function stopNoCollide()
+    noCollideActive = false
+    
+    if noCollideConnection then
+        noCollideConnection:Disconnect()
+        noCollideConnection = nil
+    end
+    
+    local character = Player.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
 
 -- ==================================================
 -- GET SPAWN POINT
@@ -110,7 +160,7 @@ local function startInvokeLoop()
     isInvoking = true
     
     invokeLoopConnection = RunService.Heartbeat:Connect(function()
-        if not _G.YOKUDO_AutoSoulReaperEnabled then
+        if not isRunning then
             stopInvokeLoop()
             return
         end
@@ -146,7 +196,7 @@ local function startSpawnPointCheck()
     if spawnPointCheckConnection then return end
     
     spawnPointCheckConnection = RunService.Heartbeat:Connect(function()
-        if not _G.YOKUDO_AutoSoulReaperEnabled then
+        if not isRunning then
             stopSpawnPointCheck()
             return
         end
@@ -241,6 +291,7 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
+    stopNoCollide()
 end
 
 local function stopTweenToPosition()
@@ -286,16 +337,19 @@ local function tweenToPosition(targetPos, speed)
     end
     isLocked = false
     
+    startNoCollide()
+    
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         isTweeningToPosition = false
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
+        stopNoCollide()
         return true 
     end
     
-    local duration = math.max(0.10, distance / speed)
+    local duration = math.max(0.5, distance / speed)
     
     local direction = (targetPos - root.Position).Unit
     if not bodyVelocity then
@@ -333,10 +387,12 @@ local function tweenToPosition(targetPos, speed)
     
     if not isTweening then
         isTweeningToPosition = false
+        stopNoCollide()
         return false
     end
     
     isTweeningToPosition = false
+    stopNoCollide()
     return true
 end
 
@@ -367,12 +423,15 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
+    startNoCollide()
+    
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
+        stopNoCollide()
         return true 
     end
     
@@ -413,9 +472,11 @@ local function tweenToBoss(bossPos, speed)
     end
     
     if not isTweening then
+        stopNoCollide()
         return false
     end
     
+    stopNoCollide()
     return true
 end
 
@@ -445,12 +506,10 @@ local function findSoulReaper()
 end
 
 -- ==================================================
--- AUTO SOUL REAPER LOOP
+-- MAIN LOOP
 -- ==================================================
 local function soulReaperLoop()
-    isFeatureRunning = true
-    
-    while _G.YOKUDO_AutoSoulReaperEnabled do
+    while isRunning do
         local character = Player.Character
         if not character then
             task.wait(0.01)
@@ -463,39 +522,27 @@ local function soulReaperLoop()
             continue
         end
         
-        -- ==================================================
-        -- 1. CHECK ReplicatedStorage["Soul Reaper"]
-        -- ==================================================
         local boss, location = findSoulReaper()
         
         if location == "replicatedstorage" then
             local distance = getDistanceToTweenPosition()
             
             if distance > DISTANCE_THRESHOLD then
-                -- Bypass Teleport
                 if not hasBypassTeleported then
                     bypassTeleport(SOUL_REAPER_BYPASS)
-                    print("⚡ Bypass Teleport to Soul Reaper Position!")
                 end
                 
-                -- រង់ចាំ 3s រួច Tween ទៅ TWEEN Position
                 if hasBypassTeleported and not hasTweenedToPosition then
                     task.wait(3)
                     tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
                     hasTweenedToPosition = true
-                    print("🚀 Tween to Tween Position!")
-                    
-                    -- ចាប់ផ្ដើម Invoke + Spawn Point Check
                     startInvokeLoop()
                     startSpawnPointCheck()
                 end
             else
-                -- Tween Teleport ទៅ TWEEN Position ភ្លាមៗ
                 if not hasTweenedToPosition then
                     tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
                     hasTweenedToPosition = true
-                    print("🚀 Tween to Tween Position!")
-                    
                     startInvokeLoop()
                     startSpawnPointCheck()
                 end
@@ -505,11 +552,7 @@ local function soulReaperLoop()
             continue
         end
         
-        -- ==================================================
-        -- 2. CHECK workspace.Enemies["Soul Reaper"]
-        -- ==================================================
         if location == "workspace" then
-            -- ឈប់ Invoke + Spawn Point Check
             stopInvokeLoop()
             stopSpawnPointCheck()
             
@@ -549,7 +592,7 @@ local function soulReaperLoop()
                 end
                 
                 followConnection = RunService.Heartbeat:Connect(function()
-                    if not _G.YOKUDO_AutoSoulReaperEnabled then
+                    if not isRunning then
                         if followConnection then
                             followConnection:Disconnect()
                             followConnection = nil
@@ -597,9 +640,6 @@ local function soulReaperLoop()
             continue
         end
         
-        -- ==================================================
-        -- 3. Boss Dead
-        -- ==================================================
         if not boss then
             if location == "dead" then
                 if not isBossDead then
@@ -624,61 +664,16 @@ local function soulReaperLoop()
             continue
         end
     end
-    
-    isFeatureRunning = false
 end
 
 -- ==================================================
--- CHARACTER RESPAWN HANDLER
--- ==================================================
-Player.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    
-    hasBypassTeleported = false
-    hasTweenedToPosition = false
-    
-    if _G.YOKUDO_AutoSoulReaperEnabled then
-        -- Tween ទៅ TWEEN Position ភ្លាមៗ
-        tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
-        hasTweenedToPosition = true
-        
-        startInvokeLoop()
-        startSpawnPointCheck()
-        
-        stopTweenTeleport()
-    end
-end)
-
--- ==================================================
--- STATE
--- ==================================================
-_G.YOKUDO_AutoSoulReaperEnabled = false
-_G.YOKUDO_AutoSoulReaperLoop = nil
-
--- ==================================================
--- TOGGLE AUTO SOUL REAPER
+-- TOGGLE FUNCTION (NEW - SIMPLE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoSoulReaper()
-    if toggleLock then
-        return
-    end
+    isRunning = not isRunning
     
-    if isToggling then
-        return
-    end
-    
-    isToggling = true
-    toggleLock = true
-    
-    _G.YOKUDO_AutoSoulReaperEnabled = not _G.YOKUDO_AutoSoulReaperEnabled
-    
-    if _G.YOKUDO_AutoSoulReaperEnabled then
-        if isFeatureRunning then
-            isToggling = false
-            toggleLock = false
-            return
-        end
-        
+    if isRunning then
+        -- START
         hasBypassTeleported = false
         hasTweenedToPosition = false
         isBossDead = false
@@ -692,16 +687,18 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
             followConnection = nil
         end
         
-        if _G.YOKUDO_AutoSoulReaperLoop then
-            _G.YOKUDO_AutoSoulReaperLoop:Disconnect()
-            _G.YOKUDO_AutoSoulReaperLoop = nil
+        if loopConnection then
+            loopConnection:Disconnect()
+            loopConnection = nil
         end
         
-        _G.YOKUDO_AutoSoulReaperLoop = task.spawn(soulReaperLoop)
+        loopConnection = task.spawn(soulReaperLoop)
+        print("💀 Auto Soul Reaper Started")
     else
-        if _G.YOKUDO_AutoSoulReaperLoop then
-            task.cancel(_G.YOKUDO_AutoSoulReaperLoop)
-            _G.YOKUDO_AutoSoulReaperLoop = nil
+        -- STOP
+        if loopConnection then
+            task.cancel(loopConnection)
+            loopConnection = nil
         end
         
         if followConnection then
@@ -721,12 +718,33 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        isFeatureRunning = false
+        
+        print("💀 Auto Soul Reaper Stopped")
     end
-    
-    task.wait(0.3)
-    isToggling = false
-    toggleLock = false
 end
 
-print("✅ AutoSoulReaper Loaded (Final)")
+-- ==================================================
+-- STATE
+-- ==================================================
+_G.YOKUDO_AutoSoulReaperEnabled = false
+
+-- ==================================================
+-- CHARACTER RESPAWN HANDLER
+-- ==================================================
+Player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    
+    hasBypassTeleported = false
+    hasTweenedToPosition = false
+    stopNoCollide()
+    
+    if isRunning then
+        tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
+        hasTweenedToPosition = true
+        startInvokeLoop()
+        startSpawnPointCheck()
+        stopTweenTeleport()
+    end
+end)
+
+print("✅ AutoSoulReaper Loaded (New Toggle + No Collide)")
