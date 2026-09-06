@@ -125,6 +125,30 @@ task.spawn(function()
         end)
     end
     print("✅ All Features Loaded")
+    _G.YOKUDO_FeaturesReady = true
+end)
+
+-- ==================================================
+-- ⭐ LOAD CONFIG MANAGER (បន្ថែមថ្មី)
+-- ==================================================
+task.spawn(function()
+    print("⏳ Waiting for UI & Features to be ready...")
+    
+    while not _G.YOKUDO_FeaturesReady or not _G.YOKUDO_AutoHopPage do
+        task.wait(0.1)
+    end
+    
+    print("✅ UI & Features ready! Loading ConfigManager...")
+    
+    loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
+    
+    while not _G.YOKUDO_ApplyConfig do
+        task.wait(0.1)
+    end
+    
+    print("⏳ Applying config...")
+    _G.YOKUDO_ApplyConfig()
+    print("✅ Config applied successfully!")
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
