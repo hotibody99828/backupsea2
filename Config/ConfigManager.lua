@@ -122,9 +122,7 @@ function _G.YOKUDO_ApplyConfig()
     
     local c = _G.YOKUDO_Config
     
-    -- ==============================================
-    -- WALK ON WATER
-    -- ==============================================
+    -- Walk on Water
     if c.WalkOnWater and _G.YOKUDO_SetWalk then
         _G.YOKUDO_SetWalk(true)
         print("✅ Walk on Water applied from config")
@@ -135,9 +133,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_Walk(c.WalkOnWater)
     end
     
-    -- ==============================================
-    -- AUTO BUSO
-    -- ==============================================
+    -- Auto Buso
     if c.AutoBuso and _G.YOKUDO_SetBuso then
         _G.YOKUDO_SetBuso(true)
         print("✅ Auto Buso applied from config")
@@ -148,9 +144,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_Buso(c.AutoBuso)
     end
     
-    -- ==============================================
-    -- AUTO UNLOCK HAKI
-    -- ==============================================
+    -- Auto Unlock Haki
     if c.AutoUnlockHaki and _G.YOKUDO_ToggleAutoUnlockHaki then
         if not _G.YOKUDO_AutoUnlockHakiEnabled then
             _G.YOKUDO_ToggleAutoUnlockHaki()
@@ -166,9 +160,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_UnlockHaki(c.AutoUnlockHaki)
     end
     
-    -- ==============================================
-    -- AUTO CLICK ATTACK
-    -- ==============================================
+    -- Auto Click Attack
     if c.AutoClickAttack and _G.YOKUDO_ToggleAutoClickAttack then
         if not _G.YOKUDO_AutoClickAttackEnabled then
             _G.YOKUDO_ToggleAutoClickAttack()
@@ -184,9 +176,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_ClickAttack(c.AutoClickAttack)
     end
     
-    -- ==============================================
-    -- AUTO DOUGH KING
-    -- ==============================================
+    -- Auto Dough King
     if c.AutoDoughKing and _G.YOKUDO_ToggleAutoDoughKing then
         if not _G.YOKUDO_AutoDoughKingEnabled then
             _G.YOKUDO_ToggleAutoDoughKing()
@@ -202,9 +192,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_DoughKing(c.AutoDoughKing)
     end
     
-    -- ==============================================
-    -- AUTO RIP INDRA
-    -- ==============================================
+    -- Auto Rip Indra
     if c.AutoRipIndra and _G.YOKUDO_ToggleAutoRipIndra then
         if not _G.YOKUDO_AutoRipIndraEnabled then
             _G.YOKUDO_ToggleAutoRipIndra()
@@ -220,9 +208,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_RipIndra(c.AutoRipIndra)
     end
     
-    -- ==============================================
-    -- AUTO CAKE PRINCE
-    -- ==============================================
+    -- Auto Cake Prince
     if c.AutoCakePrince and _G.YOKUDO_ToggleAutoCakePrince then
         if not _G.YOKUDO_AutoCakePrinceEnabled then
             _G.YOKUDO_ToggleAutoCakePrince()
@@ -238,9 +224,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_CakePrince(c.AutoCakePrince)
     end
     
-    -- ==============================================
-    -- AUTO SOUL REAPER
-    -- ==============================================
+    -- Auto Soul Reaper
     if c.AutoSoulReaper and _G.YOKUDO_ToggleAutoSoulReaper then
         if not _G.YOKUDO_AutoSoulReaperEnabled then
             _G.YOKUDO_ToggleAutoSoulReaper()
@@ -256,9 +240,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_SoulReaper(c.AutoSoulReaper)
     end
     
-    -- ==============================================
-    -- AUTO ELITE HUNTER
-    -- ==============================================
+    -- Auto Elite Hunter
     if c.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
         if not _G.YOKUDO_AutoEliteHunterEnabled then
             _G.YOKUDO_ToggleAutoEliteHunter()
@@ -274,9 +256,7 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_EliteHunter(c.AutoEliteHunter)
     end
     
-    -- ==============================================
-    -- WEAPON TYPE
-    -- ==============================================
+    -- Weapon Type
     local weaponType = c.WeaponType or "Melee"
     if _G.YOKUDO_SetWeaponType then
         _G.YOKUDO_SetWeaponType(weaponType)
