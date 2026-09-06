@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO UNLOCK HAKI LEGENDARY (SEA3 - Shop)
+-- AUTO UNLOCK HAKI LEGENDARY (SEA3 - Shop) - ជាមួយ Config Save
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -55,7 +55,7 @@ local function unlockHakiLoop()
 end
 
 -- ==================================================
--- TOGGLE AUTO UNLOCK HAKI
+-- TOGGLE FUNCTION (ជាមួយ Config Save)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoUnlockHaki()
     if toggleLock then
@@ -84,6 +84,7 @@ function _G.YOKUDO_ToggleAutoUnlockHaki()
         end
         
         _G.YOKUDO_AutoUnlockHakiLoop = task.spawn(unlockHakiLoop)
+        print("✅ Auto Unlock Haki: ON")
     else
         if _G.YOKUDO_AutoUnlockHakiLoop then
             task.cancel(_G.YOKUDO_AutoUnlockHakiLoop)
@@ -91,6 +92,17 @@ function _G.YOKUDO_ToggleAutoUnlockHaki()
         end
         
         isFeatureRunning = false
+        print("❌ Auto Unlock Haki: OFF")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_UnlockHaki then
+        _G.YOKUDO_UpdateUI_UnlockHaki(_G.YOKUDO_AutoUnlockHakiEnabled)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoUnlockHaki", _G.YOKUDO_AutoUnlockHakiEnabled)
     end
     
     task.wait(0.3)
@@ -112,4 +124,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoUnlockHaki Loaded")
+print("✅ AutoUnlockHaki Loaded (Config Ready)")
