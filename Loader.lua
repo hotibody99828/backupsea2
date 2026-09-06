@@ -96,7 +96,7 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- LOAD FEATURES (Auto Elite Hunter & Auto Buso)
+-- LOAD FEATURES
 -- ==================================================
 task.spawn(function()
     local Features = {
@@ -117,7 +117,7 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- AUTO LOAD CONFIG (បន្ទាប់ពី Features Load)
+-- AUTO LOAD CONFIG
 -- ==================================================
 task.spawn(function()
     task.wait(1.5)
@@ -125,13 +125,11 @@ task.spawn(function()
     local config = _G.YOKUDO_GetConfig()
     print("📋 Auto Loading Config...")
     
-    -- Auto Elite Hunter
     if config.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
         _G.YOKUDO_ToggleAutoEliteHunter()
         print("✅ Auto Elite Hunter Loaded from Config")
     end
     
-    -- Auto Buso
     if config.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
         _G.YOKUDO_ToggleAutoBuso()
         print("✅ Auto Buso Loaded from Config")
