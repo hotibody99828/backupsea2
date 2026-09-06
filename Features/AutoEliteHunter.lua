@@ -609,4 +609,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (New Toggle System)")
+print("✅ AutoEliteHunter Loaded")
