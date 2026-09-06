@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO BUSO HAKI (SEA3)
+-- AUTO BUSO HAKI (SEA3) - ជាមួយ Config Save
 -- ==================================================
 
 local Y = _G.Y
@@ -30,7 +30,7 @@ local function TurnOnBuso()
     end
 end
 
-local function startAutoBuso()
+function startAutoBuso()
     if _G.YOKUDO_BusoLoopConnection then return end
     TurnOnBuso()
     _G.YOKUDO_BusoLoopConnection = Y.RS.Stepped:Connect(function()
@@ -45,7 +45,7 @@ local function startAutoBuso()
     end)
 end
 
-local function stopAutoBuso()
+function stopAutoBuso()
     if _G.YOKUDO_BusoLoopConnection then 
         _G.YOKUDO_BusoLoopConnection:Disconnect() 
         _G.YOKUDO_BusoLoopConnection = nil 
@@ -56,13 +56,37 @@ local function stopAutoBuso()
     end
 end
 
-function _G.YOKUDO_ToggleAutoBuso()
-    _G.YOKUDO_BusoEnabled = not _G.YOKUDO_BusoEnabled
-    if _G.YOKUDO_BusoEnabled then
+-- ==================================================
+-- SET FUNCTION (សម្រាប់ Config Load)
+-- ==================================================
+function _G.YOKUDO_SetBuso(enabled)
+    if enabled == _G.YOKUDO_BusoEnabled then return end
+    
+    _G.YOKUDO_BusoEnabled = enabled
+    if enabled then
         startAutoBuso()
+        print("✅ Auto Buso: ON (Config)")
     else
         stopAutoBuso()
+        print("❌ Auto Buso: OFF (Config)")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_Buso then
+        _G.YOKUDO_UpdateUI_Buso(enabled)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoBuso", enabled)
     end
 end
 
-print("✅ AutoBuso Loaded")
+-- ==================================================
+-- TOGGLE FUNCTION (សម្រាប់ User Click)
+-- ==================================================
+function _G.YOKUDO_ToggleAutoBuso()
+    _G.YOKUDO_SetBuso(not _G.YOKUDO_BusoEnabled)
+end
+
+print("✅ AutoBuso Loaded (Config Ready)")
