@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CAKE PRINCE (Check ReplicatedStorage មុន)
+-- AUTO CAKE PRINCE (New Toggle + No Collide)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -21,20 +21,17 @@ local CAKE_PRINCE_POSITION = Vector3.new(-2157, 160, -12400)
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- TOGGLE DEBOUNCE
+-- STATE (SIMPLE - New Toggle System)
 -- ==================================================
-local isToggling = false
+local isRunning = false
+local loopConnection = nil
+local noCollideConnection = nil
+local noCollideActive = false
 
 -- ==================================================
 -- BYPASS TELEPORT STATE
 -- ==================================================
 local hasBypassTeleported = false
-
--- ==================================================
--- TOGGLE PROTECTION
--- ==================================================
-local isFeatureRunning = false
-local toggleLock = false
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -53,6 +50,51 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
+
+-- ==================================================
+-- NO COLLIDE FUNCTIONS
+-- ==================================================
+local function applyNoCollide()
+    local character = Player.Character
+    if not character then return end
+    
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function startNoCollide()
+    if noCollideConnection then return end
+    if noCollideActive then return end
+    
+    noCollideActive = true
+    applyNoCollide()
+    
+    noCollideConnection = RunService.Heartbeat:Connect(function()
+        if not noCollideActive then return end
+        applyNoCollide()
+    end)
+end
+
+local function stopNoCollide()
+    noCollideActive = false
+    
+    if noCollideConnection then
+        noCollideConnection:Disconnect()
+        noCollideConnection = nil
+    end
+    
+    local character = Player.Character
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
 
 -- ==================================================
 -- BYPASS TELEPORT FUNCTION
@@ -74,7 +116,7 @@ local function bypassTeleport(targetPos)
 end
 
 -- ==================================================
--- RESET BYPASS STATE (ពេល Character Respawn)
+-- RESET BYPASS STATE
 -- ==================================================
 local function resetBypassState()
     hasBypassTeleported = false
@@ -116,6 +158,7 @@ local function stopTweenTeleport()
     currentBossPos = nil
     bossTarget = nil
     isTweeningToPosition = false
+    stopNoCollide()
 end
 
 local function stopTweenToPosition()
@@ -161,12 +204,15 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
+    startNoCollide()
+    
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
     local distance = (targetPos - root.Position).Magnitude
     if distance < 3 then 
         if bodyVelocity then
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
         end
+        stopNoCollide()
         return true 
     end
     
@@ -207,9 +253,11 @@ local function tweenToBoss(bossPos, speed)
     end
     
     if not isTweening then
+        stopNoCollide()
         return false
     end
     
+    stopNoCollide()
     return true
 end
 
@@ -241,12 +289,10 @@ local function findCakePrince()
 end
 
 -- ==================================================
--- AUTO CAKE PRINCE LOOP
+-- MAIN LOOP
 -- ==================================================
 local function cakePrinceLoop()
-    isFeatureRunning = true
-    
-    while _G.YOKUDO_AutoCakePrinceEnabled do
+    while isRunning do
         local character = Player.Character
         if not character then
             task.wait(0.01)
@@ -295,9 +341,6 @@ local function cakePrinceLoop()
             _G.YOKUDO_EquipWeaponFromBackpack(weaponType)
         end
         
-        -- ==================================================
-        -- CASE 1: Boss នៅឆ្ងាយ (ReplicatedStorage) → Bypass Teleport
-        -- ==================================================
         if location == "replicatedstorage" then
             bossFound = false
             isAtPosition = false
@@ -311,9 +354,6 @@ local function cakePrinceLoop()
             continue
         end
         
-        -- ==================================================
-        -- CASE 2: Boss នៅជិត (workspace) → Tween ទៅ Boss
-        -- ==================================================
         if location == "workspace" then
             if isTweeningToPosition then
                 stopTweenToPosition()
@@ -343,7 +383,7 @@ local function cakePrinceLoop()
                 end
                 
                 followConnection = RunService.Heartbeat:Connect(function()
-                    if not _G.YOKUDO_AutoCakePrinceEnabled then
+                    if not isRunning then
                         if followConnection then
                             followConnection:Disconnect()
                             followConnection = nil
@@ -391,40 +431,16 @@ local function cakePrinceLoop()
             continue
         end
     end
-    
-    isFeatureRunning = false
 end
 
 -- ==================================================
--- STATE
--- ==================================================
-_G.YOKUDO_AutoCakePrinceEnabled = false
-_G.YOKUDO_AutoCakePrinceLoop = nil
-
--- ==================================================
--- TOGGLE AUTO CAKE PRINCE
+-- TOGGLE FUNCTION (NEW - SIMPLE)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoCakePrince()
-    if toggleLock then
-        return
-    end
+    isRunning = not isRunning
     
-    if isToggling then
-        return
-    end
-    
-    isToggling = true
-    toggleLock = true
-    
-    _G.YOKUDO_AutoCakePrinceEnabled = not _G.YOKUDO_AutoCakePrinceEnabled
-    
-    if _G.YOKUDO_AutoCakePrinceEnabled then
-        if isFeatureRunning then
-            isToggling = false
-            toggleLock = false
-            return
-        end
-        
+    if isRunning then
+        -- START
         hasBypassTeleported = false
         isBossDead = false
         bossFound = false
@@ -437,16 +453,18 @@ function _G.YOKUDO_ToggleAutoCakePrince()
             followConnection = nil
         end
         
-        if _G.YOKUDO_AutoCakePrinceLoop then
-            _G.YOKUDO_AutoCakePrinceLoop:Disconnect()
-            _G.YOKUDO_AutoCakePrinceLoop = nil
+        if loopConnection then
+            loopConnection:Disconnect()
+            loopConnection = nil
         end
         
-        _G.YOKUDO_AutoCakePrinceLoop = task.spawn(cakePrinceLoop)
+        loopConnection = task.spawn(cakePrinceLoop)
+        print("🎂 Auto Cake Prince Started")
     else
-        if _G.YOKUDO_AutoCakePrinceLoop then
-            task.cancel(_G.YOKUDO_AutoCakePrinceLoop)
-            _G.YOKUDO_AutoCakePrinceLoop = nil
+        -- STOP
+        if loopConnection then
+            task.cancel(loopConnection)
+            loopConnection = nil
         end
         
         if followConnection then
@@ -464,13 +482,15 @@ function _G.YOKUDO_ToggleAutoCakePrince()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        isFeatureRunning = false
+        
+        print("🎂 Auto Cake Prince Stopped")
     end
-    
-    task.wait(0.3)
-    isToggling = false
-    toggleLock = false
 end
+
+-- ==================================================
+-- STATE
+-- ==================================================
+_G.YOKUDO_AutoCakePrinceEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
@@ -478,10 +498,11 @@ end
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     resetBypassState()
+    stopNoCollide()
     
-    if _G.YOKUDO_AutoCakePrinceEnabled then
+    if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoCakePrince Loaded (Check ReplicatedStorage First)")
+print("✅ AutoCakePrince Loaded (New Toggle + No Collide)")
