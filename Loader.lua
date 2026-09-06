@@ -98,6 +98,8 @@ end)
 local featuresLoaded = false
 
 task.spawn(function()
+    task.wait(0.5)
+    
     local Features = {
         "AutoEquip",
         "AutoAttack",
@@ -119,16 +121,14 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG & APPLY (ក្រោយ UI, Tabs, Features Load រួច)
+-- LOAD CONFIG (កុំហៅ Toggle)
 -- ==================================================
 task.spawn(function()
-    -- រង់ចាំ Features Load រួច
     while not featuresLoaded do
         task.wait(0.1)
     end
     
-    -- រង់ចាំ UI និង Tabs ត្រៀមខ្លួន
-    task.wait(0.5)
+    task.wait(1)
     
     print("📋 Auto Loading Config...")
     local config = _G.YOKUDO_GetConfig()
@@ -138,40 +138,38 @@ task.spawn(function()
         print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
         print("   AutoBuso: " .. tostring(config.AutoBuso))
         
-        -- ==================================================
-        -- AUTO ELITE HUNTER
-        -- ==================================================
+        -- Update State & UI for Elite Hunter
         if config.AutoEliteHunter then
-            print("▶️ Starting Auto Elite Hunter from Config...")
-            if _G.YOKUDO_ToggleAutoEliteHunter then
-                _G.YOKUDO_ToggleAutoEliteHunter()
-                print("✅ Auto Elite Hunter Started")
+            print("▶️ Auto Elite Hunter is ENABLED in config")
+            _G.YOKUDO_AutoEliteHunterEnabled = true
+            if _G.YOKUDO_UpdateEliteHunterUI then
+                _G.YOKUDO_UpdateEliteHunterUI(true)
             end
-            -- Update Checkbox UI
-            if _G.YOKUDO_UpdateEliteHunterCheckbox then
-                _G.YOKUDO_UpdateEliteHunterCheckbox(true)
+            -- Start the feature without toggling
+            if _G.YOKUDO_StartAutoEliteHunter then
+                _G.YOKUDO_StartAutoEliteHunter()
             end
         else
-            if _G.YOKUDO_UpdateEliteHunterCheckbox then
-                _G.YOKUDO_UpdateEliteHunterCheckbox(false)
+            _G.YOKUDO_AutoEliteHunterEnabled = false
+            if _G.YOKUDO_UpdateEliteHunterUI then
+                _G.YOKUDO_UpdateEliteHunterUI(false)
             end
         end
         
-        -- ==================================================
-        -- AUTO BUSO
-        -- ==================================================
+        -- Update State & UI for Buso
         if config.AutoBuso then
-            print("▶️ Starting Auto Buso from Config...")
-            if _G.YOKUDO_ToggleAutoBuso then
-                _G.YOKUDO_ToggleAutoBuso()
-                print("✅ Auto Buso Started")
+            print("▶️ Auto Buso is ENABLED in config")
+            _G.YOKUDO_BusoEnabled = true
+            if _G.YOKUDO_UpdateBusoUI then
+                _G.YOKUDO_UpdateBusoUI(true)
             end
-            if _G.YOKUDO_UpdateBusoCheckbox then
-                _G.YOKUDO_UpdateBusoCheckbox(true)
+            if _G.YOKUDO_StartAutoBuso then
+                _G.YOKUDO_StartAutoBuso()
             end
         else
-            if _G.YOKUDO_UpdateBusoCheckbox then
-                _G.YOKUDO_UpdateBusoCheckbox(false)
+            _G.YOKUDO_BusoEnabled = false
+            if _G.YOKUDO_UpdateBusoUI then
+                _G.YOKUDO_UpdateBusoUI(false)
             end
         end
         
