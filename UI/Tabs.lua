@@ -134,10 +134,6 @@ CreateRefreshButton(FruitPage, 1)
 CreateRefreshButton(BerryPage, 1)
 
 -- ==================================================
--- INFO TAB
--- ==================================================
-
--- ==================================================
 -- SHOP TAB
 -- ==================================================
 CreateSectionTitle(ShopPage, "Shop", 1)
@@ -267,202 +263,7 @@ end)
 CreateSectionTitle(AutoHopPage, "Select Weapon for attack", 1)
 CreateWeaponDropdown(AutoHopPage, 2)
 
--- ⭐ Auto Click Attack (Smart Checkbox)
-local clickAttack = CreateSmartCheckbox(
-    AutoHopPage,
-    "Auto Click Attack",
-    3,
-    function(state)
-        if state and not _G.YOKUDO_AutoClickAttackEnabled then
-            _G.YOKUDO_ToggleAutoClickAttack()
-        elseif not state and _G.YOKUDO_AutoClickAttackEnabled then
-            _G.YOKUDO_ToggleAutoClickAttack()
-        end
-    end,
-    function()
-        return _G.YOKUDO_AutoClickAttackEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_ClickAttack == nil then
-    _G.YOKUDO_UpdateUI_ClickAttack = clickAttack.Update
-end
-
--- Farm Boss: Dough King
-CreateSectionTitle(AutoHopPage, "Farm Boss", 4)
-
--- ⭐ Auto Dough King (Smart Checkbox)
-local doughKing = CreateSmartCheckbox(
-    AutoHopPage,
-    "Auto Dough King",
-    5,
-    function(state)
-        if state and not _G.YOKUDO_AutoDoughKingEnabled then
-            _G.YOKUDO_ToggleAutoDoughKing()
-        elseif not state and _G.YOKUDO_AutoDoughKingEnabled then
-            _G.YOKUDO_ToggleAutoDoughKing()
-        end
-    end,
-    function()
-        return _G.YOKUDO_AutoDoughKingEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_DoughKing == nil then
-    _G.YOKUDO_UpdateUI_DoughKing = doughKing.Update
-end
-
--- Auto Hop Dough King (Checkbox ដើម)
-local hopDoughKingFrame, hopDoughKingCheckbox, getHopDoughKingState = CreateCheckbox(AutoHopPage, "Auto Hop Dough King", 6)
-
--- Farm Boss: Rip Indra
-CreateSectionTitle(AutoHopPage, "Farm Boss", 7)
-
--- ⭐ Auto Rip Indra (Smart Checkbox)
-local ripIndra = CreateSmartCheckbox(
-    AutoHopPage,
-    "Auto Rip indra",
-    8,
-    function(state)
-        if state and not _G.YOKUDO_AutoRipIndraEnabled then
-            _G.YOKUDO_ToggleAutoRipIndra()
-        elseif not state and _G.YOKUDO_AutoRipIndraEnabled then
-            _G.YOKUDO_ToggleAutoRipIndra()
-        end
-    end,
-    function()
-        return _G.YOKUDO_AutoRipIndraEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_RipIndra == nil then
-    _G.YOKUDO_UpdateUI_RipIndra = ripIndra.Update
-end
-
--- Auto Hop Rip Indra (Checkbox ដើម)
-local hopRipIndraFrame, hopRipIndraCheckbox, getHopRipIndraState = CreateCheckbox(AutoHopPage, "Auto Hop Rip indra", 9)
-
--- Farm Boss: Cake Prince
-CreateSectionTitle(AutoHopPage, "Farm Boss", 10)
-
--- ⭐ Auto Cake Prince (Smart Checkbox)
-local cakePrince = CreateSmartCheckbox(
-    AutoHopPage,
-    "Auto Cake Prince",
-    11,
-    function(state)
-        if state and not _G.YOKUDO_AutoCakePrinceEnabled then
-            _G.YOKUDO_ToggleAutoCakePrince()
-        elseif not state and _G.YOKUDO_AutoCakePrinceEnabled then
-            _G.YOKUDO_ToggleAutoCakePrince()
-        end
-    end,
-    function()
-        return _G.YOKUDO_AutoCakePrinceEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_CakePrince == nil then
-    _G.YOKUDO_UpdateUI_CakePrince = cakePrince.Update
-end
-
--- Auto Hop Cake Prince (Checkbox ដើម)
-local hopCakePrinceFrame, hopCakePrinceCheckbox, getHopCakePrinceState = CreateCheckbox(AutoHopPage, "Auto Hop Cake Prince", 12)
-
--- Farm Boss: Soul Reaper
-CreateSectionTitle(AutoHopPage, "Farm Boss", 13)
-
--- ⭐ Auto Soul Reaper (Smart Checkbox)
-local soulReaper = CreateSmartCheckbox(
-    AutoHopPage,
-    "Auto Soul Reaper",
-    14,
-    function(state)
-        if state and not _G.YOKUDO_AutoSoulReaperEnabled then
-            _G.YOKUDO_ToggleAutoSoulReaper()
-        elseif not state and _G.YOKUDO_AutoSoulReaperEnabled then
-            _G.YOKUDO_ToggleAutoSoulReaper()
-        end
-    end,
-    function()
-        return _G.YOKUDO_AutoSoulReaperEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_SoulReaper == nil then
-    _G.YOKUDO_UpdateUI_SoulReaper = soulReaper.Update
-end
-
--- Auto Hop Soul Reaper (Checkbox ដើម)
-local hopSoulReaperFrame, hopSoulReaperCheckbox, getHopSoulReaperState = CreateCheckbox(AutoHopPage, "Auto Hop Soul Reaper", 15)
-
--- Farm Boss: Elite Hunter
-CreateSectionTitle(AutoHopPage, "Farm Boss", 16)
-
--- ⭐ Auto Elite Hunter (Smart Checkbox)
-local eliteHunter = CreateSmartCheckbox(
-    AutoHopPage,
-    "Auto Elite Hunter",
-    17,
-    function(state)
-        if state and not _G.YOKUDO_AutoEliteHunterEnabled then
-            _G.YOKUDO_ToggleAutoEliteHunter()
-        elseif not state and _G.YOKUDO_AutoEliteHunterEnabled then
-            _G.YOKUDO_ToggleAutoEliteHunter()
-        end
-    end,
-    function()
-        return _G.YOKUDO_AutoEliteHunterEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_EliteHunter == nil then
-    _G.YOKUDO_UpdateUI_EliteHunter = eliteHunter.Update
-end
-
--- Auto Hop Elite Hunter (Checkbox ដើម)
-local hopEliteHunterFrame, hopEliteHunterCheckbox, getHopEliteHunterState = CreateCheckbox(AutoHopPage, "Auto Hop Elite Hunter", 18)
-
--- ==================================================
--- AUTO HOP CHECKBOX EVENTS
--- ==================================================
--- ⭐ Smart Checkbox Events (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
--- clickAttackCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- doughKingCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- ripIndraCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- cakePrinceCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- soulReaperCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- eliteHunterCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
-
-hopDoughKingCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoHopDoughKing then
-        _G.YOKUDO_ToggleAutoHopDoughKing()
-    end
-end)
-
-hopRipIndraCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoHopRipIndra then
-        _G.YOKUDO_ToggleAutoHopRipIndra()
-    end
-end)
-
-hopCakePrinceCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoHopCakePrince then
-        _G.YOKUDO_ToggleAutoHopCakePrince()
-    end
-end)
-
-hopSoulReaperCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoHopSoulReaper then
-        _G.YOKUDO_ToggleAutoHopSoulReaper()
-    end
-end)
-
-hopEliteHunterCheckbox.MouseButton1Click:Connect(function()
-    if _G.YOKUDO_ToggleAutoHopEliteHunter then
-        _G.YOKUDO_ToggleAutoHopEliteHunter()
-    end
-end)
+-- ⭐ Auto Click Attack (Smart Checkbox) - នឹងបន្ថែមពេលក្រោយ
 
 -- ==================================================
 -- SETTING TAB
@@ -496,26 +297,8 @@ if _G.YOKUDO_UpdateUI_Buso == nil then
     _G.YOKUDO_UpdateUI_Buso = buso.Update
 end
 
--- ⭐ Auto Ken (Smart Checkbox)
-local ken = CreateSmartCheckbox(
-    SettingPage,
-    "Auto Ken",
-    7,
-    function(state)
-        if state and not _G.YOKUDO_ObservationEnabled then
-            _G.YOKUDO_ToggleAutoKen()
-        elseif not state and _G.YOKUDO_ObservationEnabled then
-            _G.YOKUDO_ToggleAutoKen()
-        end
-    end,
-    function()
-        return _G.YOKUDO_ObservationEnabled or false
-    end
-)
-
-if _G.YOKUDO_UpdateUI_Ken == nil then
-    _G.YOKUDO_UpdateUI_Ken = ken.Update
-end
+-- ⭐ Auto Ken (Checkbox ដើម - គ្មាន Config)
+local obsFrame, obsCheckbox, getObsState = CreateCheckbox(SettingPage, "Auto Ken", 7)
 
 CreateSectionTitle(SettingPage, "Movement Hacks", 8)
 local jumpHolder, jumpCheckbox, getJumpState, jumpTextBox, getJumpValue = CreateTextBoxWithCheckbox(SettingPage, "Jump Hack", 9)
@@ -545,9 +328,17 @@ end
 -- ==================================================
 -- SETTING CHECKBOX EVENTS
 -- ==================================================
--- ⭐ Smart Checkbox Events (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
+-- ⭐ Auto Buso Event (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
 -- busoCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- obsCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
+
+-- ⭐ Auto Ken Event (Checkbox ដើម)
+obsCheckbox.MouseButton1Click:Connect(function()
+    if _G.YOKUDO_ToggleAutoKen then
+        _G.YOKUDO_ToggleAutoKen()
+    end
+end)
+
+-- ⭐ Walk on Water Event (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
 -- walkCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
 
 noClipCheckbox.MouseButton1Click:Connect(function()
