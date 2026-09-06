@@ -20,7 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 print("✅ Game loaded, Player: " .. Player.Name)
 
 -- ==================================================
--- AUTO JOIN MARINES (តែម្ដង)
+-- AUTO JOIN MARINES
 -- ==================================================
 if _G.YOKUDO_HasJoinedMarines == nil then
     _G.YOKUDO_HasJoinedMarines = false
@@ -71,7 +71,7 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG MANAGER (មុនគេ)
+-- LOAD CONFIG MANAGER
 -- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
@@ -96,30 +96,14 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- LOAD FEATURES
+-- LOAD FEATURES (Auto Elite Hunter & Auto Buso)
 -- ==================================================
 task.spawn(function()
     local Features = {
-        "SpeedHack",
-        "JumpHack",
         "AutoEquip",
         "AutoAttack",
-        "AutoClickAttack",
-        "WalkOnWater",
-        "AutoBuso",
-        "AutoKen",
-        "AutoUnlockHaki",
-        "JoinServer",
-        "AutoDoughKing",
-        "AutoHopDoughKing",
-        "AutoRipIndra",
-        "AutoHopRipIndra",
-        "AutoCakePrince",
-        "AutoHopCakePrince",
-        "AutoSoulReaper",
-        "AutoHopSoulReaper",
         "AutoEliteHunter",
-        "AutoHopEliteHunter",
+        "AutoBuso",
         "CharacterHandler",
         "WeaponWatcher"
     }
@@ -129,103 +113,29 @@ task.spawn(function()
             loadstring(game:HttpGet(BASE_URL .. "Features/" .. Feature .. ".lua"))()
         end)
     end
-    print("✅ All Features Loaded")
+    print("✅ Features Loaded")
 end)
 
 -- ==================================================
--- LOAD CONFIG AFTER FEATURES (អនុវត្ត Config)
+-- AUTO LOAD CONFIG (បន្ទាប់ពី Features Load)
 -- ==================================================
 task.spawn(function()
-    task.wait(2) -- រង់ចាំ Features Load រួច
+    task.wait(1.5)
     
     local config = _G.YOKUDO_GetConfig()
-    print("📋 Loading Config...")
-    
-    -- Auto Click Attack
-    if config.AutoClickAttack and _G.YOKUDO_ToggleAutoClickAttack then
-        _G.YOKUDO_ToggleAutoClickAttack()
-    end
-    
-    -- Auto Dough King
-    if config.AutoDoughKing and _G.YOKUDO_ToggleAutoDoughKing then
-        _G.YOKUDO_ToggleAutoDoughKing()
-    end
-    if config.AutoHopDoughKing and _G.YOKUDO_ToggleAutoHopDoughKing then
-        _G.YOKUDO_ToggleAutoHopDoughKing()
-    end
-    
-    -- Auto Rip Indra
-    if config.AutoRipIndra and _G.YOKUDO_ToggleAutoRipIndra then
-        _G.YOKUDO_ToggleAutoRipIndra()
-    end
-    if config.AutoHopRipIndra and _G.YOKUDO_ToggleAutoHopRipIndra then
-        _G.YOKUDO_ToggleAutoHopRipIndra()
-    end
-    
-    -- Auto Cake Prince
-    if config.AutoCakePrince and _G.YOKUDO_ToggleAutoCakePrince then
-        _G.YOKUDO_ToggleAutoCakePrince()
-    end
-    if config.AutoHopCakePrince and _G.YOKUDO_ToggleAutoHopCakePrince then
-        _G.YOKUDO_ToggleAutoHopCakePrince()
-    end
-    
-    -- Auto Soul Reaper
-    if config.AutoSoulReaper and _G.YOKUDO_ToggleAutoSoulReaper then
-        _G.YOKUDO_ToggleAutoSoulReaper()
-    end
-    if config.AutoHopSoulReaper and _G.YOKUDO_ToggleAutoHopSoulReaper then
-        _G.YOKUDO_ToggleAutoHopSoulReaper()
-    end
+    print("📋 Auto Loading Config...")
     
     -- Auto Elite Hunter
     if config.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
         _G.YOKUDO_ToggleAutoEliteHunter()
-    end
-    if config.AutoHopEliteHunter and _G.YOKUDO_ToggleAutoHopEliteHunter then
-        _G.YOKUDO_ToggleAutoHopEliteHunter()
-    end
-    
-    -- Auto Unlock Haki
-    if config.AutoUnlockHaki and _G.YOKUDO_ToggleAutoUnlockHaki then
-        _G.YOKUDO_ToggleAutoUnlockHaki()
+        print("✅ Auto Elite Hunter Loaded from Config")
     end
     
     -- Auto Buso
     if config.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
         _G.YOKUDO_ToggleAutoBuso()
+        print("✅ Auto Buso Loaded from Config")
     end
-    
-    -- Auto Ken
-    if config.AutoKen and _G.YOKUDO_ToggleAutoKen then
-        _G.YOKUDO_ToggleAutoKen()
-    end
-    
-    -- Walk on Water
-    if config.WalkOnWater and _G.YOKUDO_ToggleWalkOnWater then
-        _G.YOKUDO_ToggleWalkOnWater()
-    end
-    
-    -- Values
-    if config.SpeedHack then
-        _G.YOKUDO_CurrentSpeed = config.SpeedHack
-        if _G.YOKUDO_SpeedEnabled then
-            _G.YOKUDO_StartSpeedLoop()
-        end
-    end
-    
-    if config.JumpHack then
-        _G.YOKUDO_CurrentJump = config.JumpHack
-        if _G.YOKUDO_JumpEnabled then
-            _G.YOKUDO_EnableJumpPower()
-        end
-    end
-    
-    if config.SelectedWeapon and _G.YOKUDO_AutoEquip then
-        _G.YOKUDO_AutoEquip.SelectedType = config.SelectedWeapon
-    end
-    
-    print("✅ Config Applied!")
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
