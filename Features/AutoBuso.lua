@@ -1,13 +1,10 @@
 -- ==================================================
--- AUTO BUSO HAKI (FIXED - Separate Start & Toggle)
+-- AUTO BUSO HAKI (SEA3)
 -- ==================================================
 
 local Y = _G.Y
 local Player = _G.YOKUDO.Player
 
--- ==================================================
--- STATE (GLOBAL)
--- ==================================================
 _G.YOKUDO_BusoEnabled = false
 _G.YOKUDO_BusoLoopConnection = nil
 _G.YOKUDO_BusoCharConnection = nil
@@ -59,53 +56,12 @@ local function stopAutoBuso()
     end
 end
 
--- ==================================================
--- START FEATURE (ហៅពី Loader)
--- ==================================================
-function _G.YOKUDO_StartAutoBuso()
-    if _G.YOKUDO_BusoEnabled then return end
-    
-    _G.YOKUDO_BusoEnabled = true
-    startAutoBuso()
-    print("✅ Auto Buso Started (from Config)")
-end
-
--- ==================================================
--- STOP FEATURE
--- ==================================================
-function _G.YOKUDO_StopAutoBuso()
-    if not _G.YOKUDO_BusoEnabled then return end
-    
-    _G.YOKUDO_BusoEnabled = false
-    stopAutoBuso()
-    print("❌ Auto Buso Stopped")
-end
-
--- ==================================================
--- TOGGLE FUNCTION (សម្រាប់ UI Checkbox)
--- ==================================================
 function _G.YOKUDO_ToggleAutoBuso()
+    _G.YOKUDO_BusoEnabled = not _G.YOKUDO_BusoEnabled
     if _G.YOKUDO_BusoEnabled then
-        _G.YOKUDO_StopAutoBuso()
+        startAutoBuso()
     else
-        _G.YOKUDO_StartAutoBuso()
-    end
-    
-    -- Save Config
-    task.spawn(function()
-        task.wait(0.1)
-        if _G.YOKUDO_SaveCurrentState then
-            _G.YOKUDO_SaveCurrentState()
-        end
-    end)
-end
-
--- ==================================================
--- UPDATE UI (ហៅពី Loader)
--- ==================================================
-function _G.YOKUDO_UpdateBusoUI(enabled)
-    if _G.YOKUDO_UpdateBusoCheckbox then
-        _G.YOKUDO_UpdateBusoCheckbox(enabled)
+        stopAutoBuso()
     end
 end
 
