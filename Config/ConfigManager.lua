@@ -137,13 +137,11 @@ function _G.YOKUDO_ApplyConfig()
         _G.YOKUDO_UpdateUI_UnlockHaki(c.AutoUnlockHaki)
     end
     
-    -- Weapon Type
+    -- ⭐ Weapon Type
     local weaponType = c.WeaponType or "Melee"
-    if _G.YOKUDO_AutoEquip then
-        _G.YOKUDO_AutoEquip.SelectedType = weaponType
-    end
-    if _G.YOKUDO_UpdateWeaponButton then
-        _G.YOKUDO_UpdateWeaponButton(weaponType)
+    if _G.YOKUDO_SetWeaponType then
+        _G.YOKUDO_SetWeaponType(weaponType)
+        print("✅ Weapon Type applied from config: " .. weaponType)
     end
     
     print("✅ Config applied for: " .. Player.Name)
