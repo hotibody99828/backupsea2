@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (FULL - with Global State)
+-- AUTO ELITE HUNTER (FULL - Save on Toggle)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -540,7 +540,7 @@ local function eliteHunterLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (SIMPLE - with Global State)
+-- TOGGLE FUNCTION (ជាមួយ Auto Save)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
     isRunning = not isRunning
@@ -591,10 +591,18 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         
         print("❌ Auto Elite Hunter Stopped")
     end
+    
+    -- Auto Save Config
+    task.spawn(function()
+        task.wait(0.1)
+        if _G.YOKUDO_SaveCurrentState then
+            _G.YOKUDO_SaveCurrentState()
+        end
+    end)
 end
 
 -- ==================================================
--- STATE (GLOBAL - for Config)
+-- STATE (GLOBAL)
 -- ==================================================
 _G.YOKUDO_AutoEliteHunterEnabled = false
 
