@@ -57,7 +57,7 @@ local PORTAL_ARGS = {
 local TWEEN_SPEED = 180
 
 -- ==================================================
--- STATE (SIMPLE)
+-- STATE
 -- ==================================================
 local isRunning = false
 local loopConnection = nil
@@ -540,14 +540,13 @@ local function eliteHunterLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (ជាមួយ Auto Save)
+-- TOGGLE FUNCTION (Save on Toggle)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoEliteHunter()
     isRunning = not isRunning
     _G.YOKUDO_AutoEliteHunterEnabled = isRunning
     
     if isRunning then
-        -- START
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -567,7 +566,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         loopConnection = task.spawn(eliteHunterLoop)
         print("✅ Auto Elite Hunter Started")
     else
-        -- STOP
         if loopConnection then
             task.cancel(loopConnection)
             loopConnection = nil
@@ -592,7 +590,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         print("❌ Auto Elite Hunter Stopped")
     end
     
-    -- Auto Save Config
     task.spawn(function()
         task.wait(0.1)
         if _G.YOKUDO_SaveCurrentState then
