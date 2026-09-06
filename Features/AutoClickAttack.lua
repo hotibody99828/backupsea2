@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO CLICK ATTACK LOOP (SEA3)
+-- AUTO CLICK ATTACK LOOP (SEA3) - ជាមួយ Config Save
 -- ==================================================
 
 local Y = _G.Y
@@ -9,6 +9,9 @@ local Settings = _G.YOKUDO
 _G.YOKUDO_AutoClickAttackEnabled = false
 _G.YOKUDO_ClickAttackLoopConnection = nil
 
+-- ==================================================
+-- GET NEAREST TARGET (Mobs + Players)
+-- ==================================================
 local function getNearestTarget(range)
     local character = Player.GetCharacter()
     if not character then return nil end
@@ -17,6 +20,7 @@ local function getNearestTarget(range)
     
     local targets = {}
     
+    -- Mobs (Enemies)
     local enemies = Y.WS:FindFirstChild("Enemies")
     if enemies then
         for _, mob in ipairs(enemies:GetChildren()) do
@@ -35,6 +39,7 @@ local function getNearestTarget(range)
         end
     end
     
+    -- Players
     for _, plr in ipairs(Y.P:GetPlayers()) do
         if plr ~= Player.Local then
             local char = plr.Character
@@ -55,6 +60,7 @@ local function getNearestTarget(range)
     
     if #targets == 0 then return nil end
     
+    -- Sort by distance (nearest first)
     table.sort(targets, function(a, b)
         return a.Distance < b.Distance
     end)
@@ -62,9 +68,12 @@ local function getNearestTarget(range)
     return targets[1].Object
 end
 
+-- ==================================================
+-- CLICK ATTACK LOOP
+-- ==================================================
 local function clickAttackLoop()
     while _G.YOKUDO_AutoClickAttackEnabled do
-        local target = getNearestTarget(Settings.Defaults.AttackRange)
+        local target = getNearestTarget(Settings.Defaults.AttackRange or 60)
         if target and _G.YOKUDO_AttackTarget then
             _G.YOKUDO_AttackTarget(target)
         end
@@ -72,6 +81,9 @@ local function clickAttackLoop()
     end
 end
 
+-- ==================================================
+-- TOGGLE FUNCTION (ជាមួយ Config Save & UI Update)
+-- ==================================================
 function _G.YOKUDO_ToggleAutoClickAttack()
     _G.YOKUDO_AutoClickAttackEnabled = not _G.YOKUDO_AutoClickAttackEnabled
     
@@ -81,12 +93,24 @@ function _G.YOKUDO_ToggleAutoClickAttack()
             _G.YOKUDO_ClickAttackLoopConnection = nil
         end
         _G.YOKUDO_ClickAttackLoopConnection = task.spawn(clickAttackLoop)
+        print("✅ Auto Click Attack: ON")
     else
         if _G.YOKUDO_ClickAttackLoopConnection then
             task.cancel(_G.YOKUDO_ClickAttackLoopConnection)
             _G.YOKUDO_ClickAttackLoopConnection = nil
         end
+        print("❌ Auto Click Attack: OFF")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_ClickAttack then
+        _G.YOKUDO_UpdateUI_ClickAttack(_G.YOKUDO_AutoClickAttackEnabled)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoClickAttack", _G.YOKUDO_AutoClickAttackEnabled)
     end
 end
 
-print("✅ AutoClickAttack Loaded")
+print("✅ AutoClickAttack Loaded (Config Ready)")
