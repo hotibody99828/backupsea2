@@ -793,13 +793,14 @@ function CreateSmartCheckbox(Parent, LabelText, Order, SetFunction, GetStateFunc
 end
 
 -- ==================================================
--- UPDATE WEAPON BUTTON
+-- ⭐ UPDATE WEAPON BUTTON (សម្រាប់ Config Load)
 -- ==================================================
 function _G.YOKUDO_UpdateWeaponButton(weaponType)
     if not _G.YOKUDO_AutoHopPage then return end
     for _, child in ipairs(_G.YOKUDO_AutoHopPage:GetDescendants()) do
         if child.Name == "WeaponButton" then
             child.Text = weaponType
+            print("✅ Weapon Button updated to: " .. weaponType)
             return
         end
     end
