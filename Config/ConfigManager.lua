@@ -1,9 +1,8 @@
 -- ==================================================
--- CONFIG MANAGER (Auto Save & Load - Test)
+-- CONFIG MANAGER (Auto Save & Load - FULL)
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
 
 -- ==================================================
 -- CONFIG PATH
@@ -11,13 +10,10 @@ local RunService = game:GetService("RunService")
 local CONFIG_PATH = "YOKUDOHUB/sea3_config.json"
 
 -- ==================================================
--- DEFAULT CONFIG (សម្រាប់ Test)
+-- DEFAULT CONFIG
 -- ==================================================
 local DEFAULT_CONFIG = {
-    -- Auto Elite Hunter
     AutoEliteHunter = false,
-    
-    -- Auto Buso
     AutoBuso = false,
 }
 
@@ -26,8 +22,7 @@ local DEFAULT_CONFIG = {
 -- ==================================================
 local currentConfig = nil
 local isSaving = false
-local lastSaveTime = 0
-local SAVE_INTERVAL = 1 -- រក្សាទុករាល់ 1 វិនាទី
+local SAVE_INTERVAL = 0.5
 
 -- ==================================================
 -- LOAD CONFIG
@@ -57,7 +52,6 @@ local function saveConfig(data)
     local success, err = pcall(function()
         local json = HttpService:JSONEncode(data)
         writefile(CONFIG_PATH, json)
-        print("💾 Config Auto-Saved!")
     end)
     
     if not success then
@@ -65,6 +59,16 @@ local function saveConfig(data)
     end
     
     isSaving = false
+end
+
+-- ==================================================
+-- GET CURRENT STATE FROM GLOBAL
+-- ==================================================
+local function getCurrentState()
+    return {
+        AutoEliteHunter = _G.YOKUDO_AutoEliteHunterEnabled or false,
+        AutoBuso = _G.YOKUDO_BusoEnabled or false,
+    }
 end
 
 -- ==================================================
@@ -87,13 +91,26 @@ function _G.YOKUDO_GetConfig()
 end
 
 -- ==================================================
--- UPDATE CONFIG (Auto Save)
+-- FORCE SAVE CURRENT STATE
 -- ==================================================
-function _G.YOKUDO_UpdateConfig(key, value)
+function _G.YOKUDO_SaveCurrentState()
+    local currentState = getCurrentState()
     local config = _G.YOKUDO_GetConfig()
-    config[key] = value
-    currentConfig = config
-    saveConfig(config)
+    
+    local hasChanged = false
+    for key, value in pairs(currentState) do
+        if config[key] ~= value then
+            config[key] = value
+            hasChanged = true
+        end
+    end
+    
+    if hasChanged then
+        currentConfig = config
+        saveConfig(config)
+        return true
+    end
+    return false
 end
 
 -- ==================================================
@@ -102,40 +119,57 @@ end
 function _G.YOKUDO_ResetConfig()
     currentConfig = DEFAULT_CONFIG
     saveConfig(DEFAULT_CONFIG)
-    print("🔄 Config Reset to Default")
 end
 
 -- ==================================================
--- AUTO SAVE LOOP (រាល់ 1 វិនាទី)
+-- AUTO SAVE LOOP (រាល់ 0.5 វិនាទី)
 -- ==================================================
 task.spawn(function()
     while true do
         task.wait(SAVE_INTERVAL)
         
-        if currentConfig and tick() - lastSaveTime >= SAVE_INTERVAL then
-            local currentState = {
-                AutoEliteHunter = _G.YOKUDO_AutoEliteHunterEnabled or false,
-                AutoBuso = _G.YOKUDO_BusoEnabled or false,
-            }
-            
-            -- ពិនិត្យថាមានការផ្លាស់ប្តូរឬអត់
-            local hasChanged = false
+        local currentState = getCurrentState()
+        local config = _G.YOKUDO_GetConfig()
+        
+        local hasChanged = false
+        for key, value in pairs(currentState) do
+            if config[key] ~= value then
+                hasChanged = true
+                break
+            end
+        end
+        
+        if hasChanged then
             for key, value in pairs(currentState) do
-                if currentConfig[key] ~= value then
-                    hasChanged = true
-                    break
-                end
+                config[key] = value
             end
-            
-            if hasChanged then
-                for key, value in pairs(currentState) do
-                    currentConfig[key] = value
-                end
-                saveConfig(currentConfig)
-                lastSaveTime = tick()
-            end
+            currentConfig = config
+            saveConfig(config)
         end
     end
 end)
 
-print("✅ ConfigManager Loaded (Auto Save & Load)")
+-- ==================================================
+-- HOOK INTO TOGGLE FUNCTIONS (Auto Save on Toggle)
+-- ==================================================
+-- Hook Auto Elite Hunter
+local oldToggleElite = _G.YOKUDO_ToggleAutoEliteHunter
+if oldToggleElite then
+    _G.YOKUDO_ToggleAutoEliteHunter = function()
+        oldToggleElite()
+        task.wait(0.1)
+        _G.YOKUDO_SaveCurrentState()
+    end
+end
+
+-- Hook Auto Buso
+local oldToggleBuso = _G.YOKUDO_ToggleAutoBuso
+if oldToggleBuso then
+    _G.YOKUDO_ToggleAutoBuso = function()
+        oldToggleBuso()
+        task.wait(0.1)
+        _G.YOKUDO_SaveCurrentState()
+    end
+end
+
+print("✅ ConfigManager Loaded")
