@@ -27,7 +27,7 @@ if _G.YOKUDO_HasJoinedMarines == nil then
 end
 
 task.spawn(function()
-    local success, err = pcall(function()
+    local success = pcall(function()
         ReplicatedStorage:WaitForChild("Remotes", 5)
     end)
     
@@ -48,12 +48,8 @@ task.spawn(function()
 end)
 
 Player.CharacterAdded:Connect(function()
-    if _G.YOKUDO_HasJoinedMarines then
-        return
-    end
-    
+    if _G.YOKUDO_HasJoinedMarines then return end
     task.wait(0.5)
-    
     if not _G.YOKUDO_HasJoinedMarines then
         pcall(function()
             local args = {"SetTeam2", "Marines"}
@@ -129,7 +125,7 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- ⭐ LOAD CONFIG MANAGER (បន្ថែមថ្មី)
+-- ⭐ LOAD CONFIG MANAGER
 -- ==================================================
 task.spawn(function()
     print("⏳ Waiting for UI & Features to be ready...")
