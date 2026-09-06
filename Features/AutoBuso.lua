@@ -1,12 +1,12 @@
 -- ==================================================
--- AUTO BUSO HAKI (FULL - with Global State)
+-- AUTO BUSO HAKI (FULL - Save on Toggle)
 -- ==================================================
 
 local Y = _G.Y
 local Player = _G.YOKUDO.Player
 
 -- ==================================================
--- STATE (GLOBAL - for Config)
+-- STATE (GLOBAL)
 -- ==================================================
 _G.YOKUDO_BusoEnabled = false
 _G.YOKUDO_BusoLoopConnection = nil
@@ -69,6 +69,14 @@ function _G.YOKUDO_ToggleAutoBuso()
         stopAutoBuso()
         print("❌ Auto Buso Stopped")
     end
+    
+    -- Auto Save Config
+    task.spawn(function()
+        task.wait(0.1)
+        if _G.YOKUDO_SaveCurrentState then
+            _G.YOKUDO_SaveCurrentState()
+        end
+    end)
 end
 
 print("✅ AutoBuso Loaded")
