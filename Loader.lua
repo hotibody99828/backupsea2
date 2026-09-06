@@ -1,6 +1,9 @@
 -- ==================================================
 -- YOKUDO HUB | SEA3 | [Premium] | Loader
 -- ==================================================
+-- URL តែមួយគត់៖
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
+-- ==================================================
 
 local BASE_URL = "https://raw.githubusercontent.com/hotibody99828/backupsea2/main/"
 
@@ -68,11 +71,14 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG & CORE
+-- LOAD CONFIG MANAGER
 -- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
 
+-- ==================================================
+-- LOAD CORE
+-- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
@@ -92,7 +98,11 @@ end)
 -- ==================================================
 -- LOAD FEATURES
 -- ==================================================
+local featuresLoaded = false
+
 task.spawn(function()
+    task.wait(0.5)
+    
     local Features = {
         "AutoEquip",
         "AutoAttack",
@@ -108,13 +118,22 @@ task.spawn(function()
             print("✅ " .. Feature .. " Loaded")
         end)
     end
+    
+    featuresLoaded = true
+    print("✅ All Features Loaded")
 end)
 
 -- ==================================================
--- AUTO LOAD CONFIG
+-- WAIT FOR FEATURES & APPLY CONFIG
 -- ==================================================
 task.spawn(function()
-    task.wait(2.5)
+    -- រង់ចាំ Features Load រួច
+    while not featuresLoaded do
+        task.wait(0.1)
+    end
+    
+    -- រង់ចាំបន្តិចទៀត ឲ្យ Features ត្រៀមខ្លួន
+    task.wait(0.5)
     
     print("📋 Auto Loading Config...")
     local config = _G.YOKUDO_GetConfig()
@@ -124,16 +143,22 @@ task.spawn(function()
         print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
         print("   AutoBuso: " .. tostring(config.AutoBuso))
         
-        -- Auto Elite Hunter
+        -- Apply Auto Elite Hunter
         if config.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
+            print("▶️ Starting Auto Elite Hunter from Config...")
             _G.YOKUDO_ToggleAutoEliteHunter()
-            print("✅ Auto Elite Hunter Loaded from Config")
+            print("✅ Auto Elite Hunter Started")
         end
         
-        -- Auto Buso
+        -- Apply Auto Buso
         if config.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
+            print("▶️ Starting Auto Buso from Config...")
             _G.YOKUDO_ToggleAutoBuso()
-            print("✅ Auto Buso Loaded from Config")
+            print("✅ Auto Buso Started")
+        end
+        
+        if not config.AutoEliteHunter and not config.AutoBuso then
+            print("ℹ️ No features enabled in config")
         end
     else
         print("⚠️ Failed to load config!")
