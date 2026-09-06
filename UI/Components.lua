@@ -1,5 +1,5 @@
 -- ==================================================
--- UI COMPONENTS (SEA3)
+-- UI COMPONENTS (SEA3) + SMART CHECKBOX
 -- ==================================================
 
 local Y = _G.Y
@@ -377,7 +377,7 @@ function CreateTextBoxWithCheckbox(Parent, TextValue, Order)
 end
 
 -- ==================================================
--- REFRESH BUTTON (ដូច SEA2)
+-- REFRESH BUTTON
 -- ==================================================
 function CreateRefreshButton(Parent, Order)
     local Y = _G.Y
@@ -698,6 +698,125 @@ function AddFeaturesSoon(Page)
     Soon.Font = Enum.Font.GothamMedium
     Soon.ZIndex = 8
     Soon.Parent = Card
+end
+
+-- ==================================================
+-- ⭐ SMART CHECKBOX (ភ្ជាប់ជាមួយ Config)
+-- ==================================================
+function CreateSmartCheckbox(Parent, LabelText, Order, SetFunction, GetStateFunction)
+    local Holder = Instance.new("Frame")
+    Holder.Size = UDim2.new(1, 0, 0, 32)
+    Holder.BackgroundTransparency = 1
+    Holder.LayoutOrder = Order or 1
+    Holder.Parent = Parent
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -38, 1, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = LabelText
+    Label.TextColor3 = Color3.fromRGB(205, 205, 220)
+    Label.TextSize = 13
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextYAlignment = Enum.TextYAlignment.Center
+    Label.Font = Enum.Font.GothamMedium
+    Label.Parent = Holder
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0, 26, 0, 26)
+    Button.Position = UDim2.new(1, -26, 0.5, -13)
+    Button.BackgroundColor3 = Color3.fromRGB(28, 29, 39)
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.Parent = Holder
+
+    local BoxCorner = Instance.new("UICorner")
+    BoxCorner.CornerRadius = UDim.new(0, 6)
+    BoxCorner.Parent = Button
+
+    local Check = Instance.new("TextLabel")
+    Check.Size = UDim2.new(1, 0, 1, 0)
+    Check.BackgroundTransparency = 1
+    Check.Text = "✓"
+    Check.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Check.TextSize = 18
+    Check.Font = Enum.Font.GothamBold
+    Check.Visible = false
+    Check.Parent = Button
+
+    -- State
+    local Enabled = false
+    if GetStateFunction then
+        Enabled = GetStateFunction()
+        Check.Visible = Enabled
+        if Enabled then
+            Button.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+        end
+    end
+
+    local function UpdateUI(state)
+        Enabled = state
+        Check.Visible = state
+        if state then
+            Button.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+        else
+            Button.BackgroundColor3 = Color3.fromRGB(28, 29, 39)
+        end
+    end
+
+    Button.MouseButton1Click:Connect(function()
+        if SetFunction then
+            local currentState = GetStateFunction and GetStateFunction() or Enabled
+            local newState = not currentState
+            UpdateUI(newState)
+            task.spawn(function()
+                SetFunction(newState)
+            end)
+        end
+    end)
+
+    -- Export for external update
+    if LabelText == "Walk on Water" then
+        _G.YOKUDO_UpdateUI_Walk = UpdateUI
+    elseif LabelText == "Auto Buso" then
+        _G.YOKUDO_UpdateUI_Buso = UpdateUI
+    elseif LabelText == "Auto Ken" then
+        _G.YOKUDO_UpdateUI_Ken = UpdateUI
+    elseif LabelText == "Auto Click Attack" then
+        _G.YOKUDO_UpdateUI_ClickAttack = UpdateUI
+    elseif LabelText == "Auto Unlock Haki Legendary" then
+        _G.YOKUDO_UpdateUI_UnlockHaki = UpdateUI
+    elseif LabelText == "Auto Dough King" then
+        _G.YOKUDO_UpdateUI_DoughKing = UpdateUI
+    elseif LabelText == "Auto Rip indra" then
+        _G.YOKUDO_UpdateUI_RipIndra = UpdateUI
+    elseif LabelText == "Auto Cake Prince" then
+        _G.YOKUDO_UpdateUI_CakePrince = UpdateUI
+    elseif LabelText == "Auto Soul Reaper" then
+        _G.YOKUDO_UpdateUI_SoulReaper = UpdateUI
+    elseif LabelText == "Auto Elite Hunter" then
+        _G.YOKUDO_UpdateUI_EliteHunter = UpdateUI
+    end
+
+    return {
+        Holder = Holder,
+        Button = Button,
+        GetState = function() return Enabled end,
+        SetState = UpdateUI,
+        Update = UpdateUI,
+    }
+end
+
+-- ==================================================
+-- UPDATE WEAPON BUTTON
+-- ==================================================
+function _G.YOKUDO_UpdateWeaponButton(weaponType)
+    if not _G.YOKUDO_AutoHopPage then return end
+    for _, child in ipairs(_G.YOKUDO_AutoHopPage:GetDescendants()) do
+        if child.Name == "WeaponButton" then
+            child.Text = weaponType
+            return
+        end
+    end
 end
 
 print("✅ Components Loaded")
