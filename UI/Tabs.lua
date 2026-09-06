@@ -1,5 +1,5 @@
 -- ==================================================
--- TABS (SEA3)
+-- TABS (SEA3 - ជាមួយ Update Checkbox Functions)
 -- ==================================================
 
 local Y = _G.Y
@@ -357,7 +357,7 @@ hopEliteHunterCheckbox.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================
--- SETTING TAB (គ្មាន Config Buttons)
+-- SETTING TAB
 -- ==================================================
 CreateSectionTitle(SettingPage, "Tween Settings", 1)
 CreateStopTweenButton(SettingPage, 2)
@@ -400,6 +400,60 @@ noClipCheckbox.MouseButton1Click:Connect(function()
         _G.YOKUDO_ToggleNoClip()
     end
 end)
+
+-- ==================================================
+-- UPDATE CHECKBOX UI FUNCTIONS (សម្រាប់ Load Config)
+-- ==================================================
+
+-- Update Auto Elite Hunter Checkbox
+function _G.YOKUDO_UpdateEliteHunterCheckbox(enabled)
+    local page = EliteHunterPage
+    if page then
+        for _, child in ipairs(page:GetDescendants()) do
+            if child.Name == "CheckBox" and child.Parent and child.Parent.Name == "Auto_Elite_Hunter" then
+                local check = child:FindFirstChild("Check")
+                if check then
+                    check.Visible = enabled
+                    if enabled then
+                        child.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+                        local stroke = child:FindFirstChildOfClass("UIStroke")
+                        if stroke then stroke.Color = Color3.fromRGB(135, 120, 225) end
+                    else
+                        child.BackgroundColor3 = Color3.fromRGB(28, 29, 39)
+                        local stroke = child:FindFirstChildOfClass("UIStroke")
+                        if stroke then stroke.Color = Color3.fromRGB(200, 200, 220) end
+                    end
+                end
+                break
+            end
+        end
+    end
+end
+
+-- Update Auto Buso Checkbox
+function _G.YOKUDO_UpdateBusoCheckbox(enabled)
+    local page = SettingPage
+    if page then
+        for _, child in ipairs(page:GetDescendants()) do
+            if child.Name == "CheckBox" and child.Parent and child.Parent.Name == "Auto_Buso" then
+                local check = child:FindFirstChild("Check")
+                if check then
+                    check.Visible = enabled
+                    if enabled then
+                        child.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+                        local stroke = child:FindFirstChildOfClass("UIStroke")
+                        if stroke then stroke.Color = Color3.fromRGB(135, 120, 225) end
+                    else
+                        child.BackgroundColor3 = Color3.fromRGB(28, 29, 39)
+                        local stroke = child:FindFirstChildOfClass("UIStroke")
+                        if stroke then stroke.Color = Color3.fromRGB(200, 200, 220) end
+                    end
+                end
+                break
+            end
+        end
+    end
+end
 
 -- ==================================================
 -- OTHER PAGES
