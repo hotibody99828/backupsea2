@@ -367,7 +367,7 @@ hopEliteHunterCheckbox.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================
--- SETTING TAB
+-- SETTING TAB (UPDATED - WITH CONFIG BUTTONS)
 -- ==================================================
 CreateSectionTitle(SettingPage, "Tween Settings", 1)
 CreateStopTweenButton(SettingPage, 2)
@@ -383,6 +383,113 @@ CreateSectionTitle(SettingPage, "Movement Hacks", 8)
 local jumpHolder, jumpCheckbox, getJumpState, jumpTextBox, getJumpValue = CreateTextBoxWithCheckbox(SettingPage, "Jump Hack", 9)
 local speedHolder, speedCheckbox, getSpeedState, speedTextBox, getSpeedValue = CreateTextBoxWithCheckbox(SettingPage, "Speed Hack", 10)
 local walkFrame, walkCheckbox, getWalkState = CreateCheckbox(SettingPage, "Walk on Water", 11)
+
+-- ==================================================
+-- CONFIG BUTTONS (NEW)
+-- ==================================================
+CreateSectionTitle(SettingPage, "Config", 12)
+
+-- Save Config Button
+local saveConfigButton = Instance.new("TextButton")
+saveConfigButton.Name = "SaveConfigButton"
+saveConfigButton.Size = UDim2.new(1, -10, 0, 30)
+saveConfigButton.Position = UDim2.new(0, 5, 0, 0)
+saveConfigButton.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+saveConfigButton.BorderSizePixel = 0
+saveConfigButton.Text = "Save Config"
+saveConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+saveConfigButton.TextSize = 12
+saveConfigButton.Font = Enum.Font.GothamBold
+saveConfigButton.Parent = SettingPage
+
+local saveCorner = Instance.new("UICorner")
+saveCorner.CornerRadius = UDim.new(0, 4)
+saveCorner.Parent = saveConfigButton
+
+saveConfigButton.MouseEnter:Connect(function()
+    saveConfigButton.BackgroundColor3 = Color3.fromRGB(135, 120, 225)
+end)
+
+saveConfigButton.MouseLeave:Connect(function()
+    saveConfigButton.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+end)
+
+saveConfigButton.MouseButton1Click:Connect(function()
+    local config = {
+        -- Auto Hop
+        AutoClickAttack = _G.YOKUDO_AutoClickAttackEnabled or false,
+        
+        -- Auto Dough King
+        AutoDoughKing = _G.YOKUDO_AutoDoughKingEnabled or false,
+        AutoHopDoughKing = _G.YOKUDO_AutoHopDoughKingEnabled or false,
+        
+        -- Auto Rip Indra
+        AutoRipIndra = _G.YOKUDO_AutoRipIndraEnabled or false,
+        AutoHopRipIndra = _G.YOKUDO_AutoHopRipIndraEnabled or false,
+        
+        -- Auto Cake Prince
+        AutoCakePrince = _G.YOKUDO_AutoCakePrinceEnabled or false,
+        AutoHopCakePrince = _G.YOKUDO_AutoHopCakePrinceEnabled or false,
+        
+        -- Auto Soul Reaper
+        AutoSoulReaper = _G.YOKUDO_AutoSoulReaperEnabled or false,
+        AutoHopSoulReaper = _G.YOKUDO_AutoHopSoulReaperEnabled or false,
+        
+        -- Auto Elite Hunter
+        AutoEliteHunter = _G.YOKUDO_AutoEliteHunterEnabled or false,
+        AutoHopEliteHunter = _G.YOKUDO_AutoHopEliteHunterEnabled or false,
+        
+        -- Shop
+        AutoUnlockHaki = _G.YOKUDO_AutoUnlockHakiEnabled or false,
+        
+        -- Setting
+        AutoBuso = _G.YOKUDO_BusoEnabled or false,
+        AutoKen = _G.YOKUDO_ObservationEnabled or false,
+        WalkOnWater = _G.YOKUDO_WalkEnabled or false,
+        NoClip = false,
+        
+        -- Values
+        SpeedHack = _G.YOKUDO_CurrentSpeed or 16,
+        JumpHack = _G.YOKUDO_CurrentJump or 50,
+        SelectedWeapon = _G.YOKUDO_AutoEquip and _G.YOKUDO_AutoEquip.SelectedType or "Melee",
+    }
+    
+    for key, value in pairs(config) do
+        _G.YOKUDO_UpdateConfig(key, value)
+    end
+    
+    print("✅ Config Saved!")
+end)
+
+-- Reset Config Button
+local resetConfigButton = Instance.new("TextButton")
+resetConfigButton.Name = "ResetConfigButton"
+resetConfigButton.Size = UDim2.new(1, -10, 0, 30)
+resetConfigButton.Position = UDim2.new(0, 5, 0, 35)
+resetConfigButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+resetConfigButton.BorderSizePixel = 0
+resetConfigButton.Text = "Reset Config"
+resetConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+resetConfigButton.TextSize = 12
+resetConfigButton.Font = Enum.Font.GothamBold
+resetConfigButton.Parent = SettingPage
+
+local resetCorner = Instance.new("UICorner")
+resetCorner.CornerRadius = UDim.new(0, 4)
+resetCorner.Parent = resetConfigButton
+
+resetConfigButton.MouseEnter:Connect(function()
+    resetConfigButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+end)
+
+resetConfigButton.MouseLeave:Connect(function()
+    resetConfigButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+end)
+
+resetConfigButton.MouseButton1Click:Connect(function()
+    _G.YOKUDO_ResetConfig()
+    print("🔄 Config Reset! Restart the script to apply default settings.")
+end)
 
 -- ==================================================
 -- SETTING CHECKBOX EVENTS
