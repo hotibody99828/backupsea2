@@ -1,5 +1,5 @@
 -- ==================================================
--- CONFIG MANAGER (FIXED - Save only on Toggle)
+-- CONFIG MANAGER (Save only on Toggle Change)
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
