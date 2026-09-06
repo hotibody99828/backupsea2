@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO DOUGH KING (New Toggle + No Collide)
+-- AUTO DOUGH KING (ជាមួយ Config Save)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -21,16 +21,12 @@ local DOUGH_KING_POSITION = Vector3.new(-2157, 160, -12400)
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- STATE (SIMPLE - New Toggle System)
+-- STATE
 -- ==================================================
 local isRunning = false
 local loopConnection = nil
 local noCollideConnection = nil
 local noCollideActive = false
-
--- ==================================================
--- BYPASS TELEPORT STATE
--- ==================================================
 local hasBypassTeleported = false
 
 -- ==================================================
@@ -57,7 +53,6 @@ local isFollowingBoss = false
 local function applyNoCollide()
     local character = Player.Character
     if not character then return end
-    
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CanCollide = false
@@ -68,10 +63,8 @@ end
 local function startNoCollide()
     if noCollideConnection then return end
     if noCollideActive then return end
-    
     noCollideActive = true
     applyNoCollide()
-    
     noCollideConnection = RunService.Heartbeat:Connect(function()
         if not noCollideActive then return end
         applyNoCollide()
@@ -80,12 +73,10 @@ end
 
 local function stopNoCollide()
     noCollideActive = false
-    
     if noCollideConnection then
         noCollideConnection:Disconnect()
         noCollideConnection = nil
     end
-    
     local character = Player.Character
     if character then
         for _, part in ipairs(character:GetDescendants()) do
@@ -97,27 +88,20 @@ local function stopNoCollide()
 end
 
 -- ==================================================
--- BYPASS TELEPORT FUNCTION
+-- BYPASS TELEPORT
 -- ==================================================
 local function bypassTeleport(targetPos)
     local character = Player.Character
     if not character then return false end
-    
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return false end
-    
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
-    
     root.CFrame = CFrame.new(targetPos)
     hasBypassTeleported = true
-    
     return true
 end
 
--- ==================================================
--- RESET BYPASS STATE
--- ==================================================
 local function resetBypassState()
     hasBypassTeleported = false
 end
@@ -125,7 +109,6 @@ end
 -- ==================================================
 -- TWEEN TELEPORT FUNCTIONS
 -- ==================================================
-
 local function cleanupBody()
     if bodyVelocity then
         bodyVelocity:Destroy()
@@ -180,10 +163,8 @@ end
 local function tweenToBoss(bossPos, speed)
     local character = Player.Character
     if not character then return false end
-    
     local root = character:FindFirstChild("HumanoidRootPart")
     if not root then return false end
-    
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
     
@@ -217,8 +198,8 @@ local function tweenToBoss(bossPos, speed)
     end
     
     local duration = math.max(0.5, distance / speed)
-    
     local direction = (targetPos - root.Position).Unit
+    
     if not bodyVelocity then
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
@@ -233,18 +214,9 @@ local function tweenToBoss(bossPos, speed)
     end
     bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
     
-    local tweenInfo = TweenInfo.new(
-        duration,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out
-    )
-    
-    currentTween = TweenService:Create(root, tweenInfo, {
-        CFrame = CFrame.new(targetPos)
-    })
-    
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    currentTween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(targetPos)})
     isTweening = true
-    
     currentTween:Play()
     currentTween.Completed:Wait()
     
@@ -262,16 +234,14 @@ local function tweenToBoss(bossPos, speed)
 end
 
 -- ==================================================
--- FIND DOUGH KING BOSS (Check ReplicatedStorage មុន)
+-- FIND DOUGH KING BOSS
 -- ==================================================
 local function findDoughKing()
-    -- 1. ពិនិត្យ ReplicatedStorage មុន (Boss នៅឆ្ងាយ)
     local stored = ReplicatedStorage:FindFirstChild("Dough King")
     if stored then
         return stored, "replicatedstorage"
     end
     
-    -- 2. ពិនិត្យ workspace (Boss នៅជិត)
     local enemies = workspace:FindFirstChild("Enemies")
     if enemies then
         local boss = enemies:FindFirstChild("Dough King")
@@ -323,7 +293,6 @@ local function doughKingLoop()
                 isBossDead = false
                 continue
             end
-            
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
@@ -333,6 +302,7 @@ local function doughKingLoop()
         
         isBossDead = false
         
+        -- Equip Weapon
         if _G.YOKUDO_EquipWeaponFromBackpack then
             local weaponType = "Melee"
             if _G.YOKUDO_AutoEquip then
@@ -345,11 +315,9 @@ local function doughKingLoop()
             bossFound = false
             isAtPosition = false
             isFollowingBoss = false
-            
             if not hasBypassTeleported then
                 bypassTeleport(DOUGH_KING_POSITION)
             end
-            
             task.wait(0.01)
             continue
         end
@@ -419,14 +387,12 @@ local function doughKingLoop()
                         end
                     end
                 end)
-                
                 isLocked = true
             else
                 if _G.YOKUDO_AttackTarget then
                     _G.YOKUDO_AttackTarget(boss)
                 end
             end
-            
             task.wait(0.01)
             continue
         end
@@ -434,13 +400,13 @@ local function doughKingLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (NEW - SIMPLE)
+-- TOGGLE FUNCTION (ជាមួយ Config Save)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoDoughKing()
     isRunning = not isRunning
+    _G.YOKUDO_AutoDoughKingEnabled = isRunning
     
     if isRunning then
-        -- START
         hasBypassTeleported = false
         isBossDead = false
         bossFound = false
@@ -461,7 +427,6 @@ function _G.YOKUDO_ToggleAutoDoughKing()
         loopConnection = task.spawn(doughKingLoop)
         print("🍩 Auto Dough King Started")
     else
-        -- STOP
         if loopConnection then
             task.cancel(loopConnection)
             loopConnection = nil
@@ -482,8 +447,17 @@ function _G.YOKUDO_ToggleAutoDoughKing()
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
-        
         print("🍩 Auto Dough King Stopped")
+    end
+    
+    -- Update UI
+    if _G.YOKUDO_UpdateUI_DoughKing then
+        _G.YOKUDO_UpdateUI_DoughKing(isRunning)
+    end
+    
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoDoughKing", isRunning)
     end
 end
 
@@ -499,10 +473,9 @@ Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     resetBypassState()
     stopNoCollide()
-    
     if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoDoughKing Loaded (New Toggle + No Collide)")
+print("✅ AutoDoughKing Loaded (Config Ready)")
