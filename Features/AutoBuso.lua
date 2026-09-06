@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO BUSO HAKI (FULL - Save on Toggle)
+-- AUTO BUSO HAKI (Save on Toggle)
 -- ==================================================
 
 local Y = _G.Y
@@ -70,7 +70,6 @@ function _G.YOKUDO_ToggleAutoBuso()
         print("❌ Auto Buso Stopped")
     end
     
-    -- Auto Save Config
     task.spawn(function()
         task.wait(0.1)
         if _G.YOKUDO_SaveCurrentState then
