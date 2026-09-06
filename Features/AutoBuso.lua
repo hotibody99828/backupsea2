@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO BUSO HAKI (Save on Toggle)
+-- AUTO BUSO HAKI (FIXED - Separate Start & Toggle)
 -- ==================================================
 
 local Y = _G.Y
@@ -59,23 +59,54 @@ local function stopAutoBuso()
     end
 end
 
-function _G.YOKUDO_ToggleAutoBuso()
-    _G.YOKUDO_BusoEnabled = not _G.YOKUDO_BusoEnabled
+-- ==================================================
+-- START FEATURE (ហៅពី Loader)
+-- ==================================================
+function _G.YOKUDO_StartAutoBuso()
+    if _G.YOKUDO_BusoEnabled then return end
     
+    _G.YOKUDO_BusoEnabled = true
+    startAutoBuso()
+    print("✅ Auto Buso Started (from Config)")
+end
+
+-- ==================================================
+-- STOP FEATURE
+-- ==================================================
+function _G.YOKUDO_StopAutoBuso()
+    if not _G.YOKUDO_BusoEnabled then return end
+    
+    _G.YOKUDO_BusoEnabled = false
+    stopAutoBuso()
+    print("❌ Auto Buso Stopped")
+end
+
+-- ==================================================
+-- TOGGLE FUNCTION (សម្រាប់ UI Checkbox)
+-- ==================================================
+function _G.YOKUDO_ToggleAutoBuso()
     if _G.YOKUDO_BusoEnabled then
-        startAutoBuso()
-        print("✅ Auto Buso Started")
+        _G.YOKUDO_StopAutoBuso()
     else
-        stopAutoBuso()
-        print("❌ Auto Buso Stopped")
+        _G.YOKUDO_StartAutoBuso()
     end
     
+    -- Save Config
     task.spawn(function()
         task.wait(0.1)
         if _G.YOKUDO_SaveCurrentState then
             _G.YOKUDO_SaveCurrentState()
         end
     end)
+end
+
+-- ==================================================
+-- UPDATE UI (ហៅពី Loader)
+-- ==================================================
+function _G.YOKUDO_UpdateBusoUI(enabled)
+    if _G.YOKUDO_UpdateBusoCheckbox then
+        _G.YOKUDO_UpdateBusoCheckbox(enabled)
+    end
 end
 
 print("✅ AutoBuso Loaded")
