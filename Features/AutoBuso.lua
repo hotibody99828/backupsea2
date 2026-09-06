@@ -1,10 +1,13 @@
 -- ==================================================
--- AUTO BUSO HAKI (SEA3)
+-- AUTO BUSO HAKI (FULL - with Global State)
 -- ==================================================
 
 local Y = _G.Y
 local Player = _G.YOKUDO.Player
 
+-- ==================================================
+-- STATE (GLOBAL - for Config)
+-- ==================================================
 _G.YOKUDO_BusoEnabled = false
 _G.YOKUDO_BusoLoopConnection = nil
 _G.YOKUDO_BusoCharConnection = nil
@@ -58,10 +61,13 @@ end
 
 function _G.YOKUDO_ToggleAutoBuso()
     _G.YOKUDO_BusoEnabled = not _G.YOKUDO_BusoEnabled
+    
     if _G.YOKUDO_BusoEnabled then
         startAutoBuso()
+        print("✅ Auto Buso Started")
     else
         stopAutoBuso()
+        print("❌ Auto Buso Stopped")
     end
 end
 
