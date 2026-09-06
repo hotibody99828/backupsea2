@@ -1,5 +1,5 @@
 -- ==================================================
--- CONFIG MANAGER (FULL - Auto Save & Load)
+-- CONFIG MANAGER (FIXED - Save only on Toggle)
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
@@ -22,7 +22,6 @@ local DEFAULT_CONFIG = {
 -- ==================================================
 local currentConfig = nil
 local isSaving = false
-local SAVE_INTERVAL = 1
 
 -- ==================================================
 -- LOAD CONFIG
@@ -86,7 +85,7 @@ function _G.YOKUDO_GetConfig()
 end
 
 -- ==================================================
--- SAVE CURRENT STATE
+-- SAVE CURRENT STATE (ហៅពី Features ពេល Toggle)
 -- ==================================================
 function _G.YOKUDO_SaveCurrentState()
     local config = _G.YOKUDO_GetConfig()
@@ -113,34 +112,21 @@ function _G.YOKUDO_SaveCurrentState()
 end
 
 -- ==================================================
--- AUTO SAVE LOOP
+-- RELOAD CONFIG
 -- ==================================================
-task.spawn(function()
-    while true do
-        task.wait(SAVE_INTERVAL)
-        
-        local config = _G.YOKUDO_GetConfig()
-        local currentState = {
-            AutoEliteHunter = _G.YOKUDO_AutoEliteHunterEnabled or false,
-            AutoBuso = _G.YOKUDO_BusoEnabled or false,
-        }
-        
-        local hasChanged = false
-        for key, value in pairs(currentState) do
-            if config[key] ~= value then
-                hasChanged = true
-                break
-            end
-        end
-        
-        if hasChanged then
-            for key, value in pairs(currentState) do
-                config[key] = value
-            end
-            currentConfig = config
-            saveConfig(config)
-        end
-    end
-end)
+function _G.YOKUDO_ReloadConfig()
+    currentConfig = nil
+    return _G.YOKUDO_GetConfig()
+end
+
+-- ==================================================
+-- PRINT CONFIG
+-- ==================================================
+function _G.YOKUDO_PrintConfig()
+    local config = _G.YOKUDO_GetConfig()
+    print("📋 Current Config:")
+    print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
+    print("   AutoBuso: " .. tostring(config.AutoBuso))
+end
 
 print("✅ ConfigManager Loaded")
