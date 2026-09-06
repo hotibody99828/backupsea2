@@ -71,14 +71,11 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG MANAGER
+-- LOAD CONFIG & CORE
 -- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
 
--- ==================================================
--- LOAD CORE
--- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
@@ -124,15 +121,13 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- WAIT FOR FEATURES & APPLY CONFIG
+-- LOAD CONFIG (ក្រោយ Features Load រួច)
 -- ==================================================
 task.spawn(function()
-    -- រង់ចាំ Features Load រួច
     while not featuresLoaded do
         task.wait(0.1)
     end
     
-    -- រង់ចាំបន្តិចទៀត ឲ្យ Features ត្រៀមខ្លួន
     task.wait(0.5)
     
     print("📋 Auto Loading Config...")
@@ -143,14 +138,12 @@ task.spawn(function()
         print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
         print("   AutoBuso: " .. tostring(config.AutoBuso))
         
-        -- Apply Auto Elite Hunter
         if config.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
             print("▶️ Starting Auto Elite Hunter from Config...")
             _G.YOKUDO_ToggleAutoEliteHunter()
             print("✅ Auto Elite Hunter Started")
         end
         
-        -- Apply Auto Buso
         if config.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
             print("▶️ Starting Auto Buso from Config...")
             _G.YOKUDO_ToggleAutoBuso()
