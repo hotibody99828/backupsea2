@@ -1,9 +1,6 @@
 -- ==================================================
 -- YOKUDO HUB | SEA3 | [Premium] | Loader
 -- ==================================================
--- URL តែមួយគត់៖
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
--- ==================================================
 
 local BASE_URL = "https://raw.githubusercontent.com/hotibody99828/backupsea2/main/"
 
@@ -71,14 +68,11 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG MANAGER
+-- LOAD CONFIG & CORE
 -- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
 
--- ==================================================
--- LOAD CORE
--- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
@@ -111,28 +105,38 @@ task.spawn(function()
     for _, Feature in ipairs(Features) do
         pcall(function()
             loadstring(game:HttpGet(BASE_URL .. "Features/" .. Feature .. ".lua"))()
+            print("✅ " .. Feature .. " Loaded")
         end)
     end
-    print("✅ Features Loaded")
 end)
 
 -- ==================================================
 -- AUTO LOAD CONFIG
 -- ==================================================
 task.spawn(function()
-    task.wait(1.5)
+    task.wait(2.5)
     
-    local config = _G.YOKUDO_GetConfig()
     print("📋 Auto Loading Config...")
+    local config = _G.YOKUDO_GetConfig()
     
-    if config.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
-        _G.YOKUDO_ToggleAutoEliteHunter()
-        print("✅ Auto Elite Hunter Loaded from Config")
-    end
-    
-    if config.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
-        _G.YOKUDO_ToggleAutoBuso()
-        print("✅ Auto Buso Loaded from Config")
+    if config then
+        print("📋 Config Loaded:")
+        print("   AutoEliteHunter: " .. tostring(config.AutoEliteHunter))
+        print("   AutoBuso: " .. tostring(config.AutoBuso))
+        
+        -- Auto Elite Hunter
+        if config.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
+            _G.YOKUDO_ToggleAutoEliteHunter()
+            print("✅ Auto Elite Hunter Loaded from Config")
+        end
+        
+        -- Auto Buso
+        if config.AutoBuso and _G.YOKUDO_ToggleAutoBuso then
+            _G.YOKUDO_ToggleAutoBuso()
+            print("✅ Auto Buso Loaded from Config")
+        end
+    else
+        print("⚠️ Failed to load config!")
     end
 end)
 
