@@ -67,20 +67,12 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG & CORE (ផ្ទុកមុនគេ ដើម្បីឲ្យ Features Save បាន)
+-- LOAD CONFIG & CORE
 -- ==================================================
 loadstring(game:HttpGet(BASE_URL .. "Config/Settings.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Services.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Player.lua"))()
 loadstring(game:HttpGet(BASE_URL .. "Core/Utils.lua"))()
-
--- ==================================================
--- ⭐ LOAD CONFIG MANAGER (ផ្ទុកមុន UI និង Features)
--- ==================================================
-print("⏳ Loading ConfigManager (Early)...")
-loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
-task.wait(0.1)
-print("✅ ConfigManager Loaded Early!")
 
 -- ==================================================
 -- LOAD UI & TABS
@@ -133,25 +125,26 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- ⭐ APPLY CONFIG (អនុវត្ត Config បន្ទាប់ពី Features ចប់)
+-- ⭐ LOAD CONFIG MANAGER
 -- ==================================================
 task.spawn(function()
-    print("⏳ Waiting for Features to be ready...")
+    print("⏳ Waiting for UI & Features to be ready...")
     
-    while not _G.YOKUDO_FeaturesReady do
+    while not _G.YOKUDO_FeaturesReady or not _G.YOKUDO_AutoHopPage do
         task.wait(0.1)
     end
     
-    task.wait(0.3)  -- រង់ចាំ UI ត្រៀមរួច
+    print("✅ UI & Features ready! Loading ConfigManager...")
     
-    print("✅ Features ready! Applying config...")
+    loadstring(game:HttpGet(BASE_URL .. "Config/ConfigManager.lua"))()
     
-    if _G.YOKUDO_ApplyConfig then
-        _G.YOKUDO_ApplyConfig()
-        print("✅ Config applied successfully!")
-    else
-        print("⚠️ _G.YOKUDO_ApplyConfig not found!")
+    while not _G.YOKUDO_ApplyConfig do
+        task.wait(0.1)
     end
+    
+    print("⏳ Applying config...")
+    _G.YOKUDO_ApplyConfig()
+    print("✅ Config applied successfully!")
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
