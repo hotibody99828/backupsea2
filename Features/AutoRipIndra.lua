@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO RIP INDRA (FIXED Config Save)
+-- AUTO RIP INDRA (ប្រើ Global Variable - FIXED)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -9,6 +9,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local workspace = game:GetService("Workspace")
 
 local Player = Players.LocalPlayer
+
+-- ==================================================
+-- GLOBAL VARIABLE សម្រាប់ isRunning
+-- ==================================================
+_G.RipIndraRunning = false
 
 -- ==================================================
 -- RIP INDRA POSITION
@@ -26,17 +31,12 @@ local PORTAL_ARGS = {"requestEntrance", Vector3.new(-4936.41162109375, 314.50201
 local TWEEN_SPEED = 200
 
 -- ==================================================
--- STATE
+-- STATE (Local Variables - មិនចាំបាច់ Global)
 -- ==================================================
-local isRunning = false
 local loopConnection = nil
 local noCollideConnection = nil
 local noCollideActive = false
 local hasUsedPortal = false
-
--- ==================================================
--- TWEEN TELEPORT VARIABLES
--- ==================================================
 local currentTween = nil
 local bodyVelocity = nil
 local bodyGyro = nil
@@ -93,7 +93,39 @@ local function stopNoCollide()
 end
 
 -- ==================================================
--- REMOTE PORTAL FUNCTION
+-- STOP TWEEN
+-- ==================================================
+function _G.YOKUDO_StopTweenTeleport()
+    if currentTween then
+        currentTween:Cancel()
+        currentTween = nil
+    end
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+        bodyVelocity = nil
+    end
+    if bodyGyro then
+        bodyGyro:Destroy()
+        bodyGyro = nil
+    end
+    if followConnection then
+        followConnection:Disconnect()
+        followConnection = nil
+    end
+    if lockConnection then
+        lockConnection:Disconnect()
+        lockConnection = nil
+    end
+    isTweening = false
+    isLocked = false
+    isTweeningToPosition = false
+    isFollowingBoss = false
+    stopNoCollide()
+    print("🛑 Tween stopped for Rip Indra")
+end
+
+-- ==================================================
+-- REMOTE PORTAL
 -- ==================================================
 local function usePortal()
     pcall(function()
@@ -103,11 +135,9 @@ local function usePortal()
             if CommF then
                 CommF:InvokeServer(unpack(PORTAL_ARGS))
                 hasUsedPortal = true
-                return true
             end
         end
     end)
-    return false
 end
 
 -- ==================================================
@@ -129,59 +159,8 @@ local function resetState()
 end
 
 -- ==================================================
--- TWEEN TELEPORT FUNCTIONS
+-- TWEEN TO BOSS
 -- ==================================================
-local function cleanupBody()
-    if bodyVelocity then
-        bodyVelocity:Destroy()
-        bodyVelocity = nil
-    end
-    if bodyGyro then
-        bodyGyro:Destroy()
-        bodyGyro = nil
-    end
-    if currentTween then
-        currentTween:Cancel()
-        currentTween = nil
-    end
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-    isTweening = false
-    isLocked = false
-    isTweeningToPosition = false
-end
-
-local function stopTweenTeleport()
-    cleanupBody()
-    if lockConnection then
-        lockConnection:Disconnect()
-        lockConnection = nil
-    end
-    isLocked = false
-    currentBossPos = nil
-    bossTarget = nil
-    isTweeningToPosition = false
-    stopNoCollide()
-end
-
-local function stopTweenToPosition()
-    if currentTween then
-        currentTween:Cancel()
-        currentTween = nil
-    end
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-    isTweening = false
-    isTweeningToPosition = false
-    if bodyVelocity then
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    end
-end
-
 local function tweenToBoss(bossPos, speed)
     local character = Player.Character
     if not character then return false end
@@ -256,7 +235,7 @@ local function tweenToBoss(bossPos, speed)
 end
 
 -- ==================================================
--- FIND RIP INDRA BOSS
+-- FIND RIP INDRA
 -- ==================================================
 local function findRipIndra()
     local enemies = workspace:FindFirstChild("Enemies")
@@ -284,7 +263,7 @@ end
 -- MAIN LOOP
 -- ==================================================
 local function ripIndraLoop()
-    while isRunning do
+    while _G.RipIndraRunning do
         local character = Player.Character
         if not character then
             task.wait(0.01)
@@ -303,13 +282,26 @@ local function ripIndraLoop()
             if location == "dead" then
                 if not isBossDead then
                     isBossDead = true
-                    cleanupBody()
+                    if bodyVelocity then
+                        bodyVelocity:Destroy()
+                        bodyVelocity = nil
+                    end
+                    if bodyGyro then
+                        bodyGyro:Destroy()
+                        bodyGyro = nil
+                    end
+                    if currentTween then
+                        currentTween:Cancel()
+                        currentTween = nil
+                    end
                     if followConnection then
                         followConnection:Disconnect()
                         followConnection = nil
                     end
-                    isFollowingBoss = false
+                    isTweening = false
+                    isLocked = false
                     isTweeningToPosition = false
+                    isFollowingBoss = false
                     resetState()
                 end
                 task.wait(5)
@@ -336,8 +328,19 @@ local function ripIndraLoop()
         
         if location == "workspace" then
             if isTweeningToPosition then
-                stopTweenToPosition()
+                if currentTween then
+                    currentTween:Cancel()
+                    currentTween = nil
+                end
+                if followConnection then
+                    followConnection:Disconnect()
+                    followConnection = nil
+                end
+                isTweening = false
                 isTweeningToPosition = false
+                if bodyVelocity then
+                    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                end
             end
             
             local bossRoot = boss:FindFirstChild("HumanoidRootPart") or boss:FindFirstChild("Torso")
@@ -363,7 +366,7 @@ local function ripIndraLoop()
                 end
                 
                 followConnection = RunService.Heartbeat:Connect(function()
-                    if not isRunning then
+                    if not _G.RipIndraRunning then
                         if followConnection then
                             followConnection:Disconnect()
                             followConnection = nil
@@ -440,7 +443,7 @@ local function ripIndraLoop()
                     end
                     
                     followConnection = RunService.Heartbeat:Connect(function()
-                        if not isRunning then
+                        if not _G.RipIndraRunning then
                             if followConnection then
                                 followConnection:Disconnect()
                                 followConnection = nil
@@ -486,14 +489,14 @@ local function ripIndraLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (ជាមួយ Config Save - FIXED)
+-- TOGGLE FUNCTION (FIXED - ប្រើ Global Variable)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoRipIndra()
-    -- ប្ដូរ isRunning
-    isRunning = not isRunning
-    _G.YOKUDO_AutoRipIndraEnabled = isRunning
+    -- ⭐ ប្រើ Global Variable
+    _G.RipIndraRunning = not _G.RipIndraRunning
+    _G.YOKUDO_AutoRipIndraEnabled = _G.RipIndraRunning
     
-    if isRunning then
+    if _G.RipIndraRunning then
         hasUsedPortal = false
         isBossDead = false
         bossFound = false
@@ -524,7 +527,7 @@ function _G.YOKUDO_ToggleAutoRipIndra()
             followConnection = nil
         end
         
-        stopTweenTeleport()
+        _G.YOKUDO_StopTweenTeleport()
         
         isBossDead = false
         bossFound = false
@@ -539,23 +542,24 @@ function _G.YOKUDO_ToggleAutoRipIndra()
     
     -- ⭐ UPDATE UI
     if _G.YOKUDO_UpdateUI_RipIndra then
-        _G.YOKUDO_UpdateUI_RipIndra(isRunning)
+        _G.YOKUDO_UpdateUI_RipIndra(_G.RipIndraRunning)
     end
     
-    -- ⭐⭐ SAVE CONFIG - FIXED! (ហៅដោយផ្ទាល់)
-    if _G.YOKUDO_UpdateConfig then
-        _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
-        print("💾 Config Saved: AutoRipIndra = " .. tostring(isRunning))
-    else
-        -- Fallback: Save directly to _G.YOKUDO_Config
-        if _G.YOKUDO_Config then
-            _G.YOKUDO_Config.AutoRipIndra = isRunning
-            if _G.YOKUDO_SaveConfig then
-                _G.YOKUDO_SaveConfig()
-                print("💾 Config Saved (Fallback): AutoRipIndra = " .. tostring(isRunning))
+    -- ⭐⭐⭐ SAVE CONFIG - ហៅគ្រប់ពេល!
+    pcall(function()
+        if _G.YOKUDO_UpdateConfig then
+            _G.YOKUDO_UpdateConfig("AutoRipIndra", _G.RipIndraRunning)
+            print("💾 Config Saved: AutoRipIndra = " .. tostring(_G.RipIndraRunning))
+        else
+            if _G.YOKUDO_Config then
+                _G.YOKUDO_Config.AutoRipIndra = _G.RipIndraRunning
+                if _G.YOKUDO_SaveConfig then
+                    _G.YOKUDO_SaveConfig()
+                    print("💾 Config Saved (Fallback): AutoRipIndra = " .. tostring(_G.RipIndraRunning))
+                end
             end
         end
-    end
+    end)
 end
 
 -- ==================================================
@@ -564,14 +568,14 @@ end
 _G.YOKUDO_AutoRipIndraEnabled = false
 
 -- ==================================================
--- CHARACTER RESPAWN HANDLER
+-- CHARACTER RESPAWN
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     resetState()
     stopNoCollide()
-    if isRunning then
-        stopTweenTeleport()
+    if _G.RipIndraRunning then
+        _G.YOKUDO_StopTweenTeleport()
     end
 end)
 
