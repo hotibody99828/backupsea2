@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (ជាមួយ Config Save)
+-- AUTO ELITE HUNTER (ជាមួយ Config Save) - UPDATED
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -51,6 +51,9 @@ local isRunning = false
 local loopConnection = nil
 local noCollideConnection = nil
 local noCollideActive = false
+local invokeCount = 0
+local lastInvokeTime = 0
+local INVOKE_COOLDOWN = 2
 
 -- ==================================================
 -- TWEEN TELEPORT VARIABLES
@@ -108,6 +111,42 @@ local function stopNoCollide()
             end
         end
     end
+end
+
+-- ==================================================
+-- ⭐ ELITE HUNTER INVOKE (តែ ២ ដង)
+-- ==================================================
+local function invokeEliteHunter()
+    local currentTime = tick()
+    if currentTime - lastInvokeTime < INVOKE_COOLDOWN then
+        return false
+    end
+    if invokeCount >= 2 then
+        return false
+    end
+    
+    pcall(function()
+        local Remote = ReplicatedStorage:FindFirstChild("Remotes")
+        if Remote then
+            local CommF = Remote:FindFirstChild("CommF_")
+            if CommF then
+                CommF:InvokeServer("EliteHunter")
+                invokeCount = invokeCount + 1
+                lastInvokeTime = currentTime
+                print("✅ EliteHunter Invoked! (" .. invokeCount .. "/2)")
+                return true
+            end
+        end
+    end)
+    return false
+end
+
+-- ==================================================
+-- RESET INVOKE COUNT (ពេល Boss Dead)
+-- ==================================================
+local function resetInvokeCount()
+    invokeCount = 0
+    lastInvokeTime = 0
 end
 
 -- ==================================================
@@ -358,6 +397,11 @@ local function eliteHunterLoop()
         end
         
         if location == "workspace" then
+            -- ⭐ ប្រសិនបើឃើញ Boss ក្នុង workspace → Invoke EliteHunter (បើមិនទាន់បាន ២ ដង)
+            if invokeCount < 2 then
+                invokeEliteHunter()
+            end
+            
             if isTweeningToPosition then
                 stopTweenToPosition()
                 isTweeningToPosition = false
@@ -437,6 +481,11 @@ local function eliteHunterLoop()
             isAtPosition = false
             isFollowingBoss = false
             
+            -- ⭐ ប្រសិនបើ Boss នៅ ReplicatedStorage → Invoke EliteHunter (បើមិនទាន់បាន ២ ដង)
+            if invokeCount < 2 then
+                invokeEliteHunter()
+            end
+            
             local bossPos = getBossPosition(boss)
             if not bossPos then
                 task.wait(0.01)
@@ -510,6 +559,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
     _G.YOKUDO_AutoEliteHunterEnabled = isRunning
     
     if isRunning then
+        resetInvokeCount()
         isBossDead = false
         bossFound = false
         isAtPosition = false
@@ -540,6 +590,7 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         end
         
         stopTweenTeleport()
+        resetInvokeCount()
         
         isBossDead = false
         bossFound = false
@@ -564,19 +615,28 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
 end
 
 -- ==================================================
+-- ⭐ SET FUNCTION (សម្រាប់ ConfigManager)
+-- ==================================================
+function _G.YOKUDO_SetEliteHunter(enabled)
+    if enabled == isRunning then return end
+    _G.YOKUDO_ToggleAutoEliteHunter()
+end
+
+-- ==================================================
 -- STATE
 -- ==================================================
-_G.YOKUDO_AutoEliteHunterEnabled = false
+_G.YOKUDO_AutoEliteHunterEnabled = _G.YOKUDO_AutoEliteHunterEnabled or false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
+    resetInvokeCount()
     stopNoCollide()
     if isRunning then
         stopTweenTeleport()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Config Ready)")
+print("✅ AutoEliteHunter Loaded (Config Ready - Invoke 2x)")
