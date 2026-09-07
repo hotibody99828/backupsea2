@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO RIP INDRA (ជាមួយ Config Save)
+-- AUTO RIP INDRA (FIXED Config Save)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -489,6 +489,7 @@ end
 -- TOGGLE FUNCTION (ជាមួយ Config Save - FIXED)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoRipIndra()
+    -- ប្ដូរ isRunning
     isRunning = not isRunning
     _G.YOKUDO_AutoRipIndraEnabled = isRunning
     
@@ -541,10 +542,19 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         _G.YOKUDO_UpdateUI_RipIndra(isRunning)
     end
     
-    -- ⭐ SAVE CONFIG - បន្ថែមបន្ទាត់នេះ!!!
+    -- ⭐⭐ SAVE CONFIG - FIXED! (ហៅដោយផ្ទាល់)
     if _G.YOKUDO_UpdateConfig then
         _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
         print("💾 Config Saved: AutoRipIndra = " .. tostring(isRunning))
+    else
+        -- Fallback: Save directly to _G.YOKUDO_Config
+        if _G.YOKUDO_Config then
+            _G.YOKUDO_Config.AutoRipIndra = isRunning
+            if _G.YOKUDO_SaveConfig then
+                _G.YOKUDO_SaveConfig()
+                print("💾 Config Saved (Fallback): AutoRipIndra = " .. tostring(isRunning))
+            end
+        end
     end
 end
 
