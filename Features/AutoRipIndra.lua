@@ -536,15 +536,14 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         print("⚡ Auto Rip Indra Stopped")
     end
     
-    -- ⭐ Update UI (បន្ថែមពិនិត្យ)
+    -- Update UI
     if _G.YOKUDO_UpdateUI_RipIndra then
         _G.YOKUDO_UpdateUI_RipIndra(isRunning)
     end
     
-    -- ⭐ Save Config (បន្ថែមពិនិត្យ)
+    -- Save Config
     if _G.YOKUDO_UpdateConfig then
         _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
-        print("💾 AutoRipIndra Config Saved: " .. tostring(isRunning))
     end
 end
 
