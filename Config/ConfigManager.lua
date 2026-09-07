@@ -1,5 +1,5 @@
 -- ==================================================
--- CONFIG MANAGER (SEA3 - Save/Load)
+-- CONFIG MANAGER (SEA3 - Save/Load) - WITH RETRY
 -- ==================================================
 
 local HttpService = game:GetService("HttpService")
@@ -54,6 +54,9 @@ _G.YOKUDO_Config = _G.YOKUDO_Config or {}
 -- LOAD CONFIG
 -- ==================================================
 function _G.YOKUDO_LoadConfig()
+    print("📁 Loading config for: " .. Player.Name)
+    print("📁 Config file: " .. CONFIG_FILE)
+    
     local json = nil
     
     if readfile then
@@ -85,6 +88,7 @@ function _G.YOKUDO_LoadConfig()
         end
     end
     
+    print("📁 No config found for: " .. Player.Name .. ", creating default...")
     for k, v in pairs(DEFAULT) do
         _G.YOKUDO_Config[k] = v
     end
@@ -104,6 +108,7 @@ function _G.YOKUDO_SaveConfig()
     end
     
     print("✅ Config Saved for: " .. Player.Name)
+    print("   AutoSoulReaper: " .. tostring(_G.YOKUDO_Config.AutoSoulReaper))
 end
 
 -- ==================================================
@@ -115,7 +120,33 @@ function _G.YOKUDO_UpdateConfig(key, value)
 end
 
 -- ==================================================
--- APPLY CONFIG
+-- CHECK FEATURE READY
+-- ==================================================
+local function IsFeatureReady(featureName)
+    if featureName == "AutoBuso" then
+        return _G.YOKUDO_SetBuso ~= nil
+    elseif featureName == "WalkOnWater" then
+        return _G.YOKUDO_SetWalk ~= nil or _G.YOKUDO_ToggleWalkOnWater ~= nil
+    elseif featureName == "AutoUnlockHaki" then
+        return _G.YOKUDO_ToggleAutoUnlockHaki ~= nil
+    elseif featureName == "AutoClickAttack" then
+        return _G.YOKUDO_ToggleAutoClickAttack ~= nil
+    elseif featureName == "AutoDoughKing" then
+        return _G.YOKUDO_ToggleAutoDoughKing ~= nil
+    elseif featureName == "AutoRipIndra" then
+        return _G.YOKUDO_ToggleAutoRipIndra ~= nil
+    elseif featureName == "AutoCakePrince" then
+        return _G.YOKUDO_ToggleAutoCakePrince ~= nil
+    elseif featureName == "AutoSoulReaper" then
+        return _G.YOKUDO_ToggleAutoSoulReaper ~= nil
+    elseif featureName == "AutoEliteHunter" then
+        return _G.YOKUDO_ToggleAutoEliteHunter ~= nil
+    end
+    return false
+end
+
+-- ==================================================
+-- APPLY CONFIG WITH RETRY
 -- ==================================================
 function _G.YOKUDO_ApplyConfig()
     print("🔄 Applying config for: " .. Player.Name)
@@ -125,153 +156,331 @@ function _G.YOKUDO_ApplyConfig()
     -- ==============================================
     -- WALK ON WATER
     -- ==============================================
-    if c.WalkOnWater and _G.YOKUDO_SetWalk then
-        _G.YOKUDO_SetWalk(true)
-        print("✅ Walk on Water applied from config")
-    elseif _G.YOKUDO_SetWalk then
-        _G.YOKUDO_SetWalk(false)
+    local walkState = c.WalkOnWater
+    if _G.YOKUDO_SetWalk then
+        _G.YOKUDO_SetWalk(walkState)
+        print("✅ Walk on Water set to: " .. tostring(walkState))
+    elseif _G.YOKUDO_ToggleWalkOnWater then
+        if walkState and not _G.YOKUDO_WalkEnabled then
+            _G.YOKUDO_ToggleWalkOnWater()
+            print("✅ Walk on Water started from config")
+        elseif not walkState and _G.YOKUDO_WalkEnabled then
+            _G.YOKUDO_ToggleWalkOnWater()
+            print("❌ Walk on Water stopped from config")
+        end
+    else
+        print("⚠️ Walk on Water not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_SetWalk then
+                    _G.YOKUDO_SetWalk(walkState)
+                    print("✅ Walk on Water set to: " .. tostring(walkState) .. " (retry " .. retryCount .. ")")
+                    break
+                elseif _G.YOKUDO_ToggleWalkOnWater then
+                    if walkState and not _G.YOKUDO_WalkEnabled then
+                        _G.YOKUDO_ToggleWalkOnWater()
+                        print("✅ Walk on Water started from config (retry " .. retryCount .. ")")
+                    elseif not walkState and _G.YOKUDO_WalkEnabled then
+                        _G.YOKUDO_ToggleWalkOnWater()
+                        print("❌ Walk on Water stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_Walk then
-        _G.YOKUDO_UpdateUI_Walk(c.WalkOnWater)
+        _G.YOKUDO_UpdateUI_Walk(walkState)
     end
     
     -- ==============================================
     -- AUTO BUSO
     -- ==============================================
-    if c.AutoBuso and _G.YOKUDO_SetBuso then
-        _G.YOKUDO_SetBuso(true)
-        print("✅ Auto Buso applied from config")
-    elseif _G.YOKUDO_SetBuso then
-        _G.YOKUDO_SetBuso(false)
+    local busoState = c.AutoBuso
+    if _G.YOKUDO_SetBuso then
+        _G.YOKUDO_SetBuso(busoState)
+        print("✅ Auto Buso set to: " .. tostring(busoState))
+    else
+        print("⚠️ Auto Buso not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_SetBuso then
+                    _G.YOKUDO_SetBuso(busoState)
+                    print("✅ Auto Buso set to: " .. tostring(busoState) .. " (retry " .. retryCount .. ")")
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_Buso then
-        _G.YOKUDO_UpdateUI_Buso(c.AutoBuso)
+        _G.YOKUDO_UpdateUI_Buso(busoState)
     end
     
     -- ==============================================
     -- AUTO UNLOCK HAKI
     -- ==============================================
-    if c.AutoUnlockHaki and _G.YOKUDO_ToggleAutoUnlockHaki then
-        if not _G.YOKUDO_AutoUnlockHakiEnabled then
+    local unlockHakiState = c.AutoUnlockHaki
+    if _G.YOKUDO_ToggleAutoUnlockHaki then
+        if unlockHakiState and not _G.YOKUDO_AutoUnlockHakiEnabled then
             _G.YOKUDO_ToggleAutoUnlockHaki()
-            print("✅ Auto Unlock Haki applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoUnlockHakiEnabled and _G.YOKUDO_ToggleAutoUnlockHaki then
+            print("✅ Auto Unlock Haki started from config")
+        elseif not unlockHakiState and _G.YOKUDO_AutoUnlockHakiEnabled then
             _G.YOKUDO_ToggleAutoUnlockHaki()
             print("❌ Auto Unlock Haki stopped from config")
         end
+    else
+        print("⚠️ Auto Unlock Haki not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoUnlockHaki then
+                    if unlockHakiState and not _G.YOKUDO_AutoUnlockHakiEnabled then
+                        _G.YOKUDO_ToggleAutoUnlockHaki()
+                        print("✅ Auto Unlock Haki started from config (retry " .. retryCount .. ")")
+                    elseif not unlockHakiState and _G.YOKUDO_AutoUnlockHakiEnabled then
+                        _G.YOKUDO_ToggleAutoUnlockHaki()
+                        print("❌ Auto Unlock Haki stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_UnlockHaki then
-        _G.YOKUDO_UpdateUI_UnlockHaki(c.AutoUnlockHaki)
+        _G.YOKUDO_UpdateUI_UnlockHaki(unlockHakiState)
     end
     
     -- ==============================================
     -- AUTO CLICK ATTACK
     -- ==============================================
-    if c.AutoClickAttack and _G.YOKUDO_ToggleAutoClickAttack then
-        if not _G.YOKUDO_AutoClickAttackEnabled then
+    local clickState = c.AutoClickAttack
+    if _G.YOKUDO_ToggleAutoClickAttack then
+        if clickState and not _G.YOKUDO_AutoClickAttackEnabled then
             _G.YOKUDO_ToggleAutoClickAttack()
-            print("✅ Auto Click Attack applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoClickAttackEnabled and _G.YOKUDO_ToggleAutoClickAttack then
+            print("✅ Auto Click Attack started from config")
+        elseif not clickState and _G.YOKUDO_AutoClickAttackEnabled then
             _G.YOKUDO_ToggleAutoClickAttack()
             print("❌ Auto Click Attack stopped from config")
         end
+    else
+        print("⚠️ Auto Click Attack not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoClickAttack then
+                    if clickState and not _G.YOKUDO_AutoClickAttackEnabled then
+                        _G.YOKUDO_ToggleAutoClickAttack()
+                        print("✅ Auto Click Attack started from config (retry " .. retryCount .. ")")
+                    elseif not clickState and _G.YOKUDO_AutoClickAttackEnabled then
+                        _G.YOKUDO_ToggleAutoClickAttack()
+                        print("❌ Auto Click Attack stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_ClickAttack then
-        _G.YOKUDO_UpdateUI_ClickAttack(c.AutoClickAttack)
+        _G.YOKUDO_UpdateUI_ClickAttack(clickState)
     end
     
     -- ==============================================
     -- AUTO DOUGH KING
     -- ==============================================
-    if c.AutoDoughKing and _G.YOKUDO_ToggleAutoDoughKing then
-        if not _G.YOKUDO_AutoDoughKingEnabled then
+    local doughKingState = c.AutoDoughKing
+    if _G.YOKUDO_ToggleAutoDoughKing then
+        if doughKingState and not _G.YOKUDO_AutoDoughKingEnabled then
             _G.YOKUDO_ToggleAutoDoughKing()
-            print("✅ Auto Dough King applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoDoughKingEnabled and _G.YOKUDO_ToggleAutoDoughKing then
+            print("✅ Auto Dough King started from config")
+        elseif not doughKingState and _G.YOKUDO_AutoDoughKingEnabled then
             _G.YOKUDO_ToggleAutoDoughKing()
             print("❌ Auto Dough King stopped from config")
         end
+    else
+        print("⚠️ Auto Dough King not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoDoughKing then
+                    if doughKingState and not _G.YOKUDO_AutoDoughKingEnabled then
+                        _G.YOKUDO_ToggleAutoDoughKing()
+                        print("✅ Auto Dough King started from config (retry " .. retryCount .. ")")
+                    elseif not doughKingState and _G.YOKUDO_AutoDoughKingEnabled then
+                        _G.YOKUDO_ToggleAutoDoughKing()
+                        print("❌ Auto Dough King stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_DoughKing then
-        _G.YOKUDO_UpdateUI_DoughKing(c.AutoDoughKing)
+        _G.YOKUDO_UpdateUI_DoughKing(doughKingState)
     end
     
     -- ==============================================
     -- AUTO RIP INDRA
     -- ==============================================
-    if c.AutoRipIndra and _G.YOKUDO_ToggleAutoRipIndra then
-        if not _G.YOKUDO_AutoRipIndraEnabled then
+    local ripIndraState = c.AutoRipIndra
+    if _G.YOKUDO_ToggleAutoRipIndra then
+        if ripIndraState and not _G.YOKUDO_AutoRipIndraEnabled then
             _G.YOKUDO_ToggleAutoRipIndra()
-            print("✅ Auto Rip Indra applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoRipIndraEnabled and _G.YOKUDO_ToggleAutoRipIndra then
+            print("✅ Auto Rip Indra started from config")
+        elseif not ripIndraState and _G.YOKUDO_AutoRipIndraEnabled then
             _G.YOKUDO_ToggleAutoRipIndra()
             print("❌ Auto Rip Indra stopped from config")
         end
+    else
+        print("⚠️ Auto Rip Indra not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoRipIndra then
+                    if ripIndraState and not _G.YOKUDO_AutoRipIndraEnabled then
+                        _G.YOKUDO_ToggleAutoRipIndra()
+                        print("✅ Auto Rip Indra started from config (retry " .. retryCount .. ")")
+                    elseif not ripIndraState and _G.YOKUDO_AutoRipIndraEnabled then
+                        _G.YOKUDO_ToggleAutoRipIndra()
+                        print("❌ Auto Rip Indra stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_RipIndra then
-        _G.YOKUDO_UpdateUI_RipIndra(c.AutoRipIndra)
+        _G.YOKUDO_UpdateUI_RipIndra(ripIndraState)
     end
     
     -- ==============================================
     -- AUTO CAKE PRINCE
     -- ==============================================
-    if c.AutoCakePrince and _G.YOKUDO_ToggleAutoCakePrince then
-        if not _G.YOKUDO_AutoCakePrinceEnabled then
+    local cakePrinceState = c.AutoCakePrince
+    if _G.YOKUDO_ToggleAutoCakePrince then
+        if cakePrinceState and not _G.YOKUDO_AutoCakePrinceEnabled then
             _G.YOKUDO_ToggleAutoCakePrince()
-            print("✅ Auto Cake Prince applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoCakePrinceEnabled and _G.YOKUDO_ToggleAutoCakePrince then
+            print("✅ Auto Cake Prince started from config")
+        elseif not cakePrinceState and _G.YOKUDO_AutoCakePrinceEnabled then
             _G.YOKUDO_ToggleAutoCakePrince()
             print("❌ Auto Cake Prince stopped from config")
         end
+    else
+        print("⚠️ Auto Cake Prince not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoCakePrince then
+                    if cakePrinceState and not _G.YOKUDO_AutoCakePrinceEnabled then
+                        _G.YOKUDO_ToggleAutoCakePrince()
+                        print("✅ Auto Cake Prince started from config (retry " .. retryCount .. ")")
+                    elseif not cakePrinceState and _G.YOKUDO_AutoCakePrinceEnabled then
+                        _G.YOKUDO_ToggleAutoCakePrince()
+                        print("❌ Auto Cake Prince stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_CakePrince then
-        _G.YOKUDO_UpdateUI_CakePrince(c.AutoCakePrince)
+        _G.YOKUDO_UpdateUI_CakePrince(cakePrinceState)
     end
     
     -- ==============================================
     -- AUTO SOUL REAPER
     -- ==============================================
-    if c.AutoSoulReaper and _G.YOKUDO_ToggleAutoSoulReaper then
-        if not _G.YOKUDO_AutoSoulReaperEnabled then
+    local soulReaperState = c.AutoSoulReaper
+    if _G.YOKUDO_ToggleAutoSoulReaper then
+        if soulReaperState and not _G.YOKUDO_AutoSoulReaperEnabled then
             _G.YOKUDO_ToggleAutoSoulReaper()
-            print("✅ Auto Soul Reaper applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoSoulReaperEnabled and _G.YOKUDO_ToggleAutoSoulReaper then
+            print("✅ Auto Soul Reaper started from config")
+        elseif not soulReaperState and _G.YOKUDO_AutoSoulReaperEnabled then
             _G.YOKUDO_ToggleAutoSoulReaper()
             print("❌ Auto Soul Reaper stopped from config")
         end
+    else
+        print("⚠️ Auto Soul Reaper not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoSoulReaper then
+                    if soulReaperState and not _G.YOKUDO_AutoSoulReaperEnabled then
+                        _G.YOKUDO_ToggleAutoSoulReaper()
+                        print("✅ Auto Soul Reaper started from config (retry " .. retryCount .. ")")
+                    elseif not soulReaperState and _G.YOKUDO_AutoSoulReaperEnabled then
+                        _G.YOKUDO_ToggleAutoSoulReaper()
+                        print("❌ Auto Soul Reaper stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_SoulReaper then
-        _G.YOKUDO_UpdateUI_SoulReaper(c.AutoSoulReaper)
+        _G.YOKUDO_UpdateUI_SoulReaper(soulReaperState)
     end
     
     -- ==============================================
     -- AUTO ELITE HUNTER
     -- ==============================================
-    if c.AutoEliteHunter and _G.YOKUDO_ToggleAutoEliteHunter then
-        if not _G.YOKUDO_AutoEliteHunterEnabled then
+    local eliteHunterState = c.AutoEliteHunter
+    if _G.YOKUDO_ToggleAutoEliteHunter then
+        if eliteHunterState and not _G.YOKUDO_AutoEliteHunterEnabled then
             _G.YOKUDO_ToggleAutoEliteHunter()
-            print("✅ Auto Elite Hunter applied from config")
-        end
-    else
-        if _G.YOKUDO_AutoEliteHunterEnabled and _G.YOKUDO_ToggleAutoEliteHunter then
+            print("✅ Auto Elite Hunter started from config")
+        elseif not eliteHunterState and _G.YOKUDO_AutoEliteHunterEnabled then
             _G.YOKUDO_ToggleAutoEliteHunter()
             print("❌ Auto Elite Hunter stopped from config")
         end
+    else
+        print("⚠️ Auto Elite Hunter not ready, will retry...")
+        task.spawn(function()
+            local maxRetry = 5
+            local retryCount = 0
+            while retryCount < maxRetry do
+                task.wait(0.5)
+                retryCount = retryCount + 1
+                if _G.YOKUDO_ToggleAutoEliteHunter then
+                    if eliteHunterState and not _G.YOKUDO_AutoEliteHunterEnabled then
+                        _G.YOKUDO_ToggleAutoEliteHunter()
+                        print("✅ Auto Elite Hunter started from config (retry " .. retryCount .. ")")
+                    elseif not eliteHunterState and _G.YOKUDO_AutoEliteHunterEnabled then
+                        _G.YOKUDO_ToggleAutoEliteHunter()
+                        print("❌ Auto Elite Hunter stopped from config (retry " .. retryCount .. ")")
+                    end
+                    break
+                end
+            end
+        end)
     end
     if _G.YOKUDO_UpdateUI_EliteHunter then
-        _G.YOKUDO_UpdateUI_EliteHunter(c.AutoEliteHunter)
+        _G.YOKUDO_UpdateUI_EliteHunter(eliteHunterState)
     end
     
     -- ==============================================
@@ -291,5 +500,5 @@ end
 -- ==================================================
 _G.YOKUDO_LoadConfig()
 
-print("✅ ConfigManager Loaded")
+print("✅ ConfigManager Loaded (with Retry System)")
 print("📁 Config file: " .. CONFIG_FILE)
