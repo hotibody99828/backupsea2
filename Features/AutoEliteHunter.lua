@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO ELITE HUNTER (ជាមួយ Config Save) - UPDATED
+-- AUTO ELITE HUNTER (ជាមួយ Config Save)
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -42,7 +42,7 @@ local PORTAL_ARGS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 180
+local TWEEN_SPEED = 160
 
 -- ==================================================
 -- STATE
@@ -69,10 +69,9 @@ local isTweeningToPosition = false
 local bossFound = false
 local isAtPosition = false
 local isFollowingBoss = false
-local isTweenComplete = false
 
 -- ==================================================
--- ⭐ NO COLLIDE FUNCTIONS (ប្រើ Heartbeat លឿនបំផុត)
+-- NO COLLIDE FUNCTIONS
 -- ==================================================
 local function applyNoCollide()
     local character = Player.Character
@@ -89,7 +88,6 @@ local function startNoCollide()
     if noCollideActive then return end
     noCollideActive = true
     applyNoCollide()
-    -- ⭐ ប្រើ Heartbeat ដើម្បីបិត CanCollide ឲ្យលឿនបំផុត
     noCollideConnection = RunService.Heartbeat:Connect(function()
         if not noCollideActive then return end
         applyNoCollide()
@@ -132,7 +130,7 @@ local function usePortal(mapName)
 end
 
 -- ==================================================
--- ⭐ TWEEN TELEPORT FUNCTIONS (ប្រើ Heartbeat + NoCollide)
+-- TWEEN TELEPORT FUNCTIONS
 -- ==================================================
 local function cleanupBody()
     if bodyVelocity then
@@ -154,7 +152,6 @@ local function cleanupBody()
     isTweening = false
     isLocked = false
     isTweeningToPosition = false
-    isTweenComplete = false
 end
 
 local function stopTweenTeleport()
@@ -181,15 +178,11 @@ local function stopTweenToPosition()
     end
     isTweening = false
     isTweeningToPosition = false
-    isTweenComplete = false
     if bodyVelocity then
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
     end
 end
 
--- ==================================================
--- ⭐ TWEEN TO BOSS (ប្រើ NoCollide + Heartbeat)
--- ==================================================
 local function tweenToBoss(bossPos, speed)
     local character = Player.Character
     if not character then return false end
@@ -198,7 +191,6 @@ local function tweenToBoss(bossPos, speed)
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
     
-    -- បោះបង់ Tween ចាស់
     if currentTween then
         currentTween:Cancel()
         currentTween = nil
@@ -209,7 +201,6 @@ local function tweenToBoss(bossPos, speed)
     end
     isTweening = false
     isTweeningToPosition = false
-    isTweenComplete = false
     
     if lockConnection then
         lockConnection:Disconnect()
@@ -217,7 +208,6 @@ local function tweenToBoss(bossPos, speed)
     end
     isLocked = false
     
-    -- ⭐ បើក No Collide (បិត CanCollide ទាំងអស់)
     startNoCollide()
     
     local targetPos = Vector3.new(bossPos.X, bossPos.Y + 30, bossPos.Z)
@@ -233,7 +223,6 @@ local function tweenToBoss(bossPos, speed)
     local duration = math.max(0.10, distance / speed)
     local direction = (targetPos - root.Position).Unit
     
-    -- ⭐ BodyVelocity សម្រាប់រក្សាល្បឿន
     if not bodyVelocity then
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 10000
@@ -241,7 +230,6 @@ local function tweenToBoss(bossPos, speed)
     end
     bodyVelocity.Velocity = direction * speed
     
-    -- ⭐ BodyGyro សម្រាប់តម្រង់ទិស
     if not bodyGyro then
         bodyGyro = Instance.new("BodyGyro")
         bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 10000
@@ -249,15 +237,11 @@ local function tweenToBoss(bossPos, speed)
     end
     bodyGyro.CFrame = CFrame.lookAt(root.Position, targetPos)
     
-    -- ⭐ Tween
     local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
     currentTween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(targetPos)})
     isTweening = true
-    isTweenComplete = false
-    
     currentTween:Play()
     currentTween.Completed:Wait()
-    isTweenComplete = true
     
     if bodyVelocity then
         bodyVelocity.Velocity = Vector3.new(0, 0, 0)
@@ -268,7 +252,6 @@ local function tweenToBoss(bossPos, speed)
         return false
     end
     
-    -- ⭐ បិទ No Collide បន្ទាប់ពី Tween ចប់
     stopNoCollide()
     return true
 end
@@ -395,7 +378,6 @@ local function eliteHunterLoop()
             local dist = (bossPos - root.Position).Magnitude
             
             if dist > 60 then
-                -- ⭐ Tween ទៅ Boss ជាមួយ NoCollide
                 tweenToBoss(bossPos, TWEEN_SPEED)
                 
                 if followConnection then
@@ -403,7 +385,6 @@ local function eliteHunterLoop()
                     followConnection = nil
                 end
                 
-                -- ⭐ Follow Boss ដោយប្រើ Heartbeat
                 followConnection = RunService.Heartbeat:Connect(function()
                     if not isRunning then
                         if followConnection then
@@ -431,7 +412,6 @@ local function eliteHunterLoop()
                     
                     local distToLock = (lockPos - rootPart.Position).Magnitude
                     if distToLock > 5 then
-                        -- ⭐ Teleport ភ្លាមៗពេលឃ្លាតឆ្ងាយ
                         rootPart.CFrame = CFrame.new(lockPos)
                     end
                     
@@ -469,11 +449,8 @@ local function eliteHunterLoop()
                 continue
             end
             
-            -- ⭐ ប្រើ Portal
             usePortal(closestMap)
             task.wait(0.10)
-            
-            -- ⭐ Tween ទៅ Boss ជាមួយ NoCollide
             tweenToBoss(bossPos, TWEEN_SPEED)
             
             if followConnection then
@@ -481,7 +458,6 @@ local function eliteHunterLoop()
                 followConnection = nil
             end
             
-            -- ⭐ Follow Boss ដោយប្រើ Heartbeat
             followConnection = RunService.Heartbeat:Connect(function()
                 if not isRunning then
                     if followConnection then
@@ -539,7 +515,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
-        isTweenComplete = false
         
         if followConnection then
             followConnection:Disconnect()
@@ -571,7 +546,6 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
         isAtPosition = false
         isFollowingBoss = false
         isTweeningToPosition = false
-        isTweenComplete = false
         bossTarget = nil
         currentBossPos = nil
         isLocked = false
@@ -590,17 +564,9 @@ function _G.YOKUDO_ToggleAutoEliteHunter()
 end
 
 -- ==================================================
--- ⭐ SET FUNCTION (សម្រាប់ ConfigManager)
+-- STATE
 -- ==================================================
-function _G.YOKUDO_SetEliteHunter(enabled)
-    if enabled == isRunning then return end
-    _G.YOKUDO_ToggleAutoEliteHunter()
-end
-
--- ==================================================
--- STATE (ប្រើ or false ដើម្បីកុំឲ្យ Reset)
--- ==================================================
-_G.YOKUDO_AutoEliteHunterEnabled = _G.YOKUDO_AutoEliteHunterEnabled or false
+_G.YOKUDO_AutoEliteHunterEnabled = false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
@@ -613,4 +579,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoEliteHunter Loaded (Config Ready - Tween Teleport Optimized)")
+print("✅ AutoEliteHunter Loaded (Config Ready)")
