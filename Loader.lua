@@ -1,5 +1,5 @@
 -- ==================================================
--- YOKUDO HUB | SEA3 | [Premium] | Loader (TRANSPARENT LOADING)
+-- YOKUDO HUB | SEA3 | [Premium] | Loader (NO BACKGROUND)
 -- ==================================================
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
 -- ==================================================
@@ -35,7 +35,7 @@ local CoreGui = game:GetService("CoreGui")
 print("✅ Game loaded, Player: " .. Player.Name)
 
 -- ==================================================
--- ⭐ CREATE TRANSPARENT LOADING SCREEN
+-- ⭐ CREATE LOADING SCREEN (គ្មាន Background)
 -- ==================================================
 local function CreateLoadingScreen()
     local LoadingGui = Instance.new("ScreenGui")
@@ -46,25 +46,18 @@ local function CreateLoadingScreen()
     LoadingGui.DisplayOrder = 9999
     LoadingGui.Parent = CoreGui
 
-    -- ⭐ Background TRANSPARENT (ថ្លា)
-    local Background = Instance.new("Frame")
-    Background.Name = "Background"
-    Background.Size = UDim2.new(1, 0, 1, 0)
-    Background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Background.BackgroundTransparency = 0.5  -- ← ថ្លាបន្តិច
-    Background.BorderSizePixel = 0
-    Background.Parent = LoadingGui
+    -- ⭐ គ្មាន Background Frame ទាំងស្រុង
 
-    -- Container
+    -- Container (តែម្នាក់ឯង)
     local Container = Instance.new("Frame")
     Container.Name = "Container"
-    Container.Size = UDim2.new(0, 350, 0, 180)
-    Container.Position = UDim2.new(0.5, -175, 0.5, -90)
+    Container.Size = UDim2.new(0, 350, 0, 160)
+    Container.Position = UDim2.new(0.5, -175, 0.5, -80)
     Container.BackgroundColor3 = Color3.fromRGB(16, 17, 23)
-    Container.BackgroundTransparency = 0.15
+    Container.BackgroundTransparency = 0.1
     Container.BorderSizePixel = 0
     Container.ClipsDescendants = true
-    Container.Parent = Background
+    Container.Parent = LoadingGui
 
     local ContainerCorner = Instance.new("UICorner")
     ContainerCorner.CornerRadius = UDim.new(0, 16)
@@ -73,18 +66,18 @@ local function CreateLoadingScreen()
     local ContainerBorder = Instance.new("UIStroke")
     ContainerBorder.Color = Color3.fromRGB(105, 90, 190)
     ContainerBorder.Thickness = 2
-    ContainerBorder.Transparency = 0.3
+    ContainerBorder.Transparency = 0.2
     ContainerBorder.Parent = Container
 
     -- Title
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
-    Title.Size = UDim2.new(1, -40, 0, 40)
-    Title.Position = UDim2.new(0, 20, 0, 15)
+    Title.Size = UDim2.new(1, -40, 0, 35)
+    Title.Position = UDim2.new(0, 20, 0, 12)
     Title.BackgroundTransparency = 1
     Title.Text = "YOKUDO HUB"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 28
+    Title.TextSize = 26
     Title.TextXAlignment = Enum.TextXAlignment.Center
     Title.TextYAlignment = Enum.TextYAlignment.Center
     Title.Font = Enum.Font.GothamBold
@@ -93,12 +86,12 @@ local function CreateLoadingScreen()
     -- Subtitle
     local Subtitle = Instance.new("TextLabel")
     Subtitle.Name = "Subtitle"
-    Subtitle.Size = UDim2.new(1, -40, 0, 20)
-    Subtitle.Position = UDim2.new(0, 20, 0, 55)
+    Subtitle.Size = UDim2.new(1, -40, 0, 18)
+    Subtitle.Position = UDim2.new(0, 20, 0, 47)
     Subtitle.BackgroundTransparency = 1
     Subtitle.Text = "SEA3 | [Premium]"
     Subtitle.TextColor3 = Color3.fromRGB(145, 145, 175)
-    Subtitle.TextSize = 12
+    Subtitle.TextSize = 11
     Subtitle.TextXAlignment = Enum.TextXAlignment.Center
     Subtitle.TextYAlignment = Enum.TextYAlignment.Center
     Subtitle.Font = Enum.Font.GothamMedium
@@ -107,8 +100,8 @@ local function CreateLoadingScreen()
     -- Loading Bar Background
     local BarBg = Instance.new("Frame")
     BarBg.Name = "BarBg"
-    BarBg.Size = UDim2.new(0.8, 0, 0, 6)
-    BarBg.Position = UDim2.new(0.1, 0, 0.6, 0)
+    BarBg.Size = UDim2.new(0.8, 0, 0, 5)
+    BarBg.Position = UDim2.new(0.1, 0, 0.55, 0)
     BarBg.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
     BarBg.BorderSizePixel = 0
     BarBg.Parent = Container
@@ -129,25 +122,11 @@ local function CreateLoadingScreen()
     BarCorner.CornerRadius = UDim.new(1, 0)
     BarCorner.Parent = Bar
 
-    -- Bar Glow
-    local BarGlow = Instance.new("Frame")
-    BarGlow.Name = "BarGlow"
-    BarGlow.Size = UDim2.new(0.3, 0, 1, 0)
-    BarGlow.Position = UDim2.new(0, 0, 0, 0)
-    BarGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    BarGlow.BackgroundTransparency = 0.3
-    BarGlow.BorderSizePixel = 0
-    BarGlow.Parent = Bar
-
-    local BarGlowCorner = Instance.new("UICorner")
-    BarGlowCorner.CornerRadius = UDim.new(1, 0)
-    BarGlowCorner.Parent = BarGlow
-
     -- Status Text
     local Status = Instance.new("TextLabel")
     Status.Name = "Status"
-    Status.Size = UDim2.new(1, -40, 0, 20)
-    Status.Position = UDim2.new(0, 20, 0.75, 0)
+    Status.Size = UDim2.new(1, -40, 0, 18)
+    Status.Position = UDim2.new(0, 20, 0.72, 0)
     Status.BackgroundTransparency = 1
     Status.Text = "Initializing..."
     Status.TextColor3 = Color3.fromRGB(180, 180, 200)
@@ -245,29 +224,26 @@ end)
 -- ==================================================
 -- LOAD CONFIG & CORE
 -- ==================================================
-Loading.Update(10, "Loading Core Systems...")
+Loading.Update(10, "Loading Core...")
 loadstring(GetScript("Config/Settings.lua"))()
-Loading.Update(15, "Loading Services...")
+Loading.Update(18, "Loading Services...")
 loadstring(GetScript("Core/Services.lua"))()
-Loading.Update(20, "Loading Player Manager...")
+Loading.Update(25, "Loading Player...")
 loadstring(GetScript("Core/Player.lua"))()
-Loading.Update(25, "Loading Utilities...")
+Loading.Update(32, "Loading Utils...")
 loadstring(GetScript("Core/Utils.lua"))()
 
 -- ==================================================
 -- LOAD UI & TABS
 -- ==================================================
 task.spawn(function()
-    Loading.Update(30, "Loading UI System...")
+    Loading.Update(40, "Loading UI...")
     loadstring(GetScript("UI/Toggle.lua"))()
-    Loading.Update(38, "Loading Main UI...")
     loadstring(GetScript("UI/Main.lua"))()
-    Loading.Update(45, "Loading UI Components...")
     loadstring(GetScript("UI/Components.lua"))()
-    Loading.Update(50, "Loading Drag System...")
     loadstring(GetScript("UI/Drag.lua"))()
-    Loading.Update(55, "Loading Tabs & Pages...")
     loadstring(GetScript("UI/Tabs.lua"))()
+    Loading.Update(55, "UI Ready!")
     print("✅ UI & Tabs Loaded")
 end)
 
@@ -309,25 +285,25 @@ task.spawn(function()
         end)
         loaded = loaded + 1
         local percent = 60 + (loaded / total * 25)
-        Loading.Update(percent, "Loading " .. Feature .. "...")
+        Loading.Update(percent, Feature)
     end
     
     print("✅ All Features Loaded")
     _G.YOKUDO_FeaturesReady = true
-    Loading.Update(85, "Features Loaded!")
+    Loading.Update(85, "Features Ready!")
 end)
 
 -- ==================================================
 -- LOAD CONFIG MANAGER
 -- ==================================================
 task.spawn(function()
-    Loading.Update(90, "Waiting for UI & Features...")
+    Loading.Update(88, "Waiting...")
     
     while not _G.YOKUDO_FeaturesReady or not _G.YOKUDO_AutoHopPage do
         task.wait(0.05)
     end
     
-    Loading.Update(93, "Loading Config Manager...")
+    Loading.Update(92, "Loading Config...")
     loadstring(GetScript("Config/ConfigManager.lua"))()
     
     while not _G.YOKUDO_ApplyConfig do
@@ -337,9 +313,9 @@ task.spawn(function()
     Loading.Update(97, "Applying Config...")
     _G.YOKUDO_ApplyConfig()
     
-    Loading.Update(100, "YOKUDO HUB Ready!")
+    Loading.Update(100, "Ready!")
     
-    task.wait(0.5)
+    task.wait(0.3)
     Loading.Destroy()
     print("✅ Loading Screen Closed!")
     print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
