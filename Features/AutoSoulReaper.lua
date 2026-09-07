@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO SOUL REAPER (ជាមួយ Config Save) - FIXED
+-- AUTO SOUL REAPER (ជាមួយ Config Save) - FINAL
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -688,9 +688,17 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
 end
 
 -- ==================================================
--- STATE
+-- ⭐ SET FUNCTION (សម្រាប់ ConfigManager)
 -- ==================================================
-_G.YOKUDO_AutoSoulReaperEnabled = false
+function _G.YOKUDO_SetSoulReaper(enabled)
+    if enabled == isRunning then return end
+    _G.YOKUDO_ToggleAutoSoulReaper()
+end
+
+-- ==================================================
+-- STATE (ប្រើ or false ដើម្បីកុំឲ្យ Reset)
+-- ==================================================
+_G.YOKUDO_AutoSoulReaperEnabled = _G.YOKUDO_AutoSoulReaperEnabled or false
 
 -- ==================================================
 -- CHARACTER RESPAWN HANDLER
