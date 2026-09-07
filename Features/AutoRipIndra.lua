@@ -166,9 +166,6 @@ local function stopTweenTeleport()
     stopNoCollide()
 end
 
--- Export stop function for UI
-_G.YOKUDO_StopTweenTeleport = stopTweenTeleport
-
 local function stopTweenToPosition()
     if currentTween then
         currentTween:Cancel()
@@ -544,17 +541,10 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         _G.YOKUDO_UpdateUI_RipIndra(isRunning)
     end
     
-    -- ⭐ Save Config (ជាមួយ pcall ដើម្បីការពារកំហុស)
-    pcall(function()
-        if _G.YOKUDO_UpdateConfig then
-            _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
-        else
-            -- បើ ConfigManager មិនទាន់ផ្ទុក រក្សាទុកក្នុងអថេរបណ្តោះអាសន្ន
-            _G.YOKUDO_Config = _G.YOKUDO_Config or {}
-            _G.YOKUDO_Config.AutoRipIndra = isRunning
-            print("⚠️ ConfigManager not loaded, saved to _G.YOKUDO_Config.AutoRipIndra = " .. tostring(isRunning))
-        end
-    end)
+    -- Save Config
+    if _G.YOKUDO_UpdateConfig then
+        _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
+    end
 end
 
 -- ==================================================
