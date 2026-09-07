@@ -19,7 +19,7 @@ local SOUL_REAPER_TWEEN = Vector3.new(-9524, 327, 6660)
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 190
+local TWEEN_SPEED = 180
 local DISTANCE_THRESHOLD = 3000
 
 -- ==================================================
