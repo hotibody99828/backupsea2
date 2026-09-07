@@ -1,5 +1,5 @@
 -- ==================================================
--- YOKUDO HUB | SEA3 | [Premium] | Loader
+-- YOKUDO HUB | SEA3 | [Premium] | Loader (FAST CONFIG)
 -- ==================================================
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
 -- ==================================================
@@ -81,7 +81,7 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- LOAD CONFIG & CORE
+-- ⭐ LOAD CONFIG & CORE (ភ្លាមៗ)
 -- ==================================================
 loadstring(GetScript("Config/Settings.lua"))()
 loadstring(GetScript("Core/Services.lua"))()
@@ -89,7 +89,22 @@ loadstring(GetScript("Core/Player.lua"))()
 loadstring(GetScript("Core/Utils.lua"))()
 
 -- ==================================================
--- LOAD UI & TABS
+-- ⭐ LOAD CONFIG MANAGER (ភ្លាមៗ - មិនរង់ចាំ Features)
+-- ==================================================
+task.spawn(function()
+    loadstring(GetScript("Config/ConfigManager.lua"))()
+    
+    while not _G.YOKUDO_ApplyConfig do
+        task.wait(0.05)
+    end
+    
+    -- ⭐ Apply Config ភ្លាមៗ (មិនរង់ចាំ Features)
+    _G.YOKUDO_ApplyConfig()
+    print("✅ Config applied immediately!")
+end)
+
+-- ==================================================
+-- ⭐ LOAD UI & TABS (Parallel)
 -- ==================================================
 task.spawn(function()
     loadstring(GetScript("UI/Toggle.lua"))()
@@ -101,7 +116,7 @@ task.spawn(function()
 end)
 
 -- ==================================================
--- LOAD FEATURES
+-- ⭐ LOAD FEATURES (Parallel - មិនប៉ះពាល់ Config)
 -- ==================================================
 task.spawn(function()
     local Features = {
@@ -136,23 +151,6 @@ task.spawn(function()
     end
     print("✅ All Features Loaded")
     _G.YOKUDO_FeaturesReady = true
-end)
-
--- ==================================================
--- LOAD CONFIG MANAGER
--- ==================================================
-task.spawn(function()
-    while not _G.YOKUDO_FeaturesReady or not _G.YOKUDO_AutoHopPage do
-        task.wait(0.1)
-    end
-    
-    loadstring(GetScript("Config/ConfigManager.lua"))()
-    
-    while not _G.YOKUDO_ApplyConfig do
-        task.wait(0.1)
-    end
-    
-    _G.YOKUDO_ApplyConfig()
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
