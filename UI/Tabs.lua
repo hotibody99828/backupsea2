@@ -422,14 +422,6 @@ local hopEliteHunterFrame, hopEliteHunterCheckbox, getHopEliteHunterState = Crea
 -- ==================================================
 -- AUTO HOP CHECKBOX EVENTS
 -- ==================================================
--- ⭐ Smart Checkbox Events (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
--- clickAttackCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- doughKingCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- ripIndraCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- cakePrinceCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- soulReaperCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
--- eliteHunterCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
-
 hopDoughKingCheckbox.MouseButton1Click:Connect(function()
     if _G.YOKUDO_ToggleAutoHopDoughKing then
         _G.YOKUDO_ToggleAutoHopDoughKing()
@@ -523,18 +515,12 @@ end
 -- ==================================================
 -- SETTING CHECKBOX EVENTS
 -- ==================================================
--- ⭐ Auto Buso Event (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
--- busoCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
-
--- ⭐ Auto Ken Event (Checkbox ដើម)
+-- Auto Ken Event (Checkbox ដើម)
 obsCheckbox.MouseButton1Click:Connect(function()
     if _G.YOKUDO_ToggleAutoKen then
         _G.YOKUDO_ToggleAutoKen()
     end
 end)
-
--- ⭐ Walk on Water Event (ដកចេញ ព្រោះ Smart Checkbox គ្រប់គ្រងដោយខ្លួនឯង)
--- walkCheckbox.MouseButton1Click:Connect(function() ... end)  ← លុបចេញ!
 
 noClipCheckbox.MouseButton1Click:Connect(function()
     if _G.YOKUDO_ToggleNoClip then
@@ -543,9 +529,33 @@ noClipCheckbox.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================
--- OTHER PAGES
+-- EXPORT FOR CONFIG MANAGER
 -- ==================================================
-
+-- រក្សាទុក Page សម្រាប់ប្រើក្នុង Config Manager
 _G.YOKUDO_AutoHopPage = AutoHopPage
+
+-- ==================================================
+-- UPDATE WEAPON BUTTON FUNCTION (សម្រាប់ Config Load)
+-- ==================================================
+function _G.YOKUDO_UpdateWeaponButton(weaponType)
+    if not _G.YOKUDO_AutoHopPage then return end
+    for _, child in ipairs(_G.YOKUDO_AutoHopPage:GetDescendants()) do
+        if child.Name == "WeaponButton" and child:IsA("TextButton") then
+            child.Text = weaponType
+            print("✅ Weapon Button updated to: " .. weaponType)
+            return
+        end
+    end
+end
+
+-- ==================================================
+-- SET WEAPON TYPE FUNCTION (សម្រាប់ Config Load)
+-- ==================================================
+_G.YOKUDO_SetWeaponType = _G.YOKUDO_SetWeaponType or function(weaponType)
+    _G.YOKUDO_UpdateWeaponButton(weaponType)
+    if _G.YOKUDO_AutoEquip then
+        _G.YOKUDO_AutoEquip.SelectedType = weaponType
+    end
+end
 
 print("✅ Tabs Loaded")
