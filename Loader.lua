@@ -1,5 +1,5 @@
 -- ==================================================
--- YOKUDO HUB | SEA3 | [Premium] | Loader (CHECK ALL CONFIG FEATURES)
+-- YOKUDO HUB | SEA3 | [Premium] | Loader (SHOW UI AFTER LOAD)
 -- ==================================================
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
 -- ==================================================
@@ -30,8 +30,14 @@ repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 local Player = game.Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
 
 print("✅ Game loaded, Player: " .. Player.Name)
+
+-- ==================================================
+-- ⭐ HIDE UI UNTIL LOAD COMPLETE
+-- ==================================================
+_G.YOKUDO_UI_Visible = false
 
 -- ==================================================
 -- AUTO JOIN MARINES
@@ -89,7 +95,7 @@ loadstring(GetScript("Core/Player.lua"))()
 loadstring(GetScript("Core/Utils.lua"))()
 
 -- ==================================================
--- LOAD UI & TABS
+-- LOAD UI & TABS (HIDDEN)
 -- ==================================================
 task.spawn(function()
     loadstring(GetScript("UI/Toggle.lua"))()
@@ -97,7 +103,20 @@ task.spawn(function()
     loadstring(GetScript("UI/Components.lua"))()
     loadstring(GetScript("UI/Drag.lua"))()
     loadstring(GetScript("UI/Tabs.lua"))()
-    print("✅ UI & Tabs Loaded")
+    print("✅ UI & Tabs Loaded (Hidden)")
+    
+    -- ⭐ លាក់ UI ទាំងអស់
+    local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
+    if ToggleGUI then
+        ToggleGUI.Enabled = false
+    end
+    
+    local HubGUI = CoreGui:FindFirstChild("YOKUDO_HUB")
+    if HubGUI then
+        HubGUI.Enabled = false
+    end
+    
+    _G.YOKUDO_UI_Loaded = true
 end)
 
 -- ==================================================
@@ -166,7 +185,6 @@ task.spawn(function()
         local eliteHunterReady = _G.YOKUDO_ToggleAutoEliteHunter ~= nil
         local weaponReady = _G.YOKUDO_SetWeaponType ~= nil
 
-        -- ⭐ ពិនិត្យ Features ដែលមាន Config ទាំងអស់
         if busoReady and walkReady and unlockHakiReady and clickReady and 
            doughKingReady and ripIndraReady and cakePrinceReady and 
            soulReaperReady and eliteHunterReady and weaponReady then
@@ -182,16 +200,6 @@ task.spawn(function()
         print("✅ All Config Features ready! Loading ConfigManager...")
     else
         print("⚠️ Some Config Features not ready, continuing anyway...")
-        print("   Buso: " .. tostring(_G.YOKUDO_SetBuso ~= nil))
-        print("   Walk: " .. tostring(_G.YOKUDO_SetWalk ~= nil))
-        print("   UnlockHaki: " .. tostring(_G.YOKUDO_ToggleAutoUnlockHaki ~= nil))
-        print("   Click: " .. tostring(_G.YOKUDO_ToggleAutoClickAttack ~= nil))
-        print("   DoughKing: " .. tostring(_G.YOKUDO_ToggleAutoDoughKing ~= nil))
-        print("   RipIndra: " .. tostring(_G.YOKUDO_ToggleAutoRipIndra ~= nil))
-        print("   CakePrince: " .. tostring(_G.YOKUDO_ToggleAutoCakePrince ~= nil))
-        print("   SoulReaper: " .. tostring(_G.YOKUDO_ToggleAutoSoulReaper ~= nil))
-        print("   EliteHunter: " .. tostring(_G.YOKUDO_ToggleAutoEliteHunter ~= nil))
-        print("   Weapon: " .. tostring(_G.YOKUDO_SetWeaponType ~= nil))
     end
 
     -- ⭐ Load ConfigManager
@@ -204,6 +212,27 @@ task.spawn(function()
     print("⏳ Applying config...")
     _G.YOKUDO_ApplyConfig()
     print("✅ Config applied successfully!")
+
+    -- ==================================================
+    -- ⭐ SHOW UI AFTER EVERYTHING IS LOADED
+    -- ==================================================
+    _G.YOKUDO_UI_Visible = true
+    
+    -- បង្ហាញ Toggle Icon
+    local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
+    if ToggleGUI then
+        ToggleGUI.Enabled = true
+        print("✅ Toggle Icon Showed")
+    end
+    
+    -- បង្ហាញ Hub UI
+    local HubGUI = CoreGui:FindFirstChild("YOKUDO_HUB")
+    if HubGUI then
+        HubGUI.Enabled = true
+        print("✅ Hub UI Showed")
+    end
+    
+    print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready & Visible!")
 end)
 
-print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
+print("🚀 YOKUDO HUB | SEA3 | [Premium] Loading...")
