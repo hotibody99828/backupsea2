@@ -1,5 +1,5 @@
 -- ==================================================
--- YOKUDO HUB | SEA3 | [Premium] | Loader (SHOW ALL AT ONCE)
+-- YOKUDO HUB | SEA3 | [Premium] | Loader
 -- ==================================================
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
 -- ==================================================
@@ -97,13 +97,13 @@ loadstring(GetScript("Core/Utils.lua"))()
 -- ==================================================
 -- ⭐ LOAD UI & TABS (HIDDEN)
 -- ==================================================
-local function LoadUI()
+task.spawn(function()
     loadstring(GetScript("UI/Toggle.lua"))()
     loadstring(GetScript("UI/Main.lua"))()
     loadstring(GetScript("UI/Components.lua"))()
     loadstring(GetScript("UI/Drag.lua"))()
     loadstring(GetScript("UI/Tabs.lua"))()
-    print("✅ UI & Tabs Loaded")
+    print("✅ UI & Tabs Loaded (Hidden)")
     
     -- ⭐ លាក់ UI ទាំងអស់
     local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
@@ -115,12 +115,14 @@ local function LoadUI()
     if HubGUI then
         HubGUI.Enabled = false
     end
-end
+    
+    _G.YOKUDO_UI_Loaded = true
+end)
 
 -- ==================================================
--- ⭐ LOAD FEATURES
+-- ⭐ LOAD FEATURES (Parallel)
 -- ==================================================
-local function LoadFeatures()
+task.spawn(function()
     local Features = {
         "SpeedHack",
         "JumpHack",
@@ -153,20 +155,25 @@ local function LoadFeatures()
     end
     print("✅ All Features Loaded")
     _G.YOKUDO_FeaturesReady = true
-end
+end)
 
 -- ==================================================
--- ⭐ LOAD CONFIG MANAGER & APPLY
+-- ⭐ LOAD CONFIG MANAGER & APPLY (រង់ចាំ UI + Features)
 -- ==================================================
-local function LoadConfig()
+task.spawn(function()
     print("⏳ Waiting for UI & Config Features...")
 
-    -- រង់ចាំ UI
+    -- 1. រង់ចាំ UI Loaded
+    while not _G.YOKUDO_UI_Loaded do
+        task.wait(0.05)
+    end
+    
+    -- 2. រង់ចាំ UI AutoHopPage
     while not _G.YOKUDO_AutoHopPage do
         task.wait(0.05)
     end
 
-    -- រង់ចាំ Features ដែលមាន Config ទាំងអស់
+    -- 3. រង់ចាំ Features ដែលមាន Config ទាំងអស់
     local maxWait = 5
     local waited = 0
     local allConfigReady = false
@@ -200,65 +207,40 @@ local function LoadConfig()
         print("⚠️ Some Config Features not ready, continuing anyway...")
     end
 
+    -- 4. Load ConfigManager
     loadstring(GetScript("Config/ConfigManager.lua"))()
 
     while not _G.YOKUDO_ApplyConfig do
         task.wait(0.05)
     end
 
+    -- 5. Apply Config
     print("⏳ Applying config...")
     _G.YOKUDO_ApplyConfig()
     print("✅ Config applied successfully!")
-end
+    
+    -- 6. Set flag Config Applied
+    _G.YOKUDO_ConfigApplied = true
 
--- ==================================================
--- ⭐ LOAD EVERYTHING IN SEQUENCE
--- ==================================================
+    -- ==================================================
+    -- ⭐ SHOW UI & ICON AFTER CONFIG APPLIED
+    -- ==================================================
+    print("🎯 Showing UI & Icon...")
+    
+    local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
+    if ToggleGUI then
+        ToggleGUI.Enabled = true
+        print("✅ Toggle Icon Showed")
+    end
+    
+    local HubGUI = CoreGui:FindFirstChild("YOKUDO_HUB")
+    if HubGUI then
+        HubGUI.Enabled = true
+        print("✅ Hub UI Showed")
+    end
+    
+    _G.YOKUDO_UI_Visible = true
+    print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready & Visible!")
+end)
 
--- 1. Load Config & Core
-print("📦 Loading Core...")
-
--- 2. Load UI (Hidden)
-print("📦 Loading UI & Tabs...")
-LoadUI()
-
--- 3. Load Features
-print("📦 Loading Features...")
-LoadFeatures()
-
--- 4. Load Config Manager & Apply
-print("📦 Loading Config Manager...")
-LoadConfig()
-
--- ==================================================
--- ⭐ SHOW UI AFTER EVERYTHING IS DONE
--- ==================================================
-print("⏳ Waiting for all systems to be ready...")
-
--- រង់ចាំ Features ទាំងអស់ផ្ទុករួច
-while not _G.YOKUDO_FeaturesReady do
-    task.wait(0.1)
-end
-
--- រង់ចាំ Config Apply រួច
-while not _G.YOKUDO_ConfigApplied do
-    task.wait(0.1)
-end
-
--- ⭐ បង្ហាញ UI ទាំងអស់ម្ដង
-print("🎯 Showing UI...")
-
-local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
-if ToggleGUI then
-    ToggleGUI.Enabled = true
-    print("✅ Toggle Icon Showed")
-end
-
-local HubGUI = CoreGui:FindFirstChild("YOKUDO_HUB")
-if HubGUI then
-    HubGUI.Enabled = true
-    print("✅ Hub UI Showed")
-end
-
-_G.YOKUDO_UI_Visible = true
-print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
+print("🚀 YOKUDO HUB | SEA3 | [Premium] Loading...")
