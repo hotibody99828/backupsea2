@@ -486,7 +486,7 @@ local function ripIndraLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (ជាមួយ Config Save)
+-- TOGGLE FUNCTION (ជាមួយ Config Save - FIXED)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoRipIndra()
     isRunning = not isRunning
@@ -541,9 +541,10 @@ function _G.YOKUDO_ToggleAutoRipIndra()
         _G.YOKUDO_UpdateUI_RipIndra(isRunning)
     end
     
-    -- ⭐ SAVE CONFIG (បើក = true, បិទ = false)
+    -- ⭐ SAVE CONFIG - បន្ថែមបន្ទាត់នេះ!!!
     if _G.YOKUDO_UpdateConfig then
         _G.YOKUDO_UpdateConfig("AutoRipIndra", isRunning)
+        print("💾 Config Saved: AutoRipIndra = " .. tostring(isRunning))
     end
 end
 
@@ -564,4 +565,4 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
-print("✅ AutoRipIndra Loaded (Config Ready)")
+print("✅ AutoRipIndra Loaded (Config Ready - FIXED)")
