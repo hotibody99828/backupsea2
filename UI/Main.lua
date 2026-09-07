@@ -15,9 +15,6 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.DisplayOrder = 999
 ScreenGui.Parent = GuiParent
 
--- ⭐ លាក់ Main UI រហូតដល់ Loading រួច
-ScreenGui.Enabled = false
-
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 480, 0, 340)
