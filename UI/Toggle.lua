@@ -32,9 +32,6 @@ ToggleScreenGui.IgnoreGuiInset = true
 ToggleScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ToggleScreenGui.Parent = GuiParent
 
--- ⭐ លាក់ Toggle Button រហូតដល់ Loading រួច
-ToggleScreenGui.Enabled = false
-
 local Toggle = Instance.new("ImageButton")
 Toggle.Name = "Y"
 Toggle.Size = UDim2.new(0, 55, 0, 55)
