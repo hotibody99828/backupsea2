@@ -1,5 +1,5 @@
 -- ==================================================
--- AUTO SOUL REAPER (ជាមួយ Config Save)
+-- AUTO SOUL REAPER (ជាមួយ Config Save) - FIXED
 -- ==================================================
 
 local Players = game:GetService("Players")
@@ -23,13 +23,13 @@ local TWEEN_SPEED = 190
 local DISTANCE_THRESHOLD = 3000
 
 -- ==================================================
--- STATE
+-- STATE (ដូច AutoRipIndra)
 -- ==================================================
 local isRunning = false
 local loopConnection = nil
 local noCollideConnection = nil
 local noCollideActive = false
-local hasBypassTeleported = false
+local hasUsedPortal = false
 local hasTweenedToPosition = false
 local isInvoking = false
 local invokeLoopConnection = nil
@@ -130,10 +130,18 @@ end
 -- ==================================================
 local function getDistanceToTweenPosition()
     local character = Player.Character
-    if not character then return 99999
+    if not character then return 99999 end
     local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return 99999
+    if not root then return 99999 end
     return (SOUL_REAPER_TWEEN - root.Position).Magnitude
+end
+
+-- ==================================================
+-- RESET STATE
+-- ==================================================
+local function resetState()
+    hasUsedPortal = false
+    hasTweenedToPosition = false
 end
 
 -- ==================================================
@@ -225,7 +233,7 @@ local function bypassTeleport(targetPos)
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid and humanoid.Health <= 0 then return false end
     root.CFrame = CFrame.new(targetPos)
-    hasBypassTeleported = true
+    hasUsedPortal = true
     return true
 end
 
@@ -457,7 +465,7 @@ local function findSoulReaper()
 end
 
 -- ==================================================
--- MAIN LOOP
+-- MAIN LOOP (ប្រើ isRunning)
 -- ==================================================
 local function soulReaperLoop()
     while isRunning do
@@ -479,10 +487,10 @@ local function soulReaperLoop()
             local distance = getDistanceToTweenPosition()
             
             if distance > DISTANCE_THRESHOLD then
-                if not hasBypassTeleported then
+                if not hasUsedPortal then
                     bypassTeleport(SOUL_REAPER_BYPASS)
                 end
-                if hasBypassTeleported and not hasTweenedToPosition then
+                if hasUsedPortal and not hasTweenedToPosition then
                     task.wait(3)
                     tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
                     hasTweenedToPosition = true
@@ -599,6 +607,7 @@ local function soulReaperLoop()
                     end
                     isFollowingBoss = false
                     isTweeningToPosition = false
+                    resetState()
                 end
                 task.wait(5)
                 isBossDead = false
@@ -614,14 +623,14 @@ local function soulReaperLoop()
 end
 
 -- ==================================================
--- TOGGLE FUNCTION (ជាមួយ Config Save)
+-- TOGGLE FUNCTION (ដូច AutoRipIndra)
 -- ==================================================
 function _G.YOKUDO_ToggleAutoSoulReaper()
     isRunning = not isRunning
     _G.YOKUDO_AutoSoulReaperEnabled = isRunning
     
     if isRunning then
-        hasBypassTeleported = false
+        hasUsedPortal = false
         hasTweenedToPosition = false
         isBossDead = false
         bossFound = false
@@ -688,10 +697,8 @@ _G.YOKUDO_AutoSoulReaperEnabled = false
 -- ==================================================
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
-    hasBypassTeleported = false
-    hasTweenedToPosition = false
+    resetState()
     stopNoCollide()
-    
     if isRunning then
         tweenToPosition(SOUL_REAPER_TWEEN, TWEEN_SPEED)
         hasTweenedToPosition = true
