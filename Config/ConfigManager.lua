@@ -41,6 +41,13 @@ local DEFAULT = {
     AutoSoulReaper = false,
     AutoEliteHunter = false,
     
+    -- Auto Hop
+    AutoHopDoughKing = false,
+    AutoHopRipIndra = false,
+    AutoHopCakePrince = false,
+    AutoHopSoulReaper = false,
+    AutoHopEliteHunter = false,
+    
     -- Weapon
     WeaponType = "Melee",
 }
@@ -51,22 +58,60 @@ local DEFAULT = {
 _G.YOKUDO_Config = _G.YOKUDO_Config or {}
 
 -- ==================================================
--- LOAD CONFIG
+-- SAVE CONFIG (រក្សាទុក Config)
+-- ==================================================
+function _G.YOKUDO_SaveConfig()
+    local json = HttpService:JSONEncode(_G.YOKUDO_Config)
+    
+    local success = pcall(function()
+        if writefile then
+            writefile(CONFIG_FILE, json)
+        elseif syn and syn.crypt then
+            syn.crypt.custom_writefile(CONFIG_FILE, json)
+        end
+    end)
+    
+    if success then
+        print("✅ Config Saved for: " .. Player.Name)
+    else
+        print("⚠️ Failed to save config!")
+    end
+end
+
+-- ==================================================
+-- UPDATE SINGLE CONFIG (កែប្រែតម្លៃមួយ ហើយ Save ភ្លាម)
+-- ==================================================
+function _G.YOKUDO_UpdateConfig(key, value)
+    if not _G.YOKUDO_Config then
+        _G.YOKUDO_Config = {}
+    end
+    _G.YOKUDO_Config[key] = value
+    _G.YOKUDO_SaveConfig()
+    print("📝 Config Updated: " .. key .. " = " .. tostring(value))
+end
+
+-- ==================================================
+-- LOAD CONFIG (ផ្ទុក Config ពី File)
 -- ==================================================
 function _G.YOKUDO_LoadConfig()
     local json = nil
     
-    if readfile then
-        local ok, data = pcall(readfile, CONFIG_FILE)
+    -- ព្យាយាមអានពី writefile
+    if writefile then
+        local ok, data = pcall(writefile, CONFIG_FILE)  -- ប្រើ readfile មិនមែន writefile
         if ok then json = data end
-    elseif syn and syn.crypt then
+    end
+    
+    -- ព្យាយាមអានពី syn
+    if not json and syn and syn.crypt then
         local ok, data = pcall(syn.crypt.custom_readfile, CONFIG_FILE)
         if ok then json = data end
     end
     
+    -- បើមាន Config រួច ផ្ទុកមក
     if json and json ~= "" then
-        local config = HttpService:JSONDecode(json)
-        if config then
+        local success, config = pcall(HttpService.JSONDecode, HttpService, json)
+        if success and config then
             for k, v in pairs(DEFAULT) do
                 _G.YOKUDO_Config[k] = config[k] ~= nil and config[k] or v
             end
@@ -85,37 +130,37 @@ function _G.YOKUDO_LoadConfig()
         end
     end
     
+    -- បើគ្មាន Config ឬអានមិនបាន ប្រើ DEFAULT
     for k, v in pairs(DEFAULT) do
         _G.YOKUDO_Config[k] = v
     end
     _G.YOKUDO_SaveConfig()
+    print("📁 New config created for: " .. Player.Name)
 end
 
 -- ==================================================
--- SAVE CONFIG
+-- SET FUNCTIONS FOR FEATURES (ឲ្យ Features អាចប្រើបាន)
 -- ==================================================
-function _G.YOKUDO_SaveConfig()
-    local json = HttpService:JSONEncode(_G.YOKUDO_Config)
-    
-    if writefile then
-        writefile(CONFIG_FILE, json)
-    elseif syn and syn.crypt then
-        syn.crypt.custom_writefile(CONFIG_FILE, json)
-    end
-    
-    print("✅ Config Saved for: " .. Player.Name)
-end
+-- មុខងារទាំងនេះនឹងត្រូវបានកំណត់ដោយ Features
+_G.YOKUDO_SetWalk = _G.YOKUDO_SetWalk or function(state) end
+_G.YOKUDO_SetBuso = _G.YOKUDO_SetBuso or function(state) end
+_G.YOKUDO_SetWeaponType = _G.YOKUDO_SetWeaponType or function(type) end
 
 -- ==================================================
--- UPDATE SINGLE CONFIG
+-- UPDATE UI FUNCTIONS (ឲ្យ Tabs.lua អាច Update UI បាន)
 -- ==================================================
-function _G.YOKUDO_UpdateConfig(key, value)
-    _G.YOKUDO_Config[key] = value
-    _G.YOKUDO_SaveConfig()
-end
+_G.YOKUDO_UpdateUI_Walk = _G.YOKUDO_UpdateUI_Walk or function(state) end
+_G.YOKUDO_UpdateUI_Buso = _G.YOKUDO_UpdateUI_Buso or function(state) end
+_G.YOKUDO_UpdateUI_UnlockHaki = _G.YOKUDO_UpdateUI_UnlockHaki or function(state) end
+_G.YOKUDO_UpdateUI_ClickAttack = _G.YOKUDO_UpdateUI_ClickAttack or function(state) end
+_G.YOKUDO_UpdateUI_DoughKing = _G.YOKUDO_UpdateUI_DoughKing or function(state) end
+_G.YOKUDO_UpdateUI_RipIndra = _G.YOKUDO_UpdateUI_RipIndra or function(state) end
+_G.YOKUDO_UpdateUI_CakePrince = _G.YOKUDO_UpdateUI_CakePrince or function(state) end
+_G.YOKUDO_UpdateUI_SoulReaper = _G.YOKUDO_UpdateUI_SoulReaper or function(state) end
+_G.YOKUDO_UpdateUI_EliteHunter = _G.YOKUDO_UpdateUI_EliteHunter or function(state) end
 
 -- ==================================================
--- APPLY CONFIG
+-- APPLY CONFIG (អនុវត្ត Config ទាំងអស់)
 -- ==================================================
 function _G.YOKUDO_ApplyConfig()
     print("🔄 Applying config for: " .. Player.Name)
@@ -275,12 +320,50 @@ function _G.YOKUDO_ApplyConfig()
     end
     
     -- ==============================================
+    -- AUTO HOP (ផ្ទៀងផ្ទាត់ UI Checkbox)
+    -- ==============================================
+    -- Auto Hop Dough King
+    if c.AutoHopDoughKing and _G.YOKUDO_ToggleAutoHopDoughKing then
+        _G.YOKUDO_ToggleAutoHopDoughKing()
+        print("✅ Auto Hop Dough King applied from config")
+    end
+    
+    -- Auto Hop Rip Indra
+    if c.AutoHopRipIndra and _G.YOKUDO_ToggleAutoHopRipIndra then
+        _G.YOKUDO_ToggleAutoHopRipIndra()
+        print("✅ Auto Hop Rip Indra applied from config")
+    end
+    
+    -- Auto Hop Cake Prince
+    if c.AutoHopCakePrince and _G.YOKUDO_ToggleAutoHopCakePrince then
+        _G.YOKUDO_ToggleAutoHopCakePrince()
+        print("✅ Auto Hop Cake Prince applied from config")
+    end
+    
+    -- Auto Hop Soul Reaper
+    if c.AutoHopSoulReaper and _G.YOKUDO_ToggleAutoHopSoulReaper then
+        _G.YOKUDO_ToggleAutoHopSoulReaper()
+        print("✅ Auto Hop Soul Reaper applied from config")
+    end
+    
+    -- Auto Hop Elite Hunter
+    if c.AutoHopEliteHunter and _G.YOKUDO_ToggleAutoHopEliteHunter then
+        _G.YOKUDO_ToggleAutoHopEliteHunter()
+        print("✅ Auto Hop Elite Hunter applied from config")
+    end
+    
+    -- ==============================================
     -- WEAPON TYPE
     -- ==============================================
     local weaponType = c.WeaponType or "Melee"
     if _G.YOKUDO_SetWeaponType then
         _G.YOKUDO_SetWeaponType(weaponType)
         print("✅ Weapon Type applied from config: " .. weaponType)
+    end
+    
+    -- ធ្វើបច្ចុប្បន្នភាព UI Weapon Button
+    if _G.YOKUDO_UpdateWeaponButton then
+        _G.YOKUDO_UpdateWeaponButton(weaponType)
     end
     
     print("✅ Config applied for: " .. Player.Name)
