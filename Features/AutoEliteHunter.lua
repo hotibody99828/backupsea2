@@ -42,7 +42,7 @@ local PORTAL_ARGS = {
 -- ==================================================
 -- TWEEN SPEED
 -- ==================================================
-local TWEEN_SPEED = 160
+local TWEEN_SPEED = 150
 
 -- ==================================================
 -- STATE
@@ -220,7 +220,7 @@ local function tweenToBoss(bossPos, speed)
         return true 
     end
     
-    local duration = math.max(0.10, distance / speed)
+    local duration = math.max(0.5, distance / speed)
     local direction = (targetPos - root.Position).Unit
     
     if not bodyVelocity then
