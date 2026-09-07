@@ -675,7 +675,6 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
     -- ⭐ Save Config
     if _G.YOKUDO_UpdateConfig then
         _G.YOKUDO_UpdateConfig("AutoSoulReaper", isRunning)
-        print("💾 AutoSoulReaper Config Saved: " .. tostring(isRunning))
     end
 end
 
