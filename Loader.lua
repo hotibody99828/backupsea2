@@ -1,5 +1,5 @@
 -- ==================================================
--- YOKUDO HUB | SEA3 | [Premium] | Loader
+-- YOKUDO HUB | SEA3 | [Premium] | Loader (TRANSPARENT LOADING)
 -- ==================================================
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/hotibody99828/backupsea2/main/Loader.lua"))()
 -- ==================================================
@@ -35,9 +35,165 @@ local CoreGui = game:GetService("CoreGui")
 print("✅ Game loaded, Player: " .. Player.Name)
 
 -- ==================================================
--- ⭐ HIDE UI UNTIL LOAD COMPLETE
+-- ⭐ CREATE TRANSPARENT LOADING SCREEN
 -- ==================================================
-_G.YOKUDO_UI_Visible = false
+local function CreateLoadingScreen()
+    local LoadingGui = Instance.new("ScreenGui")
+    LoadingGui.Name = "LoadingScreen"
+    LoadingGui.ResetOnSpawn = false
+    LoadingGui.IgnoreGuiInset = true
+    LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    LoadingGui.DisplayOrder = 9999
+    LoadingGui.Parent = CoreGui
+
+    -- ⭐ Background TRANSPARENT (ថ្លា)
+    local Background = Instance.new("Frame")
+    Background.Name = "Background"
+    Background.Size = UDim2.new(1, 0, 1, 0)
+    Background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Background.BackgroundTransparency = 0.5  -- ← ថ្លាបន្តិច
+    Background.BorderSizePixel = 0
+    Background.Parent = LoadingGui
+
+    -- Container
+    local Container = Instance.new("Frame")
+    Container.Name = "Container"
+    Container.Size = UDim2.new(0, 350, 0, 180)
+    Container.Position = UDim2.new(0.5, -175, 0.5, -90)
+    Container.BackgroundColor3 = Color3.fromRGB(16, 17, 23)
+    Container.BackgroundTransparency = 0.15
+    Container.BorderSizePixel = 0
+    Container.ClipsDescendants = true
+    Container.Parent = Background
+
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(0, 16)
+    ContainerCorner.Parent = Container
+
+    local ContainerBorder = Instance.new("UIStroke")
+    ContainerBorder.Color = Color3.fromRGB(105, 90, 190)
+    ContainerBorder.Thickness = 2
+    ContainerBorder.Transparency = 0.3
+    ContainerBorder.Parent = Container
+
+    -- Title
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1, -40, 0, 40)
+    Title.Position = UDim2.new(0, 20, 0, 15)
+    Title.BackgroundTransparency = 1
+    Title.Text = "YOKUDO HUB"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 28
+    Title.TextXAlignment = Enum.TextXAlignment.Center
+    Title.TextYAlignment = Enum.TextYAlignment.Center
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = Container
+
+    -- Subtitle
+    local Subtitle = Instance.new("TextLabel")
+    Subtitle.Name = "Subtitle"
+    Subtitle.Size = UDim2.new(1, -40, 0, 20)
+    Subtitle.Position = UDim2.new(0, 20, 0, 55)
+    Subtitle.BackgroundTransparency = 1
+    Subtitle.Text = "SEA3 | [Premium]"
+    Subtitle.TextColor3 = Color3.fromRGB(145, 145, 175)
+    Subtitle.TextSize = 12
+    Subtitle.TextXAlignment = Enum.TextXAlignment.Center
+    Subtitle.TextYAlignment = Enum.TextYAlignment.Center
+    Subtitle.Font = Enum.Font.GothamMedium
+    Subtitle.Parent = Container
+
+    -- Loading Bar Background
+    local BarBg = Instance.new("Frame")
+    BarBg.Name = "BarBg"
+    BarBg.Size = UDim2.new(0.8, 0, 0, 6)
+    BarBg.Position = UDim2.new(0.1, 0, 0.6, 0)
+    BarBg.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    BarBg.BorderSizePixel = 0
+    BarBg.Parent = Container
+
+    local BarBgCorner = Instance.new("UICorner")
+    BarBgCorner.CornerRadius = UDim.new(1, 0)
+    BarBgCorner.Parent = BarBg
+
+    -- Loading Bar
+    local Bar = Instance.new("Frame")
+    Bar.Name = "Bar"
+    Bar.Size = UDim2.new(0, 0, 1, 0)
+    Bar.BackgroundColor3 = Color3.fromRGB(105, 90, 190)
+    Bar.BorderSizePixel = 0
+    Bar.Parent = BarBg
+
+    local BarCorner = Instance.new("UICorner")
+    BarCorner.CornerRadius = UDim.new(1, 0)
+    BarCorner.Parent = Bar
+
+    -- Bar Glow
+    local BarGlow = Instance.new("Frame")
+    BarGlow.Name = "BarGlow"
+    BarGlow.Size = UDim2.new(0.3, 0, 1, 0)
+    BarGlow.Position = UDim2.new(0, 0, 0, 0)
+    BarGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    BarGlow.BackgroundTransparency = 0.3
+    BarGlow.BorderSizePixel = 0
+    BarGlow.Parent = Bar
+
+    local BarGlowCorner = Instance.new("UICorner")
+    BarGlowCorner.CornerRadius = UDim.new(1, 0)
+    BarGlowCorner.Parent = BarGlow
+
+    -- Status Text
+    local Status = Instance.new("TextLabel")
+    Status.Name = "Status"
+    Status.Size = UDim2.new(1, -40, 0, 20)
+    Status.Position = UDim2.new(0, 20, 0.75, 0)
+    Status.BackgroundTransparency = 1
+    Status.Text = "Initializing..."
+    Status.TextColor3 = Color3.fromRGB(180, 180, 200)
+    Status.TextSize = 11
+    Status.TextXAlignment = Enum.TextXAlignment.Center
+    Status.TextYAlignment = Enum.TextYAlignment.Center
+    Status.Font = Enum.Font.GothamMedium
+    Status.Parent = Container
+
+    -- Percent
+    local Percent = Instance.new("TextLabel")
+    Percent.Name = "Percent"
+    Percent.Size = UDim2.new(1, -40, 0, 20)
+    Percent.Position = UDim2.new(0, 20, 0.85, 0)
+    Percent.BackgroundTransparency = 1
+    Percent.Text = "0%"
+    Percent.TextColor3 = Color3.fromRGB(105, 90, 190)
+    Percent.TextSize = 16
+    Percent.TextXAlignment = Enum.TextXAlignment.Center
+    Percent.TextYAlignment = Enum.TextYAlignment.Center
+    Percent.Font = Enum.Font.GothamBold
+    Percent.Parent = Container
+
+    local function UpdateProgress(percent, statusText)
+        percent = math.clamp(percent, 0, 100)
+        Bar.Size = UDim2.new(percent / 100, 0, 1, 0)
+        Percent.Text = math.floor(percent) .. "%"
+        if statusText then
+            Status.Text = statusText
+        end
+    end
+
+    return {
+        Gui = LoadingGui,
+        Update = UpdateProgress,
+        Destroy = function()
+            LoadingGui:Destroy()
+        end
+    }
+end
+
+-- ==================================================
+-- ⭐ CREATE LOADING SCREEN
+-- ==================================================
+local Loading = CreateLoadingScreen()
+Loading.Update(5, "Loading YOKUDO HUB...")
 
 -- ==================================================
 -- AUTO JOIN MARINES
@@ -87,40 +243,36 @@ Player.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================
--- ⭐ LOAD CONFIG & CORE
+-- LOAD CONFIG & CORE
 -- ==================================================
+Loading.Update(10, "Loading Core Systems...")
 loadstring(GetScript("Config/Settings.lua"))()
+Loading.Update(15, "Loading Services...")
 loadstring(GetScript("Core/Services.lua"))()
+Loading.Update(20, "Loading Player Manager...")
 loadstring(GetScript("Core/Player.lua"))()
+Loading.Update(25, "Loading Utilities...")
 loadstring(GetScript("Core/Utils.lua"))()
 
 -- ==================================================
--- ⭐ LOAD UI & TABS (HIDDEN)
+-- LOAD UI & TABS
 -- ==================================================
 task.spawn(function()
+    Loading.Update(30, "Loading UI System...")
     loadstring(GetScript("UI/Toggle.lua"))()
+    Loading.Update(38, "Loading Main UI...")
     loadstring(GetScript("UI/Main.lua"))()
+    Loading.Update(45, "Loading UI Components...")
     loadstring(GetScript("UI/Components.lua"))()
+    Loading.Update(50, "Loading Drag System...")
     loadstring(GetScript("UI/Drag.lua"))()
+    Loading.Update(55, "Loading Tabs & Pages...")
     loadstring(GetScript("UI/Tabs.lua"))()
-    print("✅ UI & Tabs Loaded (Hidden)")
-    
-    -- ⭐ លាក់ UI ទាំងអស់
-    local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
-    if ToggleGUI then
-        ToggleGUI.Enabled = false
-    end
-    
-    local HubGUI = CoreGui:FindFirstChild("YOKUDO_HUB")
-    if HubGUI then
-        HubGUI.Enabled = false
-    end
-    
-    _G.YOKUDO_UI_Loaded = true
+    print("✅ UI & Tabs Loaded")
 end)
 
 -- ==================================================
--- ⭐ LOAD FEATURES (Parallel)
+-- LOAD FEATURES
 -- ==================================================
 task.spawn(function()
     local Features = {
@@ -148,99 +300,49 @@ task.spawn(function()
         "WeaponWatcher"
     }
     
+    local total = #Features
+    local loaded = 0
+    
     for _, Feature in ipairs(Features) do
         pcall(function()
             loadstring(GetScript("Features/" .. Feature .. ".lua"))()
         end)
+        loaded = loaded + 1
+        local percent = 60 + (loaded / total * 25)
+        Loading.Update(percent, "Loading " .. Feature .. "...")
     end
+    
     print("✅ All Features Loaded")
     _G.YOKUDO_FeaturesReady = true
+    Loading.Update(85, "Features Loaded!")
 end)
 
 -- ==================================================
--- ⭐ LOAD CONFIG MANAGER & APPLY (រង់ចាំ UI + Features)
+-- LOAD CONFIG MANAGER
 -- ==================================================
 task.spawn(function()
-    print("⏳ Waiting for UI & Config Features...")
-
-    -- 1. រង់ចាំ UI Loaded
-    while not _G.YOKUDO_UI_Loaded do
+    Loading.Update(90, "Waiting for UI & Features...")
+    
+    while not _G.YOKUDO_FeaturesReady or not _G.YOKUDO_AutoHopPage do
         task.wait(0.05)
     end
     
-    -- 2. រង់ចាំ UI AutoHopPage
-    while not _G.YOKUDO_AutoHopPage do
-        task.wait(0.05)
-    end
-
-    -- 3. រង់ចាំ Features ដែលមាន Config ទាំងអស់
-    local maxWait = 5
-    local waited = 0
-    local allConfigReady = false
-
-    while waited < maxWait do
-        local busoReady = _G.YOKUDO_SetBuso ~= nil
-        local walkReady = _G.YOKUDO_SetWalk ~= nil
-        local unlockHakiReady = _G.YOKUDO_ToggleAutoUnlockHaki ~= nil
-        local clickReady = _G.YOKUDO_ToggleAutoClickAttack ~= nil
-        local doughKingReady = _G.YOKUDO_ToggleAutoDoughKing ~= nil
-        local ripIndraReady = _G.YOKUDO_ToggleAutoRipIndra ~= nil
-        local cakePrinceReady = _G.YOKUDO_ToggleAutoCakePrince ~= nil
-        local soulReaperReady = _G.YOKUDO_ToggleAutoSoulReaper ~= nil
-        local eliteHunterReady = _G.YOKUDO_ToggleAutoEliteHunter ~= nil
-        local weaponReady = _G.YOKUDO_SetWeaponType ~= nil
-
-        if busoReady and walkReady and unlockHakiReady and clickReady and 
-           doughKingReady and ripIndraReady and cakePrinceReady and 
-           soulReaperReady and eliteHunterReady and weaponReady then
-            allConfigReady = true
-            break
-        end
-
-        task.wait(0.1)
-        waited = waited + 0.1
-    end
-
-    if allConfigReady then
-        print("✅ All Config Features ready! Loading ConfigManager...")
-    else
-        print("⚠️ Some Config Features not ready, continuing anyway...")
-    end
-
-    -- 4. Load ConfigManager
+    Loading.Update(93, "Loading Config Manager...")
     loadstring(GetScript("Config/ConfigManager.lua"))()
-
+    
     while not _G.YOKUDO_ApplyConfig do
         task.wait(0.05)
     end
-
-    -- 5. Apply Config
-    print("⏳ Applying config...")
+    
+    Loading.Update(97, "Applying Config...")
     _G.YOKUDO_ApplyConfig()
-    print("✅ Config applied successfully!")
     
-    -- 6. Set flag Config Applied
-    _G.YOKUDO_ConfigApplied = true
-
-    -- ==================================================
-    -- ⭐ SHOW UI & ICON AFTER CONFIG APPLIED
-    -- ==================================================
-    print("🎯 Showing UI & Icon...")
+    Loading.Update(100, "YOKUDO HUB Ready!")
     
-    local ToggleGUI = CoreGui:FindFirstChild("ToggleGUI")
-    if ToggleGUI then
-        ToggleGUI.Enabled = true
-        print("✅ Toggle Icon Showed")
-    end
-    
-    local HubGUI = CoreGui:FindFirstChild("YOKUDO_HUB")
-    if HubGUI then
-        HubGUI.Enabled = true
-        print("✅ Hub UI Showed")
-    end
-    
-    _G.YOKUDO_UI_Visible = true
-    print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready & Visible!")
+    task.wait(0.5)
+    Loading.Destroy()
+    print("✅ Loading Screen Closed!")
+    print("🚀 YOKUDO HUB | SEA3 | [Premium] Ready!")
 end)
 
 print("🚀 YOKUDO HUB | SEA3 | [Premium] Loading...")
