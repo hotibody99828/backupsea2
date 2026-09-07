@@ -130,9 +130,9 @@ end
 -- ==================================================
 local function getDistanceToTweenPosition()
     local character = Player.Character
-    if not character then return 99999
+    if not character then return 99999 end
     local root = character:FindFirstChild("HumanoidRootPart")
-    if not root then return 99999
+    if not root then return 99999 end
     return (SOUL_REAPER_TWEEN - root.Position).Magnitude
 end
 
@@ -266,6 +266,9 @@ local function stopTweenTeleport()
     isTweeningToPosition = false
     stopNoCollide()
 end
+
+-- Export stop function for UI
+_G.YOKUDO_StopTweenTeleport = stopTweenTeleport
 
 local function stopTweenToPosition()
     if currentTween then
@@ -667,15 +670,22 @@ function _G.YOKUDO_ToggleAutoSoulReaper()
         print("💀 Auto Soul Reaper Stopped")
     end
     
-    -- ⭐ Update UI
+    -- Update UI
     if _G.YOKUDO_UpdateUI_SoulReaper then
         _G.YOKUDO_UpdateUI_SoulReaper(isRunning)
     end
     
-    -- ⭐ Save Config
-    if _G.YOKUDO_UpdateConfig then
-        _G.YOKUDO_UpdateConfig("AutoSoulReaper", isRunning)
-    end
+    -- ⭐ Save Config (ជាមួយ pcall ដើម្បីការពារកំហុស)
+    pcall(function()
+        if _G.YOKUDO_UpdateConfig then
+            _G.YOKUDO_UpdateConfig("AutoSoulReaper", isRunning)
+        else
+            -- បើ ConfigManager មិនទាន់ផ្ទុក រក្សាទុកក្នុងអថេរបណ្តោះអាសន្ន
+            _G.YOKUDO_Config = _G.YOKUDO_Config or {}
+            _G.YOKUDO_Config.AutoSoulReaper = isRunning
+            print("⚠️ ConfigManager not loaded, saved to _G.YOKUDO_Config.AutoSoulReaper = " .. tostring(isRunning))
+        end
+    end)
 end
 
 -- ==================================================
